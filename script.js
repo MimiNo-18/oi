@@ -3053,8 +3053,78 @@ let currentElement = null;
             document.getElementById('chatPageContainer').style.display = 'none';
             document.getElementById('wechatContainer').style.display = 'block';
             document.getElementById('chatMorePanel').style.display = 'none';
+            const stickerPicker = document.getElementById('stickerPickerPanel');
+            if (stickerPicker) stickerPicker.classList.remove('active');
             currentChatFriendId = null;
             saveUIState();
+        }
+
+        function toggleStickerPicker() {
+            const panel = document.getElementById('stickerPickerPanel');
+            const isVisible = panel.classList.contains('active');
+            
+            if (!isVisible) {
+                document.getElementById('chatMorePanel').style.display = 'none';
+                document.activeElement.blur();
+                renderChatStickerGrid();
+                panel.classList.add('active');
+            } else {
+                panel.classList.remove('active');
+            }
+            
+            setTimeout(() => {
+                const container = document.getElementById('chatMessages');
+                container.scrollTop = container.scrollHeight;
+            }, 100);
+        }
+
+        function renderChatStickerGrid() {
+            const grid = document.getElementById('chatStickerGrid');
+            grid.innerHTML = '';
+            
+            if (stickerList.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; padding: 20px; color: #999; font-size: 13px;">表情库为空，请先去“我->表情库”添加</div>';
+                return;
+            }
+
+            stickerList.forEach(sticker => {
+                const item = document.createElement('div');
+                item.className = 'chat-sticker-item';
+                item.onclick = () => sendStickerMessage(sticker);
+                item.innerHTML = `<img src="${sticker.src}" class="chat-sticker-img" title="${sticker.name}">`;
+                grid.appendChild(item);
+            });
+        }
+
+        function sendStickerMessage(sticker) {
+            if (!currentChatFriendId) return;
+            
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: 'sent',
+                msgType: 'sticker',
+                content: sticker.src,
+                stickerName: sticker.name,
+                time: new Date().getTime()
+            };
+            
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = `[表情: ${sticker.name}]`;
+                friend.time = formatTime(new Date());
+            }
+
+            document.getElementById('stickerPickerPanel').classList.remove('active');
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+            
+            // 触发 AI 
+            callAI();
         }
 
         function toggleChatMorePanel() {
@@ -3255,9 +3325,16 @@ let currentElement = null;
                 }
 
                 if (!msg.isMergedForward) {
-                    const textNode = document.createElement('div');
-                    textNode.textContent = msg.content;
-                    bubble.appendChild(textNode);
+                    if (msg.msgType === 'sticker') {
+                        const img = document.createElement('img');
+                        img.src = msg.content;
+                        img.className = 'msg-sticker-img';
+                        bubble.appendChild(img);
+                    } else {
+                        const textNode = document.createElement('div');
+                        textNode.textContent = msg.content;
+                        bubble.appendChild(textNode);
+                    }
                 }
 
                 if (msg.translation) {
@@ -3430,6 +3507,7 @@ let currentElement = null;
    - 严禁出现动作或心理描写，如 \`*笑了笑*\` 或 \`(摸头)\`。
    - 微信聊天通常不需要完美的标点符号。
 6. **社交距离**：根据人设（恋人、死党、同事等）动态调整亲疏远近和说话语气。
+7. **表情包使用**：你可以发送表情包。如果你想发送表情包，请在回复中使用格式 \`[表情: 表情名]\`。例如：\`[表情: 哭泣]\`。请确保表情名与上下文中提到的或你认为对方有的表情名一致。
 
 现在，请开始以 ${contact.netName || contact.name} 的身份与用户进行真实的微信对话。`;
 
@@ -3449,7 +3527,9 @@ let currentElement = null;
             // 映射历史消息，包含引用信息以提供上下文
             aiHistory.slice(-15).forEach(h => {
                 let content = h.content;
-                if (h.isMergedForward && h.fullHistory) {
+                if (h.msgType === 'sticker') {
+                    content = `[发送了一个表情包: ${h.stickerName || '未知'}]`;
+                } else if (h.isMergedForward && h.fullHistory) {
                     // 合并转发的内容，展开给 AI 识别
                     content = `[合并转发的聊天记录]\n`;
                     h.fullHistory.forEach(item => {
@@ -3513,6 +3593,18 @@ let currentElement = null;
                     }
 
                     let content = parts[i];
+                    let stickerObj = null;
+                    
+                    // 匹配 [表情: 名字]
+                    const stickerMatch = content.match(/\[表情:\s*(.*?)\]/);
+                    if (stickerMatch) {
+                        const sName = stickerMatch[1].trim();
+                        const foundSticker = stickerList.find(s => s.name === sName);
+                        if (foundSticker) {
+                            stickerObj = foundSticker;
+                        }
+                    }
+
                     let quoteObj = null;
                     // 解析 AI 想要引用的内容格式 (引用: ...)
                     const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
@@ -3520,7 +3612,7 @@ let currentElement = null;
                         quoteObj = { content: quoteMatch[1] };
                         content = quoteMatch[2];
                     }
-                    receiveAIMessage(content, quoteObj);
+                    receiveAIMessage(content, quoteObj, stickerObj);
                 }
             } catch (e) {
                 if (chatStatus) {
@@ -3532,7 +3624,7 @@ let currentElement = null;
             }
         }
 
-        function receiveAIMessage(content, quote = null) {
+        function receiveAIMessage(content, quote = null, sticker = null) {
             if (!currentChatFriendId) return;
 
             const newMessage = {
@@ -3544,12 +3636,18 @@ let currentElement = null;
             if (quote) {
                 newMessage.quote = quote;
             }
+
+            if (sticker) {
+                newMessage.msgType = 'sticker';
+                newMessage.content = sticker.src;
+                newMessage.stickerName = sticker.name;
+            }
             
             chatHistories[currentChatFriendId].push(newMessage);
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = content;
+                friend.message = sticker ? `[表情: ${sticker.name}]` : content;
                 friend.time = formatTime(new Date());
             }
 
@@ -5140,25 +5238,20 @@ let currentElement = null;
         }
 
         function processStickerTextContent(text) {
-            const lines = text.split(/[\n\r]+/);
+            // 正则匹配：名称 + 冒号 + URL(以jpg, png, gif结尾)
+            // 支持中文冒号和英文冒号
+            const regex = /([^：:\n\r]+)[：:](https?:\/\/[^ \n\r]+?\.(?:jpg|png|gif))/gi;
+            let match;
             let added = 0;
-            lines.forEach(line => {
-                const trimmed = line.trim();
-                if (!trimmed) return;
-
-                const parts = trimmed.split(/[：:]/);
-                if (parts.length >= 2) {
-                    const name = parts[0].trim();
-                    const url = trimmed.substring(trimmed.indexOf(parts[1]) + 1).trim();
-                    if (name && url && (url.startsWith('http') || url.startsWith('data:image'))) {
-                        stickerList.push({ name: name, src: url });
-                        added++;
-                    }
-                } else if (trimmed.startsWith('http') || trimmed.startsWith('data:image')) {
-                    stickerList.push({ name: '导入表情_' + (stickerList.length + 1), src: trimmed });
+            
+            while ((match = regex.exec(text)) !== null) {
+                const name = match[1].trim();
+                const url = match[2].trim();
+                if (name && url) {
+                    stickerList.push({ name: name, src: url });
                     added++;
                 }
-            });
+            }
 
             if (added > 0) {
                 saveStickers();

@@ -1,0 +1,2044 @@
+<![CDATA[<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MimiPhone</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="notch"></div>
+    <div class="phone-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="time">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 头像区 -->
+        <div class="avatar-section">
+            <div class="avatar-item">
+                <div class="avatar-bubble" id="txt-avatar-name-1" onclick="editText(this, '名称')">Mimi</div>
+                <img src="" class="avatar" id="avatar1" onclick="changeImage('avatar1')" alt="头像1">
+                <div class="emoji-text" id="txt-avatar-emoji-1" onclick="editText(this, '颜文字')">^U=U^</div>
+            </div>
+            <div class="avatar-item">
+                <div class="avatar-bubble" id="txt-avatar-name-2" onclick="editText(this, '名称')">Phone</div>
+                <img src="" class="avatar" id="avatar2" onclick="changeImage('avatar2')" alt="头像2">
+                <div class="emoji-text" id="txt-avatar-emoji-2" onclick="editText(this, '颜文字')">ʚ♡ɞ</div>
+            </div>
+        </div>
+
+        <!-- 中间文字区 -->
+        <div class="title-section">
+            <div class="small-title" id="txt-small-title" onclick="editText(this, '小标题')">°. ⊹ ✟ MimiPhone .† ☆ ⊹</div>
+            <div class="main-title" id="txt-main-title" onclick="editText(this, '主标题')"> 欢迎使用MimiPhone,,,</div>
+        </div>
+
+        <!-- 聊天气泡区 -->
+        <div class="chat-section">
+            <div class="chat-bubble" id="txt-chat-bubble-1" onclick="editText(this, '聊天内容')">⊹ .☆ 请输入文字内容?</div>
+            <div class="chat-bubble" id="txt-chat-bubble-2" onclick="editText(this, '聊天内容')">◇. '⊹请输入文字内容☆ .⊹</div>
+        </div>
+
+        <!-- Widget标题 -->
+        <div class="widget-title" id="txt-widget-title" onclick="editText(this, 'Widget标题')">请输入文字</div>
+
+        <!-- 应用图标网格和插画区 -->
+        <div class="content-grid">
+            <div class="app-grid">
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app1" onclick="openWechat()" alt="应用图标" style="cursor: pointer;">
+                    <div class="app-label">微信</div>
+                </div>
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app2" onclick="changeImage('app2')" alt="应用图标">
+                    <div class="app-label">小游戏</div>
+                </div>
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app3" onclick="changeImage('app3')" alt="应用图标">
+                    <div class="app-label">世界书</div>
+                </div>
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app4" onclick="changeImage('app4')" alt="应用图标">
+                    <div class="app-label">网易云音乐</div>
+                </div>
+            </div>
+            <div class="illustration-section">
+                <img src="" class="illustration" id="illustration" onclick="changeImage('illustration')" alt="插画">
+                <div class="illustration-text" id="txt-illustration-text" onclick="editText(this, '插画文字')">°. ⊹ ✟ Love you .† ☆ ⊹</div>
+            </div>
+        </div>
+
+        <!-- Dock栏 -->
+        <div class="dock">
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock1" onclick="changeImage('dock1')" alt="Dock图标">
+                <div class="dock-label">电话</div>
+            </div>
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock2" onclick="openContacts()" alt="Dock图标" style="cursor: pointer;">
+                <div class="dock-label">联系人</div>
+            </div>
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock3" onclick="openThemePage()" alt="Dock图标" style="cursor: pointer;">
+                <div class="dock-label">主题</div>
+            </div>
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock4" onclick="openSettings()" alt="Dock图标" style="cursor: pointer;">
+                <div class="dock-label">设置</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文字编辑模态框 -->
+    <div class="modal" id="textModal">
+        <div class="modal-content">
+            <div class="modal-title">编辑文字</div>
+            <input type="text" class="modal-input" id="textInput" placeholder="请输入文字">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="confirmText()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片编辑模态框 -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-title">更改图片</div>
+            <div class="image-options">
+                <button class="image-option-btn" onclick="selectFromAlbum()">从相册选择</button>
+                <button class="image-option-btn" onclick="showUrlInput()">使用URL链接</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+            <div id="urlInputContainer" style="display: none; margin-top: 10px;">
+                <input type="text" class="modal-input" id="urlInput" placeholder="请输入图片URL">
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+                    <button class="modal-btn confirm" type="button" onclick="confirmUrl()">确定</button>
+                </div>
+            </div>
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="modal-btn cancel" type="button" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 联系人容器 -->
+    <div id="contactsContainer" style="display: none;">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="contactsTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeContacts()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">联系人</div>
+            <div class="wechat-nav-right" style="display: flex; gap: 16px;">
+                <svg class="nav-icon" id="contactsSelectBtn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleContactSelectMode()" style="width: 24px; height: 24px; cursor: pointer;">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="showAddContactModal()" style="cursor: pointer;">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="wechat-search-bar">
+            <div class="wechat-search-input-wrapper" style="border: 1px solid #eee;">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #999;">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="contactsSearchInput" oninput="searchContactsList()" style="color: #000;">
+            </div>
+        </div>
+
+        <div class="contacts-content">
+            <!-- 联系人列表 -->
+            <div class="wechat-chat-list" id="contactsListContainer">
+                <div class="empty-state">暂无联系人，点击右上角"+"添加</div>
+            </div>
+            <!-- 删除按钮 -->
+            <button class="delete-bottom-btn inline" id="deleteBottomBtn" onclick="handleBottomDelete()" style="display: none;">
+                删除选中的联系人
+            </button>
+        </div>
+    </div>
+
+    <!-- 消息长按菜单 -->
+    <div id="msgContextMenu" class="msg-context-menu">
+        <div class="msg-context-item" onclick="handleMsgAction('复制')">复制</div>
+        <div class="msg-context-item" onclick="handleMsgAction('转发')">转发</div>
+        <div class="msg-context-item" onclick="handleMsgAction('收藏')">收藏</div>
+        <div class="msg-context-item" onclick="handleMsgAction('删除')">删除</div>
+        <div class="msg-context-item" onclick="handleMsgAction('撤回')">撤回</div>
+        <div class="msg-context-item" onclick="handleMsgAction('引用')">引用</div>
+        <div class="msg-context-item" onclick="handleMsgAction('翻译')">翻译</div>
+        <div class="msg-context-item" onclick="handleMsgAction('重回')">重回</div>
+        <div class="msg-context-item" onclick="handleMsgAction('多选')">多选</div>
+        <div class="msg-context-item" onclick="handleMsgAction('编辑')">编辑</div>
+    </div>
+
+    <!-- 撤回消息详情弹窗 -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-title">撤回的消息内容</div>
+            <div id="withdrawnContent" style="margin: 20px 0; font-size: 16px; color: #333; word-break: break-all;"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" type="button" onclick="closeWithdrawModal()" style="width: 100%;">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息编辑弹窗 -->
+    <div class="modal" id="msgEditModal">
+        <div class="modal-content">
+            <div class="modal-title">编辑消息</div>
+            <textarea id="msgEditInput" class="modal-input" style="height: 120px; resize: none; font-family: inherit;"></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeMsgEditModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="confirmMsgEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天详情页面 -->
+    <div id="chatPageContainer" style="display: none; width: 100%; top: 0; bottom: 0; background: #ffffff; flex-direction: column; position: fixed; left: 0; z-index: 150;">
+        <!-- 状态栏 -->
+        <div class="wechat-status-bar" style="background: #ffffff;">
+            <div class="status-left">
+                <span id="chatStatusTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="wechat-nav-bar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
+            <div class="wechat-nav-left" onclick="closeChat()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+                <div class="wechat-nav-title" id="chatPartnerName" style="font-size: 16px; font-weight: 600; color: #000;">网名</div>
+                <div id="chatStatus" style="font-size: 10px; color: #666; font-weight: normal; height: 12px; margin-top: 1px;"></div>
+            </div>
+            <div class="wechat-nav-right" onclick="openChatInfo()">
+                <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px;">
+                    <circle cx="4" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="20" cy="12" r="2" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 聊天记录区域 -->
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; background: #ffffff;">
+            <!-- 消息动态生成 -->
+        </div>
+
+        <!-- 底部输入栏 -->
+        <div id="chatInputBar" style="background: #F7F7F7; border-top: 1px solid #DBDBDB; padding: 8px 10px 30px; display: flex; flex-direction: column; gap: 8px; transition: padding 0.2s ease;">
+            <!-- 多选工具栏 -->
+            <div id="multiSelectToolbar" class="multi-select-toolbar">
+                <div class="multi-select-btn" onclick="showForwardOptions()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 10l5 5-5 5M4 4v7a4 4 0 0 0 4 4h12"/>
+                    </svg>
+                    <span>转发</span>
+                </div>
+                <div class="multi-select-btn" onclick="handleMultiFavorite()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>收藏</span>
+                </div>
+                <div class="multi-select-btn" onclick="handleMultiDelete()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                    <span>删除</span>
+                </div>
+            </div>
+            <!-- 引用预览区域 -->
+            <div id="quotePreview" style="display: none; background: #eee; padding: 8px 12px; margin: 0 10px 0; border-radius: 8px; position: relative; border-left: 3px solid #07C160; width: calc(100% - 20px);">
+                <div id="quotePreviewText" style="font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 20px;"></div>
+                <div onclick="cancelQuote()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #999; font-size: 18px; cursor: pointer;">×</div>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 8px; width: 100%;">
+                <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+            </div>
+            <div style="flex: 1; background: #fff; border-radius: 4px; min-height: 36px; max-height: 100px; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
+                <textarea id="chatInput" style="width: 100%; border: none; outline: none; font-size: 16px; resize: none; font-family: inherit; line-height: 1.4;" rows="1" placeholder="" oninput="handleChatInput(this)"></textarea>
+                <div id="aiMicBtn" style="display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666;" onclick="handleMicClick()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 5px;" id="chatAddons">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+                <div id="chatMoreBtn" onclick="toggleChatMorePanel()" style="width: 28px; height: 28px; border: 1.5px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </div>
+            </div>
+                <button id="chatSendBtn" style="display: none; background: #07C160; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: 500; margin-bottom: 5px;" onclick="sendChatMessage()">发送</button>
+            </div>
+        </div>
+        <!-- 更多功能面板 -->
+        <div class="chat-more-panel" id="chatMorePanel">
+            <div class="chat-more-item" onclick="alert('拍照功能开发中')">
+                <div class="chat-more-icon">📷</div>
+                <div class="chat-more-label">拍照</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('语音通话功能开发中')">
+                <div class="chat-more-icon">📞</div>
+                <div class="chat-more-label">语音通话</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('位置功能开发中')">
+                <div class="chat-more-icon">📍</div>
+                <div class="chat-more-label">位置</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('红包功能开发中')">
+                <div class="chat-more-icon">🧧</div>
+                <div class="chat-more-label">红包</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('转账功能开发中')">
+                <div class="chat-more-icon">💸</div>
+                <div class="chat-more-label">转账</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('收藏功能开发中')">
+                <div class="chat-more-icon">⭐️</div>
+                <div class="chat-more-label">收藏</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('名片功能开发中')">
+                <div class="chat-more-icon">👤</div>
+                <div class="chat-more-label">名片</div>
+            </div>
+            <div class="chat-more-item" onclick="alert('文件功能开发中')">
+                <div class="chat-more-icon">📁</div>
+                <div class="chat-more-label">文件</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信容器 -->
+    <div id="wechatContainer">
+        <!-- 状态栏 -->
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span id="wechatTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 顶部导航栏 -->
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">Wechat</div>
+            <div class="wechat-nav-right" onclick="toggleAddMenu(event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div class="wechat-search-bar" id="wechatSearchBar">
+            <div class="wechat-search-input-wrapper">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="wechatSearchInput" class="wechat-search-input" placeholder="search" oninput="searchWechat()">
+            </div>
+        </div>
+
+        <!-- 标签栏 -->
+        <div class="wechat-tag-bar" id="wechatTagBar">
+            <div class="tag-item">默认</div>
+        </div>
+
+        <div class="wechat-content-area">
+            <!-- 聊天列表 -->
+            <div class="wechat-chat-list" id="chatList">
+                <div class="empty-state">请添加朋友开始聊天</div>
+            </div>
+
+            <!-- 微信通讯录页面 -->
+            <div id="wechatContactsPage" style="display: none; padding-bottom: 80px;">
+                <div class="wechat-contacts-header-btn" onclick="showAddFriendModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    添加好友
+                </div>
+                
+                <div class="wechat-section-header">已添加的联系人</div>
+                <div id="wechatAddedContactsList">
+                    <!-- 动态生成 -->
+                </div>
+
+                <div class="wechat-section-header">已添加的群聊</div>
+                <div id="wechatAddedGroupsList">
+                    <div class="empty-state" style="padding: 20px; font-size: 13px;">暂无群聊</div>
+                </div>
+            </div>
+
+            <!-- 微信“我”页面 -->
+            <div id="wechatMePage" style="display: none; padding-bottom: 80px;">
+                <div class="me-header" onclick="openPersonalInfo()">
+                    <img src="" class="me-avatar" id="wechatMeAvatar" alt="">
+                    <div class="me-info">
+                        <div class="me-nickname" id="wechatMeNickname">未设置网名</div>
+                        <div class="me-wechat-id" id="wechatMeID">微信号：未设置</div>
+                    </div>
+                    <div class="me-header-right">
+                        <svg class="me-qrcode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="7" y="7" width="1" height="1"></rect>
+                            <rect x="16" y="7" width="1" height="1"></rect>
+                            <rect x="7" y="16" width="1" height="1"></rect>
+                        </svg>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+
+                <div class="me-divider"></div>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item">
+                        <div class="me-menu-icon" style="color: #4CAF50;">💳</div>
+                        <div class="me-menu-label">服务</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+
+                <div class="me-divider"></div>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="openWechatFavorites()">
+                        <div class="me-menu-icon" style="color: #ff9800;">🖼️</div>
+                        <div class="me-menu-label">收藏</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="me-menu-item" onclick="openStickerLibrary()">
+                        <div class="me-menu-icon" style="color: #2196F3;">😄</div>
+                        <div class="me-menu-label">表情库</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+
+                <div class="me-divider"></div>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="openWechatSettings()">
+                        <div class="me-menu-icon" style="color: #607d8b;">⚙️</div>
+                        <div class="me-menu-label">设置</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="wechat-bottom-nav">
+            <div class="wechat-nav-item active" onclick="switchWechatTab('messages', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span class="wechat-nav-label">消息</span>
+            </div>
+            <div class="wechat-nav-item" onclick="switchWechatTab('contacts', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span class="wechat-nav-label">通讯录</span>
+            </div>
+            <div class="wechat-nav-item" onclick="alert('发现功能开发中')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M2 12h20"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <span class="wechat-nav-label">发现</span>
+            </div>
+            <div class="wechat-nav-item" onclick="switchWechatTab('me', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="wechat-nav-label">我</span>
+            </div>
+        </div>
+
+        <!-- 添加菜单 -->
+        <div class="add-menu" id="addMenu">
+            <div class="add-menu-item" onclick="showAddFriendModal()">添加朋友</div>
+            <div class="add-menu-item" onclick="createGroupChat()">发起群聊</div>
+            <div class="add-menu-item" onclick="alert('扫一扫功能开发中')">扫一扫</div>
+        </div>
+
+        <!-- 添加好友模态框 - 从联系人选择 -->
+        <div class="modal" id="addFriendModal">
+            <div class="modal-content">
+                <div class="modal-title">选择联系人</div>
+                <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
+                    <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
+                        <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="friendSearchInput" oninput="searchFriendContacts()">
+                    </div>
+                </div>
+                <div id="friendContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+                    <!-- 联系人列表将在这里动态生成 -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" type="button" onclick="closeWechatModal()">取消</button>
+                    <button class="modal-btn confirm" type="button" onclick="addFriendFromContact()">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑联系人模态框 -->
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <div class="modal-title" id="contactModalTitle">添加联系人</div>
+            <input type="text" class="modal-input" id="contactNameInput" placeholder="姓名">
+            <input type="text" class="modal-input" id="contactPhoneInput" placeholder="电话号码">
+            <input type="text" class="modal-input" id="contactAvatarInput" placeholder="头像URL（可选）">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeContactModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="saveContact()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal" id="deleteContactModal">
+        <div class="modal-content">
+            <div class="modal-title">确认删除</div>
+            <div class="confirm-text" id="deleteContactText">确定要删除这个联系人吗？</div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeDeleteContactModal()">取消</button>
+                <button class="modal-btn delete" type="button" onclick="confirmDeleteContact()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 转发方式选择 -->
+    <div id="forwardTypeModal" class="forward-type-modal" onclick="closeForwardTypeModal()">
+        <div class="forward-type-content" onclick="event.stopPropagation()">
+            <button class="forward-type-btn" type="button" onclick="handleForwardMode('逐条')">逐条转发</button>
+            <button class="forward-type-btn" type="button" onclick="handleForwardMode('合并')">合并转发</button>
+            <button class="forward-type-btn" type="button" onclick="closeForwardTypeModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 转发选择联系人模态框 -->
+    <div class="modal" id="forwardModal">
+        <div class="modal-content">
+            <div class="modal-title">转发给</div>
+            <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
+                <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
+                    <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="forwardSearchInput" oninput="searchForwardContacts()">
+                </div>
+            </div>
+            <div id="forwardContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+                <!-- 联系人列表 -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeForwardModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 合并转发详情页 -->
+    <div id="mergedChatDetailContainer">
+        <div class="merged-detail-header">
+            <div class="merged-detail-back" onclick="closeMergedChatDetail()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="merged-detail-title" id="mergedDetailTitle">聊天记录</div>
+            <div style="width: 40px;"></div>
+        </div>
+        <div class="merged-detail-content" id="mergedDetailContent">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 表情库页面 -->
+    <div id="stickerLibraryContainer">
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeStickerLibrary()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">表情库</div>
+            <div class="wechat-nav-right" onclick="openStickerManagement()">
+                <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px; cursor: pointer;">
+                    <circle cx="4" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="20" cy="12" r="2" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+        <div class="wechat-search-bar">
+            <div class="wechat-search-input-wrapper">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="stickerSearchInput" class="wechat-search-input" placeholder="搜索" oninput="renderStickerGrid()">
+            </div>
+        </div>
+        <div class="sticker-content">
+            <div id="stickerGrid" class="sticker-grid">
+                <div class="sticker-add-btn" onclick="openStickerUploadModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </div>
+                <!-- 表情动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 表情库管理页面 -->
+    <div id="stickerManagementContainer">
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeStickerManagement()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">表情管理</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="sticker-mgmt-list">
+            <div class="sticker-mgmt-btn" onclick="openUsageManagement()">使用管理</div>
+            <div class="sticker-mgmt-btn" onclick="triggerStickerImport()">导入文件</div>
+            <div class="sticker-mgmt-btn" onclick="exportStickers()">导出文件</div>
+        </div>
+    </div>
+
+    <!-- 表情上传模态框 -->
+    <div class="modal" id="stickerUploadModal">
+        <div class="modal-content">
+            <div class="sticker-upload-tabs">
+                <div class="sticker-upload-tab active" id="tab-single" onclick="switchStickerUploadTab('single')">单个上传</div>
+                <div class="sticker-upload-tab" id="tab-batch" onclick="switchStickerUploadTab('batch')">批量上传</div>
+            </div>
+
+            <!-- 单个上传 -->
+            <div id="stickerUploadSingle">
+                <div class="sticker-upload-option" onclick="importStickerFromAlbum('single')">相册导入</div>
+                <div class="sticker-upload-option" onclick="showStickerUrlInput('single')">URL链接导入</div>
+                
+                <div id="stickerUrlArea-single" class="sticker-url-input-area">
+                    <input type="text" id="stickerUrl-single" class="modal-input" placeholder="输入链接 (jpg/png/gif)">
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel" type="button" onclick="hideStickerUrlInput('single')">取消</button>
+                        <button class="modal-btn confirm" type="button" onclick="confirmStickerUrl('single')">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量上传 -->
+            <div id="stickerUploadBatch" style="display: none;">
+                <div class="sticker-upload-option" onclick="importStickerFromAlbum('batch')">相册导入</div>
+                <div class="sticker-upload-option" onclick="showStickerUrlInput('batch')">URL链接导入</div>
+
+                <div id="stickerUrlArea-batch" class="sticker-url-input-area">
+                    <div class="sticker-batch-tip">格式：名字：URL，多个用空格或回车隔开</div>
+                    <textarea id="stickerUrl-batch" class="modal-input" style="height: 100px; resize: none;" placeholder="小猫撒娇：https://xxx.jpg&#10;小狗开心：https://yyy.png"></textarea>
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel" type="button" onclick="hideStickerUrlInput('batch')">取消</button>
+                        <button class="modal-btn confirm" type="button" onclick="confirmStickerUrl('batch')">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="modal-btn cancel" type="button" onclick="closeStickerUploadModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表情操作弹窗 -->
+    <div class="modal" id="stickerOptionsModal">
+        <div class="modal-content">
+            <div class="modal-title">表情操作</div>
+            <div class="modal-buttons" style="flex-direction: column; gap: 10px;">
+                <button class="modal-btn delete" type="button" onclick="startDeleteSticker()">删除</button>
+                <button class="modal-btn confirm" type="button" onclick="startModifyStickerName()">修改表情包名称</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量上传名字模态框 -->
+    <div class="modal" id="batchStickerNameModal">
+        <div class="modal-content">
+            <div class="modal-title">输入表情名称</div>
+            <div class="sticker-batch-tip">多个名称用空格或回车隔开</div>
+            <textarea id="batchStickerNameInput" class="modal-input" style="height: 100px; resize: none;" placeholder="名称1&#10;名称2"></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeBatchNameModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="confirmBatchNames()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏的表情文件输入 -->
+    <input type="file" id="stickerFileInputSingle" accept="image/jpeg,image/png,image/gif" style="display: none;" onchange="handleStickerFileSelect(event, 'single')">
+    <input type="file" id="stickerFileInputBatch" accept="image/jpeg,image/png,image/gif" multiple style="display: none;" onchange="handleBatchStickerSelect(event)">
+    <input type="file" id="stickerFileImportInput" accept=".txt,.docx,.json" style="display: none;" onchange="handleStickerFileImport(event)">
+
+    <!-- 统一系统弹窗替代方案 -->
+    <div class="modal" id="mimiAlertModal">
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-title" id="mimiAlertTitle">提示</div>
+            <div id="mimiAlertText" style="margin: 20px 0; font-size: 15px; color: #333; line-height: 1.6;"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" type="button" onclick="closeMimiAlert()" style="width: 100%;">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信设置页面 -->
+    <div id="wechatSettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 210;">
+        <div class="wechat-status-bar" style="background: #f7f7f7;">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeWechatSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">设置</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="wechat-search-bar" style="background: #f7f7f7; padding-bottom: 8px;">
+            <div class="wechat-search-input-wrapper" style="background: #fff; border: none;">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()">
+            </div>
+        </div>
+        <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7;">
+            <div class="settings-list-wrapper">
+                <div class="me-rounded-box">
+                    <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()">
+                        <div class="me-menu-label">个人资料</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-divider"></div>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item setting-item" data-search="通知">
+                        <div class="me-menu-label">新消息通知</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="me-menu-item setting-item" data-search="显示" onclick="openWechatDisplaySettings()">
+                        <div class="me-menu-label">显示</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="me-menu-item setting-item" data-search="朋友权限">
+                        <div class="me-menu-label">朋友权限</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="me-menu-item setting-item" data-search="存储空间" onclick="openWechatStorage()">
+                        <div class="me-menu-label">存储空间</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-divider"></div>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item setting-item" data-search="更多" onclick="openCategoryManagement()">
+                        <div class="me-menu-label">更多</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-divider"></div>
+                <div class="wechat-settings-footer">
+                    <div class="settings-action-btn" onclick="alert('切换账号')">切换账号</div>
+                    <div class="settings-action-btn" onclick="alert('退出登录')" style="margin-top: 10px; color: #fa5151;">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信显示设置页面 -->
+    <div id="wechatDisplaySettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 215;">
+        <div class="wechat-status-bar" style="background: #f7f7f7;">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeWechatDisplaySettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">显示设置</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="wechat-content-area" style="background: #f7f7f7;">
+            <div class="me-rounded-box" style="margin-top: 10px;">
+                <div class="me-menu-item" onclick="alert('整体页面美化')">
+                    <div class="me-menu-label">整体页面美化</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+                <div class="me-menu-item" onclick="alert('聊天页面美化')">
+                    <div class="me-menu-label">聊天页面美化</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+                <div class="me-menu-item" onclick="alert('按键图标修改')">
+                    <div class="me-menu-label">按键图标修改</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+                <div class="me-menu-item" onclick="alert('气泡美化')">
+                    <div class="me-menu-label">气泡美化</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信存储空间页面 -->
+    <div id="wechatStorageContainer">
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeWechatStorage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">存储空间</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        
+        <div class="wechat-content-area" style="position: relative; overflow-y: auto;">
+            <!-- 扫描状态 -->
+            <div id="storageScanning" class="scanning-overlay">
+                <div class="scanning-circle"></div>
+                <div style="color: #888; font-size: 14px;">正在计算存储空间...</div>
+            </div>
+
+            <!-- 存储详情 -->
+            <div id="storageDetail" style="display: none;">
+                <div class="storage-usage-card">
+                    <div class="storage-total-title">已用空间</div>
+                    <div class="storage-total-size" id="totalStorageSize">0 GB</div>
+                    <div class="storage-bar-container" id="storageBar">
+                        <!-- 动态生成 -->
+                    </div>
+                    <div class="storage-legend">
+                        <div class="legend-item"><div class="legend-dot" style="background: #07c160;"></div>聊天</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: #ff9800;"></div>资源</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: #2196f3;"></div>网页</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: #9e9e9e;"></div>其他</div>
+                    </div>
+                </div>
+
+                <div class="storage-list-group">
+                    <div class="storage-item">
+                        <div class="storage-item-info">
+                            <div class="storage-item-label">聊天记录</div>
+                            <div class="storage-item-desc">包含联系人、群聊及所有聊天历史记录</div>
+                        </div>
+                        <div class="storage-item-size" id="size-chat">0 MB</div>
+                    </div>
+                    <div class="storage-item">
+                        <div class="storage-item-info">
+                            <div class="storage-item-label">个性化资源</div>
+                            <div class="storage-item-desc">已保存的主题、壁纸、图标和字体文件</div>
+                        </div>
+                        <div class="storage-item-size" id="size-resources">0 MB</div>
+                    </div>
+                    <div class="storage-item">
+                        <div class="storage-item-info">
+                            <div class="storage-item-label">网页文件</div>
+                            <div class="storage-item-desc">MimiPhone 核心网页代码文件大小</div>
+                        </div>
+                        <div class="storage-item-size" id="size-app">0 MB</div>
+                    </div>
+                    <div class="storage-item">
+                        <div class="storage-item-info">
+                            <div class="storage-item-label">其他数据</div>
+                            <div class="storage-item-desc">系统设置、API 配置及 UI 缓存状态</div>
+                        </div>
+                        <div class="storage-item-size" id="size-others">0 MB</div>
+                    </div>
+                </div>
+
+                <div class="storage-footer">
+                    <button class="storage-btn clear-cache" onclick="clearWechatCache()">清除缓存</button>
+                    <button class="storage-btn delete-data" onclick="deleteWechatData()">删除数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 微信顶部分组管理页面 -->
+    <div id="categoryManagementContainer">
+        <div class="wechat-status-bar" style="background: #f7f7f7;">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeCategoryManagement()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">顶部分组设置</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="wechat-content-area" style="background: #f7f7f7;">
+            <div class="category-preview-box">
+                <div class="category-preview-title">分组栏预览</div>
+                <div class="category-preview-tags" id="categoryPreviewTags">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+            <div class="add-category-btn" onclick="addNewCategory()">+ 添加新分组</div>
+            <div class="category-list-wrapper" id="categoryManagementList">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 联系人选择模态框 (用于分类添加成员) -->
+    <div class="modal" id="contactSelectionModal">
+        <div class="modal-content">
+            <div class="modal-title" id="selectionModalTitle">选择成员</div>
+            <div id="selectionContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+                <!-- 动态生成 -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeSelectionModal()">取消</button>
+                <button class="modal-btn confirm" onclick="confirmContactSelection()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天信息页面 -->
+    <div id="chatInfoContainer">
+        <!-- 状态栏 -->
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-info-header">
+            <div class="chat-info-back" onclick="closeChatInfo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="chat-info-title">聊天信息</div>
+            <div style="width: 40px;"></div>
+        </div>
+        <div class="chat-info-content">
+            <!-- 头像 -->
+            <div class="chat-info-avatar-box">
+                <img id="chatInfoAvatar" src="" class="chat-info-avatar" onclick="changeChatInfoAvatar()">
+            </div>
+
+            <!-- 备注 & 绑定世界书 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item">
+                    <div class="chat-info-label">备注</div>
+                    <div class="chat-info-value">
+                        <input type="text" id="chatInfoRemark" class="chat-info-input" placeholder="设置备注" onchange="saveChatInfoSettings()">
+                    </div>
+                </div>
+                <div class="chat-info-item chat-info-clickable" onclick="alert('绑定世界书功能开发中')">
+                    <div class="chat-info-label">绑定世界书</div>
+                    <div class="chat-info-value">
+                        <span class="chat-info-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索聊天记录 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item chat-info-clickable" onclick="alert('搜索功能开发中')">
+                    <div class="chat-info-label">搜索聊天记录</div>
+                </div>
+            </div>
+
+            <!-- 手动记忆 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item chat-info-clickable" onclick="alert('手动记忆功能开发中')">
+                    <div class="chat-info-label">手动记忆</div>
+                    <div class="chat-info-value">
+                        <span class="chat-info-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 读取记忆条数 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item">
+                    <div class="chat-info-label">读取记忆条数</div>
+                    <div class="chat-info-value">
+                        <input type="number" id="chatInfoMemCount" class="chat-info-underline-input" value="10" onchange="saveChatInfoSettings()">
+                        <span style="color: #333;">条</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能开关列表 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item">
+                    <div class="chat-info-label">自动总结</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoAutoSum" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">主动发消息</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoProactiveMsg" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">感知真实时间</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoSenseTime" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">主动发朋友圈</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoProactiveMoment" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">发起线下邀请</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoOfflineInvite" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">同步群聊消息</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoSyncGroup" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 聊天背景 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item chat-info-clickable" onclick="alert('聊天背景设置开发中')">
+                    <div class="chat-info-label">聊天背景</div>
+                </div>
+            </div>
+
+            <!-- AI朋友圈可见数 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item">
+                    <div class="chat-info-label">AI朋友圈可见数</div>
+                    <div class="chat-info-value">
+                        <input type="number" id="chatInfoAiMomentCount" class="chat-info-underline-input" value="3" onchange="saveChatInfoSettings()">
+                        <span style="color: #333;">条</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 置顶 & 拉黑 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item">
+                    <div class="chat-info-label">置顶聊天</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoSticky" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="chat-info-item">
+                    <div class="chat-info-label">拉黑联系人</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chatInfoBlock" onchange="saveChatInfoSettings()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 操作 -->
+            <div class="chat-info-group">
+                <div class="chat-info-item chat-info-clickable" onclick="clearCurrentChatHistory()">
+                    <div class="chat-info-label">清空聊天记录</div>
+                </div>
+                <div class="chat-info-item chat-info-clickable" onclick="deleteCurrentPartner()">
+                    <div class="chat-info-label" style="color: #FF3B30;">删除联系人</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信收藏页面 -->
+    <div id="wechatFavoritesContainer">
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeWechatFavorites()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">收藏</div>
+            <div class="wechat-nav-right">
+                <span id="favCancelSelectBtn" style="display: none; font-size: 14px; color: #000; cursor: pointer;" onclick="toggleFavSelectMode()">取消</span>
+            </div>
+        </div>
+        <div class="favorites-search-bar">
+            <div class="wechat-search-input-wrapper" style="background: #fff; border: none;">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="favoritesSearchInput" class="wechat-search-input" placeholder="搜索收藏内容" oninput="searchFavorites()">
+            </div>
+        </div>
+        <div class="favorites-list" id="favoritesList">
+            <!-- 收藏内容动态生成 -->
+        </div>
+        <button class="delete-bottom-btn" id="favDeleteBtn" onclick="handleFavBatchDelete()" style="display: none; background: #fa5151;">
+            删除选中的收藏
+        </button>
+    </div>
+
+    <!-- 收藏长按菜单 -->
+    <div id="favContextMenu" class="msg-context-menu" style="width: 200px;">
+        <div class="msg-context-item" style="width: 50%;" onclick="handleFavAction('转发')">转发</div>
+        <div class="msg-context-item" style="width: 50%;" onclick="handleFavAction('置顶')">置顶</div>
+        <div class="msg-context-item" style="width: 50%;" onclick="handleFavAction('删除')">删除</div>
+        <div class="msg-context-item" style="width: 50%;" onclick="handleFavAction('多选')">多选</div>
+    </div>
+
+    <!-- 微信个人资料页面 -->
+    <div id="personalInfoContainer">
+        <div class="wechat-status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closePersonalInfo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">个人资料</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="wechat-content-area" style="background: #f7f7f7;">
+            <div class="info-group">
+                <div class="info-item" onclick="changeWechatAvatar()">
+                    <div class="info-label">头像</div>
+                    <div class="info-content">
+                        <img src="" class="info-avatar" id="editWechatAvatar" alt="">
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item" onclick="editWechatInfo('nickname', '名字')">
+                    <div class="info-label">名字</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatNickname">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item" onclick="editWechatInfo('wechatId', '微信号')">
+                    <div class="info-label">微信号</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatWechatId">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item" onclick="editWechatInfo('phone', '手机号')">
+                    <div class="info-label">手机号</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatPhone">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">二维码名片</div>
+                    <div class="info-content">
+                        <svg class="me-qrcode" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item" onclick="editWechatInfo('region', '地区')">
+                    <div class="info-label">地区</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatRegion">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+            <div class="info-group">
+                <div class="info-item" onclick="editWechatInfo('patPat', '拍一拍')">
+                    <div class="info-label">拍一拍</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatPatPat">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="info-item" onclick="editWechatInfo('signature', '个性签名')">
+                    <div class="info-label">个性签名</div>
+                    <div class="info-content">
+                        <span class="info-text" id="editWechatSignature">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加联系人页面 -->
+    <div id="addContactContainer">
+        <!-- 状态栏 -->
+        <div class="add-contact-status-bar">
+            <div class="status-left">
+                <span id="addContactTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="add-contact-nav">
+            <div class="add-contact-nav-left" onclick="closeAddContactPage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="add-contact-nav-title">新建联系人</div>
+            <button class="add-contact-nav-right" type="button" onclick="saveNewContact(event)" style="border:none;">保存</button>
+        </div>
+
+        <div class="add-contact-content">
+            <!-- 头像上传区域 -->
+            <div class="avatar-upload-section">
+                <div class="avatar-upload-circle" onclick="uploadContactAvatar()">
+                    <img id="newContactAvatar" src="" alt="">
+                    <span class="avatar-upload-text">点击上传</span>
+                </div>
+            </div>
+
+            <!-- 表单输入区域 -->
+            <div class="add-contact-form">
+            <div class="form-field">
+                <label class="form-label">真名 (Name)</label>
+                <input type="text" class="form-input" id="newContactName" placeholder="角色名字">
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">昵称 (Nickname)</label>
+                <input type="text" class="form-input" id="newContactNickname" placeholder="角色昵称">
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">网名 (Net Name)</label>
+                <input type="text" class="form-input" id="newContactNetName" placeholder="角色网名">
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">微信号 (WeChat account)</label>
+                <input type="text" class="form-input" id="newContactWechat" placeholder="角色微信号">
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">分组 (Grouping)</label>
+                <div style="position: relative;">
+                    <select class="form-select" id="newContactCategory" onchange="handleCategoryChange()">
+                        <option value="朋友">朋友</option>
+                        <option value="恋人">恋人</option>
+                        <option value="同事">同事</option>
+                        <option value="其他">其他</option>
+                        <option value="__custom__">+ 添加新分组</option>
+                    </select>
+                </div>
+                <div id="customCategoryInput" style="display: none; margin-top: 8px;">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="form-input" id="customCategoryName" placeholder="输入新分组名称" style="flex: 1; margin-bottom: 0;">
+                        <button onclick="addCustomCategory()" style="padding: 12px 20px; background: #8B7355; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; white-space: nowrap;">添加</button>
+                        <button onclick="cancelCustomCategory()" style="padding: 12px 20px; background: #F0F0F0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">取消</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">人设 (Human design)</label>
+                <textarea class="form-textarea" id="newContactDesign" placeholder="请输入角色设定..."></textarea>
+            </div>
+
+            <!-- 删除按钮 - 仅在编辑模式显示 -->
+            <div class="form-field" id="deleteContactBtnContainer" style="display: none;">
+                <button class="delete-bottom-btn" onclick="deleteSingleContact()" style="margin-top: 20px;">
+                    删除该联系人
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- 头像上传选项模态框 -->
+    <div class="modal" id="avatarUploadModal">
+        <div class="modal-content">
+            <div class="modal-title">上传头像</div>
+            <div class="image-options">
+                <button class="image-option-btn" onclick="selectAvatarFromAlbum()">从相册选择</button>
+                <button class="image-option-btn" onclick="showAvatarUrlInput()">使用URL链接</button>
+            </div>
+            <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarFileSelect(event)">
+            <div id="avatarUrlInputContainer" style="display: none; margin-top: 10px;">
+                <input type="text" class="modal-input" id="avatarUrlInput" placeholder="请输入图片URL">
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" onclick="closeAvatarUploadModal()">取消</button>
+                    <button class="modal-btn confirm" type="button" onclick="confirmAvatarUrl()">确定</button>
+                </div>
+            </div>
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="modal-btn cancel" type="button" onclick="closeAvatarUploadModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的页面 -->
+    <div id="mineContainer">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="mineTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 顶部标题栏 -->
+        <div class="theme-header">
+            <div class="theme-back" onclick="closeMinePage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="theme-title">我的主题</div>
+            <div class="theme-header-right"></div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="theme-content" style="display: flex; flex-direction: column; height: 100%; padding-bottom: 80px; overflow: hidden; position: relative; flex: 1;">
+            <button class="theme-action-btn" type="button" onclick="saveCurrentTheme()" style="margin-bottom: 20px; flex-shrink: 0;">保存当前主题</button>
+            
+            <div class="theme-grid" id="themeList" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+                <!-- 主题列表动态生成 -->
+            </div>
+
+            <div class="theme-bottom-actions" style="position: absolute; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px; border-top: 1px solid #eee; z-index: 10; display: flex; gap: 10px;">
+                <button class="theme-bottom-btn" type="button" onclick="exportThemes()" style="flex: 1;">导出主题</button>
+                <button class="theme-bottom-btn" type="button" onclick="document.getElementById('importThemeInput').click()" style="flex: 1;">导入主题</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主题美化页面 -->
+    <!-- 设置容器 -->
+    <div id="settingsContainer">
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="settingsTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">设置</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item" onclick="openAccount()">
+                <div class="settings-item-content">
+                    <div class="settings-item-icon">🔑</div>
+                    <span class="settings-item-label">账号</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="settings-item" onclick="openDisplaySettings()">
+                <div class="settings-item-content">
+                    <div class="settings-item-icon">📱</div>
+                    <span class="settings-item-label">显示</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="settings-item" onclick="openApiConfig()">
+                <div class="settings-item-content">
+                    <div class="settings-item-icon">⚙️</div>
+                    <span class="settings-item-label">API配置</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="settings-item" onclick="alert('安全设置功能开发中')">
+                <div class="settings-item-content">
+                    <div class="settings-item-icon">🛡️</div>
+                    <span class="settings-item-label">安全</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+        </div>
+
+        <div class="settings-btn-group">
+            <button class="settings-full-btn export" onclick="exportSystemData()">导出系统数据</button>
+            <button class="settings-full-btn import" onclick="document.getElementById('systemImportInput').click()">导入系统数据</button>
+            <button class="settings-full-btn delete" onclick="deleteSystemData()">删除系统数据</button>
+            <input type="file" id="systemImportInput" accept=".json" style="display: none;" onchange="importSystemData(event)">
+        </div>
+    </div>
+
+    <!-- 显示设置容器 -->
+    <div id="displaySettingsContainer">
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeDisplaySettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">显示</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">全屏模式</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="fullscreenToggle" onchange="toggleFullscreen(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">手机边框</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="borderToggle" onchange="togglePhoneBorder(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">刘海屏</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notchToggle" onchange="toggleNotch(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-item" onclick="openBatterySettings()">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">电量提醒</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 电量提醒设置容器 -->
+    <div id="batterySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeBatterySettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">电量提醒</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">低于20%提醒充电</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="batteryAlertToggle" onchange="toggleBatteryAlert(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="battery-config-area" id="batteryConfigArea" style="padding: 10px 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
+                    <div id="batteryTextLine" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                        <input type="text" id="batteryAlertText" placeholder="请输入提醒文案" 
+                               style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #333;"
+                               oninput="saveBatterySettings()">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒弹窗CSS美化</div>
+                    <textarea id="batteryAlertCss" placeholder="请输入弹窗自定义CSS..." 
+                              style="width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 14px; font-family: monospace; outline: none; resize: vertical;"
+                              oninput="saveBatterySettings()"></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 12px;">内置弹窗美化模板</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #007AFF; color: #007AFF;" onclick="applyBatteryTemplate('ios')">iOS 风格</button>
+                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #FF3B30; color: #FF3B30;" onclick="applyBatteryTemplate('neon')">霓虹风格</button>
+                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #07C160; color: #07C160;" onclick="applyBatteryTemplate('minimal')">极简风格</button>
+                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #8E8E93; color: #8E8E93;" onclick="applyBatteryTemplate('dark')">暗黑风格</button>
+                    </div>
+                </div>
+
+                <button class="theme-action-btn" style="width: 100%;" onclick="previewBatteryAlert()">预览效果</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 账号容器 -->
+    <div id="accountContainer">
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="accountTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeAccount()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">Mimi账号</div>
+        </div>
+        <div class="account-avatar-section">
+            <img src="" class="account-avatar" id="accountAvatarImg" onclick="changeImage('accountAvatarImg')" alt="账号头像">
+            <div class="account-info-text" id="txt-account-nickname" onclick="editText(this, '昵称')">请输入昵称</div>
+            <div class="account-info-text" id="txt-account-phone" onclick="editText(this, '手机号')">请输入手机号</div>
+        </div>
+        <div class="settings-group" style="margin-top: 0;">
+            <div class="settings-item" onclick="alert('账号信息功能开发中')">
+                <span class="settings-item-label">账号信息</span>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="settings-item" onclick="alert('检查更新功能开发中')">
+                <span class="settings-item-label">检查更新</span>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+        </div>
+        <div class="account-action-group">
+            <div class="account-action-item" onclick="saveAccountInfo()">
+                <span class="account-action-label">保存账号</span>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="account-action-item" onclick="alert('退出账号成功')">
+                <span class="account-action-label danger">退出账号</span>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- API配置容器 -->
+    <div id="apiConfigContainer">
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="apiTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeApiConfig()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">API配置</div>
+        </div>
+        
+        <div class="api-config-content">
+            <!-- 配置选择区域 -->
+            <div class="config-select-row">
+                <div class="config-dropdown-wrapper">
+                    <select id="configSelect" onchange="handleConfigChange()">
+                        <option value="default">默认配置</option>
+                    </select>
+                </div>
+                <button class="icon-btn add-btn" onclick="prepareNewConfig()" title="新建配置">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <button class="icon-btn delete-btn" onclick="deleteConfig()" title="删除当前配置">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+            </div>
+
+            <div class="api-form-item">
+                <label class="api-label">配置名称</label>
+                <input type="text" class="api-input" id="configNameInput" placeholder="请输入配置名称">
+            </div>
+
+            <div class="api-form-item">
+                <label class="api-label">接口地址</label>
+                <input type="text" class="api-input" id="apiUrlInput" placeholder="请输入URL链接">
+            </div>
+
+            <div class="api-form-item">
+                <label class="api-label">API秘钥</label>
+                <input type="password" class="api-input" id="apiKeyInput" placeholder="请输入API秘钥">
+            </div>
+
+            <div class="api-form-item">
+                <div class="label-row">
+                    <label class="api-label">模型选择</label>
+                    <button class="search-model-btn" onclick="searchModels()">搜索模型</button>
+                </div>
+                <select class="api-input" id="modelSelect">
+                    <option value="">请选择模型</option>
+                </select>
+            </div>
+
+            <div class="api-form-item">
+                <div class="label-row">
+                    <label class="api-label">温度配置</label>
+                    <span id="tempValue">1.0</span>
+                </div>
+                <input type="range" class="api-slider" id="tempSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateTempValue(this.value)">
+            </div>
+
+            
+            <div style="margin-top: 30px; padding: 0 20px;">
+                <button class="theme-action-btn" type="button" onclick="saveCurrentApiConfig()" style="width: 100%; background: #007AFF; color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="themeContainer">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="themeTime">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 顶部标题栏 -->
+        <div class="theme-header">
+            <div class="theme-back" onclick="closeThemePage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="theme-title">主题设置</div>
+            <div class="theme-header-right"></div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="theme-content" id="themeMainMenu">
+            <div class="theme-menu-item" onclick="openMinePage()">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon">👤</div>
+                    <span class="theme-menu-title">我的</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            
+            <div class="theme-menu-item" onclick="openWallpaperPage()">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon">🖼️</div>
+                    <span class="theme-menu-title">壁纸</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            <div class="theme-menu-item" onclick="openIconPage()">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon">🎨</div>
+                    <span class="theme-menu-title">图标</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            <div class="theme-menu-item" onclick="openFontPage()">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon">🔤</div>
+                    <span class="theme-menu-title">字体</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+        </div>
+        <input type="file" id="importThemeInput" accept=".json" style="display: none;" onchange="importThemes(event)">
+
+        <!-- 字体页面 -->
+        <div class="theme-content" id="fontPage">
+            <div class="wallpaper-actions">
+                <button class="wallpaper-action-btn" type="button" onclick="document.getElementById('fontFileInput').click()">导入字体文件</button>
+                <button class="wallpaper-action-btn" type="button" onclick="showFontUrlInput()">URL链接</button>
+            </div>
+            <div class="font-grid" id="fontGrid">
+                <!-- 字体列表动态生成 -->
+            </div>
+        </div>
+        <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display: none;" onchange="handleFontFile(event)">
+
+        <!-- 壁纸页面 -->
+        <div class="theme-content" id="wallpaperPage">
+            <div class="wallpaper-actions">
+                <button class="wallpaper-action-btn" type="button" onclick="document.getElementById('wallpaperFileInput').click()">导入图片</button>
+                <button class="wallpaper-action-btn" type="button" onclick="showWallpaperUrlInput()">URL链接</button>
+            </div>
+            <div class="wallpaper-grid" id="wallpaperGrid">
+                <!-- 壁纸列表动态生成 -->
+            </div>
+        </div>
+        
+        <input type="file" id="wallpaperFileInput" accept="image/*" style="display: none;" onchange="handleWallpaperFile(event)">
+        
+        <!-- 图标设置页面 -->
+        <div class="theme-content" id="iconPage">
+            <div class="icon-list" id="iconList">
+                <!-- 图标列表动态生成 -->
+            </div>
+            <button class="wallpaper-action-btn" type="button" onclick="resetIcons()" style="margin-top: 20px; background: #ff3b30; color: white; flex-shrink: 0;">重置默认图标</button>
+        </div>
+    </div>
+
+    <div id="mergedChatDetailContainer">
+        <div class="merged-detail-header">
+            <div class="merged-detail-back" onclick="closeMergedChatDetail()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="merged-detail-title" id="mergedDetailTitle">聊天记录</div>
+            <div style="width: 40px;"></div>
+        </div>
+        <div class="merged-detail-content" id="mergedDetailContent">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

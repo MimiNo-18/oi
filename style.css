@@ -1,0 +1,3678 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 100vw;
+            height: 100vh;
+            background: #ffffff;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 110px;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        body.has-phone-border {
+            background-color: #ffffff !important; /* 边框以外的背景是纯白色 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* 所有页面容器在边框开启时统一在边框内且白色背景 */
+        body.has-phone-border .phone-container,
+        body.has-phone-border #contactsContainer,
+        body.has-phone-border #chatPageContainer,
+        body.has-phone-border #wechatContainer,
+        body.has-phone-border #settingsContainer,
+        body.has-phone-border #accountContainer,
+        body.has-phone-border #displaySettingsContainer,
+        body.has-phone-border #batterySettingsContainer,
+        body.has-phone-border #apiConfigContainer,
+        body.has-phone-border #themeContainer,
+        body.has-phone-border #mineContainer,
+        body.has-phone-border #personalInfoContainer,
+        body.has-phone-border #wechatSettingsContainer,
+        body.has-phone-border #wechatDisplaySettingsContainer,
+        body.has-phone-border #wechatStorageContainer,
+        body.has-phone-border #categoryManagementContainer,
+        body.has-phone-border #chatInfoContainer,
+        body.has-phone-border #addContactContainer,
+        body.has-phone-border #wechatFavoritesContainer,
+        body.has-phone-border #stickerLibraryContainer,
+        body.has-phone-border #stickerManagementContainer,
+        body.has-phone-border #mergedChatDetailContainer {
+            width: 375px !important;
+            height: 812px !important;
+            border: none !important;
+            border-radius: 60px !important;
+            background-color: #fff !important;
+            box-shadow: 
+                0 0 0 12px #1a1a1a,
+                0 0 0 14px #333,
+                0 0 0 16px #111,
+                0 0 20px rgba(255,255,255,0.1) inset,
+                0 20px 50px rgba(0,0,0,0.6) !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(0.8) !important;
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0 !important;
+            min-height: unset !important;
+            max-width: unset !important;
+            max-height: unset !important;
+            bottom: auto !important;
+            right: auto !important;
+        }
+
+        /* 首页层级 */
+        body.has-phone-border .phone-container { z-index: 10000 !important; }
+
+        /* 一级应用层级 (微信、设置、通讯录等) */
+        body.has-phone-border #wechatContainer,
+        body.has-phone-border #settingsContainer,
+        body.has-phone-border #contactsContainer,
+        body.has-phone-border #themeContainer,
+        body.has-phone-border #mineContainer { z-index: 10100 !important; }
+
+        /* 二级页面层级 (聊天、微信设置、账号等) */
+        body.has-phone-border #chatPageContainer,
+        body.has-phone-border #accountContainer,
+        body.has-phone-border #displaySettingsContainer,
+        body.has-phone-border #batterySettingsContainer,
+        body.has-phone-border #apiConfigContainer,
+        body.has-phone-border #chatInfoContainer,
+        body.has-phone-border #addContactContainer,
+        body.has-phone-border #wechatFavoritesContainer { z-index: 10200 !important; }
+
+        /* 三级页面层级 (个人资料、显示设置、存储空间等) */
+        body.has-phone-border #wechatSettingsContainer,
+        body.has-phone-border #personalInfoContainer,
+        body.has-phone-border #wechatDisplaySettingsContainer,
+        body.has-phone-border #wechatStorageContainer,
+        body.has-phone-border #categoryManagementContainer,
+        body.has-phone-border #stickerLibraryContainer,
+        body.has-phone-border #stickerManagementContainer,
+        body.has-phone-border #mergedChatDetailContainer { z-index: 10300 !important; }
+
+        /* 首页容器在边框模式下需允许内容滚动且隐藏滚动条 */
+        body.has-phone-border .phone-container {
+            overflow-y: auto !important;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        body.has-phone-border .phone-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 手机边框物理按键细节 */
+        body.has-phone-border::before,
+        body.has-phone-border::after {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            background: #1a1a1a;
+            pointer-events: none;
+            z-index: 20001; /* 确保按键在页面之上 */
+        }
+
+        body.has-phone-border::before {
+            width: 3px;
+            height: 25px;
+            margin-left: -162.6px; /* (375 + 12*2) * 0.8 / 2 = 159.6, 加上自身宽度 3px */
+            margin-top: -180px;
+            border-radius: 3px 0 0 3px;
+            box-shadow: 0 40px 0 #1a1a1a, 0 80px 0 #1a1a1a;
+        }
+
+        body.has-phone-border::after {
+            width: 3px;
+            height: 60px;
+            margin-left: 159.6px;
+            margin-top: -120px;
+            border-radius: 0 3px 3px 0;
+        }
+
+        body.has-phone-border.has-notch .notch {
+            position: fixed;
+            top: calc(50% - 324.8px); /* (812 * 0.8) / 2 = 324.8，恰好对齐缩放后内容区的顶部 */
+            left: 50% !important;
+            width: 120px;
+            height: 25px;
+            background: #000;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+            transform: translateX(-50%) scale(0.8);
+            transform-origin: top center; /* 确保缩放后顶部依然对齐内容区边缘 */
+            z-index: 20002;
+            display: block !important;
+        }
+
+        /* 边框模式下，如果未开启刘海则隐藏 */
+        body.has-phone-border:not(.has-notch) .notch {
+            display: none !important;
+        }
+
+        body.has-phone-border .dock {
+            position: absolute !important;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            width: auto;
+            margin: 0;
+            border-radius: 30px;
+        }
+
+        /* 确保微信底部导航在边框内 */
+        body.has-phone-border .wechat-bottom-nav {
+            position: absolute !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        /* 确保长按菜单跟随缩放 */
+        body.has-phone-border .msg-context-menu {
+            transform: scale(0.8) !important;
+            z-index: 20003 !important;
+        }
+
+        /* 确保弹窗在边框模式下显示在最上层且保持原样 */
+        body.has-phone-border .modal {
+            z-index: 30000 !important;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transform: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body.has-phone-border .modal.active {
+            display: flex;
+        }
+
+        body.has-phone-border .add-menu {
+            position: absolute !important;
+            top: 60px !important;
+            right: 16px !important;
+            z-index: 30001 !important;
+        }
+
+        /* 确保删除按钮在边框内 */
+        body.has-phone-border .delete-bottom-btn:not(.inline) {
+            position: absolute !important;
+            bottom: 20px !important;
+        }
+
+        body.has-phone-border #contactsContainer .delete-bottom-btn.inline {
+            position: relative !important;
+            bottom: auto !important;
+            margin: 20px auto !important;
+            left: auto !important;
+            transform: none !important;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            z-index: 20;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .battery {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .battery-icon {
+            width: 25px;
+            height: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 1px;
+        }
+
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.5px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0 1px 1px 0;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background: #000;
+            border-radius: 1.5px;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .battery-fill.low {
+            background: #ff3b30;
+        }
+
+        .signal-icon {
+            width: 17px;
+            height: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 头像区 */
+        .avatar-section {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar-bubble {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .avatar-bubble:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #d0d0d0;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            object-fit: cover;
+        }
+
+        .avatar:hover {
+            opacity: 0.9;
+        }
+
+        .emoji-text {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .emoji-text:hover {
+            color: #333;
+        }
+
+        /* 中间文字区 */
+        .title-section {
+            text-align: center;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .small-title {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .main-title {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 聊天气泡区 */
+        .chat-section {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .chat-bubble {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #333;
+            max-width: 80%;
+            align-self: flex-start;
+            cursor: pointer;
+            user-select: none;
+            word-wrap: break-word;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .chat-bubble:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Widget标题 */
+        .widget-title {
+            text-align: center;
+            font-size: 15px;
+            color: #333;
+            padding: 0 20px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 应用图标网格和插画区 */
+        .content-grid {
+            display: flex;
+            padding: 0 20px;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: flex-start;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            gap: 15px;
+            flex-shrink: 0;
+            width: fit-content;
+        }
+
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-icon {
+            width: 50px;
+            height: 50px;
+            background: #d0d0d0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            object-fit: cover;
+        }
+
+        .app-icon:active {
+            transform: scale(0.95);
+        }
+
+        .app-label {
+            font-size: 12px;
+            color: #333;
+            text-align: center;
+        }
+
+        .illustration-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            margin-left: 6px;
+        }
+
+        .illustration {
+            width: 180px;
+            height: 135px;
+            background: #d0d0d0;
+            border-radius: 8px;
+            cursor: pointer;
+            object-fit: cover;
+        }
+
+        .illustration:hover {
+            opacity: 0.9;
+        }
+
+        .illustration-text {
+            font-size: 11px;
+            color: #999;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Dock栏 */
+        .dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 30px;
+            margin: 0 20px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin: 0 15px;
+        }
+
+        .dock-icon {
+            width: 50px;
+            height: 50px;
+            background: #d0d0d0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            object-fit: cover;
+        }
+
+        .dock-icon:active {
+            transform: scale(0.95);
+        }
+
+        .dock-label {
+            font-size: 12px;
+            color: #333;
+            display: none;
+        }
+
+        /* 主题功能网格 */
+        .theme-func-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .theme-func-btn {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .theme-func-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.98);
+        }
+
+        .theme-func-icon {
+            font-size: 24px;
+        }
+
+        .theme-func-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 编辑模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
+            max-width: 350px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn.confirm {
+            background: #007AFF;
+            color: #fff;
+        }
+
+        .image-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .image-option-btn {
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* 微信页面样式 */
+        #wechatContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #ffffff; /* 纯白色背景 */
+            flex-direction: column;
+        }
+
+        .wechat-content-area {
+            flex: 1;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        /* 微信通讯录特有样式 */
+        .wechat-contacts-header-btn {
+            margin: 10px 16px;
+            padding: 16px;
+            background: #f7f7f7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            border: 1px solid #eee;
+            color: #000;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .wechat-contacts-header-btn:active {
+            background: #ebebeb;
+        }
+
+        .wechat-section-header {
+            padding: 8px 16px;
+            background: #f7f7f7;
+            color: #888;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .wechat-contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f2f2f2;
+            cursor: pointer;
+        }
+
+        .wechat-contact-item:active {
+            background: #f7f7f7;
+        }
+
+        .wechat-contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: #eee;
+            margin-right: 12px;
+            object-fit: cover;
+        }
+
+        .wechat-contact-name {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .wechat-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            background: #ffffff;
+        }
+
+        .wechat-nav-bar {
+            background: #ffffff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #f5f5f5; /* 极淡的分隔线 */
+        }
+
+        .wechat-nav-left, .wechat-nav-right {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .wechat-nav-left svg, .wechat-nav-right svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .wechat-nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .wechat-search-bar {
+            background: #ffffff;
+            padding: 8px 16px 12px;
+            position: sticky;
+            top: 64px;
+            z-index: 99;
+        }
+
+        .wechat-tag-bar {
+            background: #ffffff;
+            padding: 8px 16px 12px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            position: sticky;
+            top: 118px; /* Adjust based on nav + search height */
+            z-index: 98;
+        }
+
+        .tag-item {
+            padding: 4px 12px;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #000;
+            white-space: nowrap;
+            border: 1px solid #eee;
+        }
+
+        .wechat-search-input-wrapper {
+            background: #fff;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #eee;
+        }
+
+        .wechat-search-icon {
+            width: 18px;
+            height: 18px;
+            color: #999;
+        }
+
+        .wechat-search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 15px;
+            flex: 1;
+            color: #000;
+        }
+
+        .wechat-search-input::placeholder {
+            color: #999;
+        }
+
+        .wechat-chat-list {
+            padding: 10px 0 80px 0;
+            background: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            font-size: 15px;
+            padding: 60px 20px;
+        }
+
+        .chat-item-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            margin: 0 16px 16px;
+            border-radius: 16px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            cursor: pointer;
+            background: #ffffff;
+            position: relative;
+            z-index: 2;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-item:active {
+            background: #f7f7f7;
+            transform: scale(0.99);
+        }
+
+        .chat-item.pinned {
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            z-index: 1;
+        }
+
+        .chat-action-btn {
+            width: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .chat-action-btn.pin {
+            background: #C7C7CC;
+        }
+
+        .chat-action-btn.delete {
+            background: #FF3B30;
+        }
+
+        .chat-gap {
+            height: 8px;
+            background: #f2f2f2;
+            margin: 8px 0;
+            position: relative;
+        }
+
+        .chat-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #E0E0E0;
+            margin-right: 12px;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+
+        .chat-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            background: #F0F0F0;
+            color: #666;
+        }
+
+        .category-tag.朋友 {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+
+        .category-tag.恋人 {
+            background: #FCE4EC;
+            color: #E91E63;
+        }
+
+        .category-tag.同事 {
+            background: #E3F2FD;
+            color: #2196F3;
+        }
+
+        .category-tag.其他 {
+            background: #F5F5F5;
+            color: #9E9E9E;
+        }
+
+        /* 正在输入动画 */
+        @keyframes typingFade {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        .typing-status {
+            animation: typingFade 1.5s infinite;
+        }
+
+        /* 聊天消息气泡样式 */
+        .msg-row {
+            display: flex;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .msg-row.sent {
+            justify-content: flex-end;
+        }
+
+        .msg-row.received {
+            justify-content: flex-start;
+        }
+
+        .msg-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .msg-bubble {
+            max-width: 70%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            position: relative;
+            margin: 0 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .msg-row.sent .msg-bubble {
+            background: #000;
+            color: #fff;
+            border-radius: 18px; /* 更加圆润的矩形 */
+        }
+
+        /* 多选复选框样式 */
+        .msg-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            margin: auto 10px;
+            display: none;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .msg-row.multi-selecting .msg-checkbox {
+            display: flex;
+        }
+
+        .msg-checkbox.checked {
+            background: #000;
+            border-color: #000;
+        }
+
+        .msg-checkbox.checked::after {
+            content: '';
+            width: 10px;
+            height: 5px;
+            border-left: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(-45deg) translateY(-1px);
+        }
+
+        /* 多选底部工具栏 */
+        .multi-select-toolbar {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            height: 70px;
+            border-top: 1px solid #eee;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: 20px;
+            z-index: 1001;
+        }
+
+        .multi-select-toolbar.active {
+            display: flex;
+        }
+
+        .multi-select-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .multi-select-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .multi-select-btn span {
+            font-size: 11px;
+        }
+
+        /* 转发方式弹窗 */
+        .forward-type-modal {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 20000;
+            height: 100vh;
+            align-items: flex-end;
+        }
+
+        .forward-type-modal.active {
+            display: flex;
+        }
+
+        .forward-type-content {
+            background: #f7f7f7;
+            width: 100%;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            padding: 8px 0;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .forward-type-btn {
+            background: #fff;
+            width: 100%;
+            padding: 16px;
+            text-align: center;
+            font-size: 17px;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .forward-type-btn:last-child {
+            border-bottom: none;
+            margin-top: 8px;
+        }
+
+        .forward-type-btn:active {
+            background: #f2f2f2;
+        }
+
+        /* 聊天长按菜单 - 圆角矩形框，无三角 */
+        .msg-context-menu {
+            display: none;
+            position: fixed;
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 8px;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 280px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            border: 1px solid rgba(255,255,255,0.1);
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .msg-context-item {
+            color: #fff;
+            padding: 12px 0;
+            font-size: 13px;
+            text-align: center;
+            width: 20%;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+        }
+
+        .msg-context-item:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .msg-system-hint {
+            align-self: center;
+            background: rgba(0, 0, 0, 0.08);
+            color: #888;
+            font-size: 11px;
+            padding: 3px 12px;
+            border-radius: 12px; /* 圆角矩形包裹 */
+            margin: 15px 0;
+            cursor: pointer;
+            user-select: none;
+            max-width: 90%;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .msg-row.received .msg-bubble {
+            background: #fff;
+            color: #000;
+            border-radius: 18px; /* 更加圆润的矩形 */
+            border: 1px solid #f0f0f0;
+        }
+
+        .msg-translation {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.1);
+            font-size: 15px;
+            color: inherit;
+        }
+
+        .msg-row.sent .msg-translation {
+            border-top-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: #000;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .chat-message {
+            font-size: 14px;
+            color: #000;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .wechat-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 20px;
+            border-top: 1px solid #E5E5E5;
+            z-index: 100;
+        }
+
+        .wechat-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .wechat-nav-item svg {
+            width: 26px;
+            height: 26px;
+            color: #666;
+        }
+
+        .wechat-nav-item.active svg {
+            color: #07C160;
+        }
+
+        .wechat-nav-label {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .wechat-nav-item.active .wechat-nav-label {
+            color: #07C160;
+        }
+
+        .add-menu {
+            position: fixed;
+            top: 60px;
+            right: 16px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 200;
+            overflow: hidden;
+        }
+
+        .add-menu.active {
+            display: block;
+        }
+
+        .add-menu-item {
+            padding: 14px 20px;
+            font-size: 15px;
+            color: #000;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 1px solid #F2F2F2;
+        }
+
+        .add-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .add-menu-item:active {
+            background: #F8F8F8;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 16px;
+            background: #fff;
+        }
+
+        /* 联系人页面样式 */
+        #contactsContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .contacts-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 80px;
+        }
+
+        #contactsContainer .wechat-nav-bar,
+        #contactsContainer .wechat-search-bar,
+        #contactsContainer .wechat-chat-list {
+            background: #fff !important;
+        }
+
+        #contactsContainer .category-tag {
+            background: #fff !important;
+            border: 1px solid currentColor;
+        }
+
+        /* 添加联系人页面样式 */
+        #addContactContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .add-contact-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 60px;
+        }
+
+        .add-contact-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            background: #fff;
+        }
+
+        .add-contact-nav {
+            background: #fff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E5E5E5;
+        }
+
+        .add-contact-nav-left {
+            color: #999;
+            font-size: 24px;
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .add-contact-nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .add-contact-nav-right {
+            color: #fff;
+            background: #007AFF;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 15px;
+            border-radius: 6px;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s;
+        }
+
+        .add-contact-nav-right:active {
+            opacity: 0.7;
+            transform: scale(0.95);
+        }
+
+        .avatar-upload-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .avatar-upload-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-upload-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-upload-text {
+            color: #CCC;
+            font-size: 14px;
+            position: absolute;
+        }
+
+        .avatar-upload-circle:has(img[src]:not([src=""])) .avatar-upload-text {
+            display: none;
+        }
+
+        .add-contact-form {
+            padding: 0 20px 40px;
+        }
+
+        .form-field {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+            color: #333;
+        }
+
+        .form-input::placeholder {
+            color: #CCC;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+            color: #333;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+            color: #333;
+            min-height: 120px;
+            resize: vertical;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .form-textarea::placeholder {
+            color: #CCC;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .contact-item.selecting {
+            padding-left: 50px;
+            cursor: default;
+        }
+
+        .contact-checkbox {
+            position: absolute;
+            left: 16px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .contact-checkbox.checked {
+            background: #333;
+            color: #fff;
+        }
+
+        .contact-checkbox.checked::after {
+            content: '✓';
+            font-size: 14px;
+        }
+
+        .contact-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #d0d0d0;
+            margin-right: 12px;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #000;
+            margin-bottom: 4px;
+        }
+
+        .contact-phone {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .contact-arrow {
+            width: 20px;
+            height: 20px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .delete-bottom-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 400px;
+            padding: 14px;
+            background: #ff3b30;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+            z-index: 50;
+        }
+
+        .delete-bottom-btn.inline {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            transform: none;
+            margin: 20px auto;
+            z-index: 1;
+        }
+
+        .delete-bottom-btn:active {
+            opacity: 0.8;
+        }
+
+        .delete-bottom-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .modal-btn.delete {
+            background: #ff3b30;
+            color: #fff;
+        }
+
+        .confirm-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 我的页面样式 (手机主屏点击主题进入的那个) */
+        #mineContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #fff;
+            flex-direction: column;
+        }
+
+        /* 微信内部的“我”页面样式 */
+        #wechatMePage {
+            background: #f7f7f7;
+            min-height: 100%;
+            padding-bottom: 20px;
+        }
+
+        /* 个人资料页面样式 */
+        #personalInfoContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 220; /* 提升层级，确保在设置页面之上 */
+        }
+
+        .security-group {
+            background: #fff;
+            margin: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .security-item:last-child {
+            border-bottom: none;
+        }
+
+        .security-item:active {
+            background: #f7f7f7;
+        }
+
+        .security-label {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .security-value {
+            font-size: 15px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .security-divider {
+            height: 20px;
+        }
+
+        .security-input-group {
+            background: #fff;
+            padding: 0 20px;
+            margin-top: 12px;
+        }
+
+        .security-input-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .security-input-item:last-child {
+            border-bottom: none;
+        }
+
+        .security-input-label {
+            width: 90px;
+            font-size: 16px;
+            color: #000;
+        }
+
+        .security-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: #000;
+        }
+
+        .security-btn-container {
+            padding: 30px 20px;
+        }
+
+        .security-primary-btn {
+            width: 100%;
+            padding: 12px;
+            background: #07c160;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .security-primary-btn:active {
+            opacity: 0.8;
+        }
+
+        .security-primary-btn:disabled {
+            background: #f2f2f2;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-group {
+            background: #fff;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item:active {
+            background: #f7f7f7;
+        }
+
+        .info-label {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .info-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+            font-size: 15px;
+            max-width: 70%;
+        }
+
+        .info-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .info-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .me-header {
+            background: #fff;
+            padding: 40px 24px 30px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .me-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            background: #eee;
+            margin-right: 20px;
+            object-fit: cover;
+        }
+
+        .me-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .me-nickname {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 8px;
+        }
+
+        .me-wechat-id {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .me-header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .me-qrcode {
+            width: 18px;
+            height: 18px;
+            color: #888;
+        }
+
+        .me-arrow {
+            color: #ccc;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .me-divider {
+            height: 10px;
+            background: #f7f7f7;
+        }
+
+        .me-menu-group {
+            margin: 0 12px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .me-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .me-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .me-menu-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .me-menu-label {
+            flex: 1;
+            font-size: 16px;
+            color: #000;
+        }
+
+        .me-rounded-box {
+            margin: 0 12px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .wechat-settings-footer {
+            padding: 0 12px 40px;
+        }
+
+        .settings-action-btn {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .settings-action-btn:active {
+            background: #f2f2f2;
+        }
+
+        /* 主题页面样式 */
+        #themeContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f8f8f8;
+            flex-direction: column;
+        }
+
+        .theme-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f8f8;
+        }
+
+        .theme-back {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            width: 40px;
+        }
+
+        .theme-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .theme-header-right {
+            width: 40px;
+        }
+
+        .theme-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .theme-section-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: -10px;
+            margin-left: 5px;
+        }
+
+        .theme-action-btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+            transition: transform 0.2s;
+        }
+
+        .theme-action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .theme-card {
+            background: #f5f5f5;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .theme-card.active {
+            border-color: #007AFF;
+            background: #eef6ff;
+        }
+
+        .theme-preview {
+            width: 100%;
+            aspect-ratio: 9/16;
+            background: #ddd;
+            object-fit: cover;
+            display: block;
+        }
+
+        .theme-info {
+            padding: 4px 4px 2px;
+            text-align: center;
+        }
+
+        .theme-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .theme-delete-hint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 59, 48, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .theme-card.deleting .theme-delete-hint {
+            opacity: 1;
+        }
+
+        .theme-bottom-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        .theme-bottom-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .theme-menu-item {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .theme-menu-item:active {
+            background: #f8f8f8;
+            transform: scale(0.98);
+        }
+
+        .theme-menu-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-menu-icon {
+            width: 44px;
+            height: 44px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .theme-menu-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .theme-menu-arrow {
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* 壁纸页面样式 */
+        #wallpaperPage {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .wallpaper-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .wallpaper-action-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+
+        .wallpaper-action-btn:active {
+            background: #e0e0e0;
+        }
+
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding-bottom: 20px;
+        }
+
+        .wallpaper-item {
+            aspect-ratio: 9/16;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            background: #eee;
+        }
+
+        .wallpaper-item.active {
+            border-color: #007AFF;
+        }
+
+        .wallpaper-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .wallpaper-delete-hint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .wallpaper-item:active .wallpaper-delete-hint {
+            opacity: 1;
+        }
+
+        /* 图标设置页面样式 */
+        #iconPage {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .icon-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-bottom: 20px;
+        }
+
+        .icon-setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .icon-setting-item:active {
+            background: #f0f0f0;
+        }
+
+        .icon-setting-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #ddd;
+            object-fit: cover;
+        }
+
+        .icon-name {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .icon-arrow {
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* 字体页面样式 */
+        #fontPage {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .font-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding-bottom: 20px;
+        }
+
+        .font-item {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .font-item.active {
+            border-color: #007AFF;
+            background: #eef6ff;
+        }
+
+        .font-preview-text {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .font-name {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .font-delete-hint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .font-item.deleting .font-delete-hint {
+            opacity: 1;
+        }
+
+        /* 设置页面样式 */
+        #settingsContainer, #accountContainer, #displaySettingsContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f8f8f8;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .settings-header {
+            background: #f8f8f8;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .settings-back {
+            position: absolute;
+            left: 20px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .settings-group {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .settings-item {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .settings-item:active {
+            background: #f8f8f8;
+            transform: scale(0.98);
+        }
+
+        .settings-item-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .settings-item-icon {
+            width: 44px;
+            height: 44px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .settings-item-label {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .settings-item-arrow {
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4cd964;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .settings-btn-group {
+            padding: 0 20px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settings-full-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-full-btn.export {
+            background: #007AFF;
+            color: #fff;
+        }
+
+        .settings-full-btn.import {
+            background: #fff;
+            color: #007AFF;
+            border: 1px solid #007AFF;
+        }
+
+        .settings-full-btn.delete {
+            background: #fff;
+            color: #FF3B30;
+            border: 1px solid #FF3B30;
+        }
+
+        .settings-full-btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        /* 账号页面样式 */
+        .account-avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            background: #fff;
+            margin-bottom: 20px;
+        }
+
+        .account-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #E0E0E0;
+            margin-bottom: 15px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .account-info-text {
+            font-size: 14px;
+            color: #8E8E93;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .logout-btn-container {
+            margin-top: 40px;
+            padding: 0 16px;
+        }
+
+        .account-action-group {
+            background: #fff;
+            border-radius: 20px;
+            margin: 0 20px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .account-action-item {
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .account-action-item:active {
+            background: #f8f8f8;
+        }
+
+        .account-action-item:not(:last-child) {
+            border-bottom: 1px dashed #eee;
+        }
+
+        .account-action-label {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .account-action-label.danger {
+            color: #FF3B30;
+        }
+
+        /* API配置页面样式 */
+        #apiConfigContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f8f8f8;
+            flex-direction: column;
+            z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .api-config-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .config-select-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .config-dropdown-wrapper {
+            flex: 1;
+            background: #fff;
+            border-radius: 12px;
+            padding: 2px 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .config-dropdown-wrapper select {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            color: #333;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            color: #333;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:active {
+            transform: scale(0.95);
+            background: #f0f0f0;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .api-form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .api-input {
+            width: 100%;
+            height: 48px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            padding: 0 16px;
+            font-size: 15px;
+            color: #333;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .api-input:focus {
+            border-color: #007AFF;
+        }
+
+        .search-model-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .search-model-btn:active {
+            opacity: 0.8;
+        }
+
+        .api-slider {
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none !important;
+            margin: 15px 0;
+        }
+
+        .api-slider::-webkit-slider-thumb {
+            -webkit-appearance: none !important;
+            width: 26px;
+            height: 26px;
+            background: #fff;
+            border: 2px solid #007AFF;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        #tempValue {
+            font-size: 14px;
+            color: #007AFF;
+            font-weight: 600;
+        }
+
+        @media (max-width: 400px) {
+            .avatar-section {
+                gap: 25px;
+            }
+            
+            .avatar {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .illustration-section {
+                flex-direction: column;
+                align-items: center;
+                margin-left: 6px;
+            }
+            
+            .illustration {
+                width: 180px;
+                height: 135px;
+            }
+            
+            .illustration-text {
+                text-align: center;
+            }
+        }
+
+        /* 微信存储空间页面样式 */
+        #wechatStorageContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 230;
+        }
+
+        .storage-usage-card {
+            background: #fff;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .storage-total-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .storage-total-size {
+            font-size: 36px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .storage-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #f2f2f2;
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .storage-bar-item {
+            height: 100%;
+        }
+
+        .storage-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .storage-list-group {
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .storage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .storage-item:last-child {
+            border-bottom: none;
+        }
+
+        .storage-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .storage-item-label {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .storage-item-desc {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .storage-item-size {
+            font-size: 16px;
+            color: #000;
+            font-weight: 500;
+        }
+
+        .storage-footer {
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .storage-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+        }
+
+        .storage-btn.clear-cache {
+            background: #f2f2f2;
+            color: #07c160;
+        }
+
+        .storage-btn.delete-data {
+            background: #fff;
+            color: #fa5151;
+            border: 1px solid #eee;
+        }
+
+        /* 扫描动画 */
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .scanning-circle {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #07c160;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 微信分类管理页面样式 */
+        #categoryManagementContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 240;
+        }
+
+        /* 微信收藏页面样式 */
+        #wechatFavoritesContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 250;
+        }
+
+        .favorites-search-bar {
+            background: #f7f7f7;
+            padding: 8px 16px 12px;
+        }
+
+        .favorites-list {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px 16px;
+        }
+
+        .favorite-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .favorite-item.pinned {
+            background: #fdfdfd;
+            border-left: 4px solid #07c160;
+        }
+
+        .favorite-item.selecting {
+            padding-left: 50px;
+        }
+
+        .favorite-checkbox {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorite-item.selecting .favorite-checkbox {
+            display: flex;
+        }
+
+        .favorite-checkbox.checked {
+            background: #07c160;
+            border-color: #07c160;
+        }
+
+        .favorite-checkbox.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .favorite-content {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+
+        .favorite-date {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 11px;
+            color: #b2b2b2;
+        }
+
+        .category-list-wrapper {
+            padding: 12px;
+        }
+
+        .category-mgmt-item {
+            background: #fff;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .category-mgmt-info {
+            flex: 1;
+        }
+
+        .category-mgmt-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .category-mgmt-count {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .category-mgmt-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .category-action-btn {
+            font-size: 14px;
+            color: #07c160;
+            cursor: pointer;
+        }
+
+        .category-action-btn.delete {
+            color: #fa5151;
+        }
+
+        .add-category-btn {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #07c160;
+            cursor: pointer;
+            margin: 12px;
+            border: 1px dashed #07c160;
+        }
+
+        .category-preview-box {
+            background: #fff;
+            margin: 12px;
+            padding: 20px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-preview-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .category-preview-tags {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        /* 标签栏激活样式 */
+        .tag-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-item.active {
+            background: #f2f2f2;
+            color: #000 !important;
+            border-color: #f2f2f2;
+        }
+
+        /* 联系人选择模态框列表项 */
+        .selection-contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f2f2f2;
+            cursor: pointer;
+        }
+
+        .selection-contact-item:active {
+            background: #f7f7f7;
+        }
+
+        .selection-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selection-checkbox.checked {
+            background: #07c160;
+            border-color: #07c160;
+        }
+
+        .selection-checkbox.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+        }
+
+        /* 聊天信息页面样式 */
+        #chatInfoContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f7f7f7;
+            flex-direction: column;
+            z-index: 300;
+        }
+
+        .chat-info-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f7f7f7;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-info-back {
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+        }
+
+        .chat-info-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .chat-info-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .chat-info-avatar-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .chat-info-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: #eee;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .chat-info-group {
+            background: #fff;
+            margin: 0 12px 12px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .chat-info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .chat-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .chat-info-label {
+            font-size: 16px;
+            color: #333;
+            flex-shrink: 0;
+        }
+
+        .chat-info-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 15px;
+            flex: 1;
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .chat-info-input {
+            border: none;
+            outline: none;
+            text-align: right;
+            font-size: 16px;
+            color: #333;
+            width: 100%;
+        }
+
+        .chat-info-underline-input {
+            border: none;
+            border-bottom: 1px solid #333;
+            outline: none;
+            width: 60px;
+            text-align: center;
+            font-size: 16px;
+            background: transparent;
+            margin: 0 5px;
+        }
+
+        .chat-info-arrow {
+            color: #ccc;
+            font-size: 18px;
+            margin-left: 5px;
+        }
+
+        .chat-info-clickable {
+            cursor: pointer;
+        }
+
+        .chat-info-clickable:active {
+            background: #f9f9f9;
+        }
+
+        /* 聊天更多功能面板 */
+        .chat-more-panel {
+            display: none;
+            background: #f7f7f7;
+            border-top: 1px solid #dbdbdb;
+            padding: 20px 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px 0;
+            height: 240px;
+            box-sizing: border-box;
+        }
+
+        .chat-more-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .chat-more-icon {
+            width: 58px;
+            height: 58px;
+            background: #ffffff;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            color: #333;
+        }
+
+        .chat-more-icon:active {
+            background: #ececec;
+        }
+
+        .chat-more-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* 手机边框样式 - 已移至上部 */
+
+        /* 刘海屏样式 */
+        .notch {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background: #000;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+            z-index: 99999;
+        }
+        body.has-notch .notch {
+            display: block;
+        }
+
+        /* 合并转发聊天记录样式 */
+        .merged-forward-bubble {
+            background: #fff !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            width: 230px;
+            color: #333 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            text-align: left !important;
+        }
+        .merged-forward-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+        .merged-forward-preview {
+            font-size: 12px;
+            color: #888;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .merged-forward-preview-item {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .merged-forward-line {
+            border-top: 1px dashed #eee;
+            margin: 8px 0 4px;
+        }
+        .merged-forward-footer {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* 合并转发详情页样式 */
+        #mergedChatDetailContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 500;
+        }
+        .merged-detail-header {
+            background: #f7f7f7;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .merged-detail-back {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+        }
+        .merged-detail-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 10px;
+        }
+        .merged-detail-content {
+            flex: 1;
+            overflow-y: auto;
+            background: #fff;
+            padding: 0 16px;
+        }
+        .merged-msg-item {
+            padding: 16px 0;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            gap: 12px;
+        }
+        .merged-msg-item:last-child {
+            border-bottom: none;
+        }
+        .merged-msg-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #eee;
+        }
+        .merged-msg-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .merged-msg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .merged-msg-name {
+            font-size: 14px;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .merged-msg-time {
+            font-size: 11px;
+            color: #b2b2b2;
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+        .merged-msg-text {
+            font-size: 16px;
+            color: #000;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        /* 表情库样式 */
+        #stickerLibraryContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 600;
+        }
+
+        .sticker-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .sticker-add-btn {
+            aspect-ratio: 1/1;
+            background: #f7f7f7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px dashed #ddd;
+        }
+
+        .sticker-add-btn svg {
+            width: 24px;
+            height: 24px;
+            color: #999;
+        }
+
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        /* 表情库管理页面样式 */
+        #stickerManagementContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 610;
+        }
+
+        .sticker-mgmt-list {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sticker-mgmt-btn {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .sticker-mgmt-btn:active {
+            background: #f2f2f2;
+            transform: scale(0.98);
+        }
+
+        .sticker-item {
+            aspect-ratio: 1/1;
+            background: #f7f7f7;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sticker-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sticker-name-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 10px;
+            text-align: center;
+            padding: 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 上传弹窗样式 */
+        .sticker-upload-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+
+        .sticker-upload-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sticker-upload-tab.active {
+            color: #07c160;
+            font-weight: 600;
+        }
+
+        .sticker-upload-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: #07c160;
+        }
+
+        .sticker-upload-option {
+            padding: 15px;
+            background: #f7f7f7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 15px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .sticker-upload-option:active {
+            background: #eee;
+        }
+
+        .sticker-url-input-area {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .sticker-batch-tip {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }

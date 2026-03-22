@@ -3049,6 +3049,20 @@ let currentElement = null;
             saveUIState();
         }
 
+        let currentStickerCategory = 'default';
+        let favoriteStickers = [];
+
+        function loadFavoriteStickers() {
+            const saved = localStorage.getItem('wechat_favorite_stickers');
+            if (saved) {
+                favoriteStickers = JSON.parse(saved);
+            }
+        }
+
+        function saveFavoriteStickers() {
+            localStorage.setItem('wechat_favorite_stickers', JSON.stringify(favoriteStickers));
+        }
+
         function closeChat() {
             document.getElementById('chatPageContainer').style.display = 'none';
             document.getElementById('wechatContainer').style.display = 'block';
@@ -3066,6 +3080,7 @@ let currentElement = null;
             if (!isVisible) {
                 document.getElementById('chatMorePanel').style.display = 'none';
                 document.activeElement.blur();
+                currentStickerCategory = 'default';
                 renderChatStickerGrid();
                 panel.classList.add('active');
             } else {
@@ -3078,18 +3093,53 @@ let currentElement = null;
             }, 100);
         }
 
+        function switchStickerCategory(category) {
+            currentStickerCategory = category;
+            const items = document.querySelectorAll('.sticker-category-item');
+            items.forEach(item => {
+                if (item.textContent === (category === 'default' ? '默认' : '收藏')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            renderChatStickerGrid();
+        }
+
         function renderChatStickerGrid() {
             const grid = document.getElementById('chatStickerGrid');
             grid.innerHTML = '';
             
-            if (stickerList.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; padding: 20px; color: #999; font-size: 13px;">表情库为空，请先去“我->表情库”添加</div>';
+            const list = currentStickerCategory === 'default' ? stickerList : favoriteStickers;
+            
+            if (list.length === 0) {
+                grid.innerHTML = `<div style="grid-column: span 5; text-align: center; padding: 20px; color: #999; font-size: 13px;">${currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情'}</div>`;
                 return;
             }
 
-            stickerList.forEach(sticker => {
+            list.forEach((sticker, index) => {
                 const item = document.createElement('div');
                 item.className = 'chat-sticker-item';
+                
+                let timer;
+                item.addEventListener('touchstart', () => {
+                    timer = setTimeout(() => {
+                        if (currentStickerCategory === 'default') {
+                            if (!favoriteStickers.some(s => s.src === sticker.src)) {
+                                favoriteStickers.push(sticker);
+                                saveFavoriteStickers();
+                                if (navigator.vibrate) navigator.vibrate(50);
+                                alert('已加入收藏');
+                            } else {
+                                alert('已经在收藏中了');
+                            }
+                        }
+                    }, 800);
+                }, { passive: true });
+                
+                item.addEventListener('touchend', () => clearTimeout(timer));
+                item.addEventListener('touchmove', () => clearTimeout(timer));
+                
                 item.onclick = () => sendStickerMessage(sticker);
                 item.innerHTML = `<img src="${sticker.src}" class="chat-sticker-img" title="${sticker.name}">`;
                 grid.appendChild(item);
@@ -3513,6 +3563,12 @@ let currentElement = null;
 
             if (isPersonaTrigger) {
                 systemPrompt += "\n\n【场景提醒】：用户主动触发了你的人设读取。请根据当前对话的上下文，表现得像你突然想起某事，或者单纯想找对方聊天一样，主动发起一个符合你人设的新话题或延伸旧话题。";
+            }
+
+            // 告知 AI 有哪些可用的表情包
+            if (stickerList.length > 0) {
+                const stickerNames = stickerList.map(s => s.name).join('、');
+                systemPrompt += `\n\n【可用表情包】：${stickerNames}。你可以根据语境发送这些表情包，格式为 [表情: 表情名]。`;
             }
 
             // 获取历史消息（最近 15 条）
@@ -5668,6 +5724,8 @@ let currentElement = null;
             loadWechatUserInfo();
             loadTopCategories();
             loadFavoritesFromStorage();
+            loadStickers();
+            loadFavoriteStickers();
             renderTopTagBar();
 
             // 微信页面点开没有联系人

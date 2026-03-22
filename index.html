@@ -350,11 +350,12 @@
         </div>
         <!-- 表情选择面板 -->
         <div id="stickerPickerPanel" class="sticker-picker-panel">
-            <div class="sticker-picker-header">
-                <div class="sticker-picker-title">表情库</div>
-            </div>
             <div id="chatStickerGrid" class="chat-sticker-grid">
                 <!-- 动态生成表情 -->
+            </div>
+            <div class="sticker-picker-footer">
+                <div class="sticker-category-item active" id="btn-sticker-default" onclick="switchStickerCategory('default')">默认</div>
+                <div class="sticker-category-item" id="btn-sticker-fav" onclick="switchStickerCategory('favorites')">收藏</div>
             </div>
         </div>
         <!-- 更多功能面板 -->

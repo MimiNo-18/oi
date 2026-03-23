@@ -3133,11 +3133,13 @@ let currentElement = null;
         function renderChatStickerGrid() {
             const grid = document.getElementById('chatStickerGrid');
             grid.innerHTML = '';
+            grid.classList.remove('empty');
             
             const list = currentStickerCategory === 'default' ? stickerList : favoriteStickers;
             
             if (list.length === 0) {
-                grid.innerHTML = `<div style="grid-column: span 4; text-align: center; padding: 20px; color: #999; font-size: 13px;">${currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情'}</div>`;
+                grid.classList.add('empty');
+                grid.innerHTML = `<div style="text-align: center; color: #999; font-size: 13px;">${currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情'}</div>`;
                 return;
             }
 
@@ -3173,7 +3175,12 @@ let currentElement = null;
                 item.addEventListener('touchmove', () => clearTimeout(timer));
                 
                 item.onclick = () => sendStickerMessage(sticker);
-                item.innerHTML = `<img src="${sticker.src}" class="chat-sticker-img" title="${sticker.name}">`;
+                item.innerHTML = `
+                    <div class="chat-sticker-img-wrapper">
+                        <img src="${sticker.src}" class="chat-sticker-img">
+                    </div>
+                    <div class="chat-sticker-name">${sticker.name}</div>
+                `;
                 grid.appendChild(item);
             });
         }

@@ -3679,10 +3679,6 @@
 
 /* 表情选择面板 */
 .sticker-picker-panel {
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    width: 100%;
     background: #f7f7f7;
     border-top: 1px solid #dbdbdb;
     display: none;

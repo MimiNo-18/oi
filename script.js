@@ -3051,6 +3051,7 @@ let currentElement = null;
 
         let currentStickerCategory = 'default';
         let favoriteStickers = [];
+        let isPanelToggling = false; // 标记是否正在切换面板，防止 focus/touchstart 冲突
 
         function loadFavoriteStickers() {
             const saved = localStorage.getItem('wechat_favorite_stickers');
@@ -3073,12 +3074,22 @@ let currentElement = null;
             saveUIState();
         }
 
-        function toggleStickerPicker() {
+        function toggleStickerPicker(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             const panel = document.getElementById('stickerPickerPanel');
+            const morePanel = document.getElementById('chatMorePanel');
+            const inputBar = document.getElementById('chatInputBar');
             const isVisible = panel.classList.contains('active');
             
+            isPanelToggling = true;
             if (!isVisible) {
-                document.getElementById('chatMorePanel').style.display = 'none';
+                // 隐藏更多面板并恢复内边距
+                if (morePanel) morePanel.style.display = 'none';
+                if (inputBar) inputBar.style.paddingBottom = '30px';
+                
                 document.activeElement.blur();
                 currentStickerCategory = 'default';
                 renderChatStickerGrid();
@@ -3089,8 +3100,10 @@ let currentElement = null;
             
             setTimeout(() => {
                 const container = document.getElementById('chatMessages');
-                container.scrollTop = container.scrollHeight;
-            }, 100);
+                if (container) container.scrollTop = container.scrollHeight;
+                isPanelToggling = false;
+            }, 300);
+            saveUIState();
         }
 
         function switchStickerCategory(category) {
@@ -3177,12 +3190,21 @@ let currentElement = null;
             callAI();
         }
 
-        function toggleChatMorePanel() {
+        function toggleChatMorePanel(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             const panel = document.getElementById('chatMorePanel');
+            const stickerPanel = document.getElementById('stickerPickerPanel');
             const inputBar = document.getElementById('chatInputBar');
             const isVisible = panel.style.display === 'grid';
             
+            isPanelToggling = true;
             if (!isVisible) {
+                // 隐藏表情面板
+                if (stickerPanel) stickerPanel.classList.remove('active');
+                
                 // 如果面板要显示，关闭键盘
                 document.activeElement.blur();
                 panel.style.display = 'grid';
@@ -3195,19 +3217,31 @@ let currentElement = null;
             // 无论如何显示/隐藏都滚动到底部
             setTimeout(() => {
                 const container = document.getElementById('chatMessages');
-                container.scrollTop = container.scrollHeight;
-            }, 100);
+                if (container) container.scrollTop = container.scrollHeight;
+                isPanelToggling = false;
+            }, 300);
             saveUIState();
         }
 
         function hideChatMorePanel() {
+            if (isPanelToggling) return; // 如果正在切换中，则忽略此请求防止闪烁
             const panel = document.getElementById('chatMorePanel');
+            const stickerPanel = document.getElementById('stickerPickerPanel');
             const inputBar = document.getElementById('chatInputBar');
-            if (panel.style.display === 'grid') {
+            let changed = false;
+            
+            if (panel && panel.style.display === 'grid') {
                 panel.style.display = 'none';
                 if (inputBar) inputBar.style.paddingBottom = '30px';
-                saveUIState();
+                changed = true;
             }
+            
+            if (stickerPanel && stickerPanel.classList.contains('active')) {
+                stickerPanel.classList.remove('active');
+                changed = true;
+            }
+            
+            if (changed) saveUIState();
         }
 
         // 初始化聊天页面事件
@@ -3244,8 +3278,10 @@ let currentElement = null;
                 addons.style.display = 'none';
                 // 保持小麦克风可见，以便用户可以随时点击触发AI回复
                 aiMicBtn.style.display = 'flex';
-                // 输入文字时隐藏更多面板
+                // 输入文字时隐藏面板
                 document.getElementById('chatMorePanel').style.display = 'none';
+                const stickerPanel = document.getElementById('stickerPickerPanel');
+                if (stickerPanel) stickerPanel.classList.remove('active');
             } else {
                 sendBtn.style.display = 'none';
                 addons.style.display = 'flex';

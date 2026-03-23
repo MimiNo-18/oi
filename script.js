@@ -3126,7 +3126,7 @@ let currentElement = null;
             const list = currentStickerCategory === 'default' ? stickerList : favoriteStickers;
             
             if (list.length === 0) {
-                grid.innerHTML = `<div style="grid-column: span 5; text-align: center; padding: 20px; color: #999; font-size: 13px;">${currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情'}</div>`;
+                grid.innerHTML = `<div style="grid-column: span 4; text-align: center; padding: 20px; color: #999; font-size: 13px;">${currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情'}</div>`;
                 return;
             }
 
@@ -3145,6 +3145,14 @@ let currentElement = null;
                                 alert('已加入收藏');
                             } else {
                                 alert('已经在收藏中了');
+                            }
+                        } else {
+                            // 收藏列表中长按移除
+                            if (confirm('确定从收藏中移除该表情吗？')) {
+                                favoriteStickers.splice(index, 1);
+                                saveFavoriteStickers();
+                                renderChatStickerGrid();
+                                if (navigator.vibrate) navigator.vibrate(50);
                             }
                         }
                     }, 800);
@@ -3186,8 +3194,8 @@ let currentElement = null;
             saveChatListToStorage();
             renderChatList();
             
-            // 触发 AI 
-            callAI();
+            // 发送表情包之后联系人不会立即回复，移除自动调用 AI
+            // callAI();
         }
 
         function toggleChatMorePanel(e) {
@@ -3392,6 +3400,8 @@ let currentElement = null;
                     footer.className = 'merged-forward-footer';
                     footer.textContent = '聊天记录';
                     bubble.appendChild(footer);
+                } else if (msg.msgType === 'sticker') {
+                    bubble.className = 'msg-bubble sticker-bubble';
                 } else {
                     bubble.className = 'msg-bubble';
                 }

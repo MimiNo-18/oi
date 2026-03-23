@@ -3752,9 +3752,40 @@
 }
 
 /* 聊天中的表情包样式 */
-.chat-msg-sticker {
-    max-width: 150px;
-    max-height: 150px;
-    border-radius: 8px;
+.msg-sticker-img {
+    max-width: 100px;
+    max-height: 100px;
+    display: block;
     cursor: pointer;
+}
+
+/* 表情包消息气泡 - 无背景 */
+.msg-bubble.sticker-bubble {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: none !important;
+}
+
+.chat-sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.chat-sticker-item {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+    border: 1px solid #eee;
 }

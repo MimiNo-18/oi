@@ -3320,22 +3320,32 @@ let currentElement = null;
             const addons = document.getElementById('chatAddons');
             const aiMicBtn = document.getElementById('aiMicBtn');
             
+            // 自动调整高度，但不超过三行（CSS中已限制max-height）
             textarea.style.height = 'auto';
-            textarea.style.height = (textarea.scrollHeight) + 'px';
+            let scrollHeight = textarea.scrollHeight;
+            textarea.style.height = scrollHeight + 'px';
 
-            if (textarea.value.trim().length > 0) {
+            if (textarea.value.length > 0) {
                 sendBtn.style.display = 'block';
                 addons.style.display = 'none';
-                // 保持小麦克风可见，以便用户可以随时点击触发AI回复
-                aiMicBtn.style.display = 'flex';
-                // 输入文字时隐藏面板
-                document.getElementById('chatMorePanel').style.display = 'none';
+                // 输入文字时隐藏麦克风
+                if (aiMicBtn) aiMicBtn.style.display = 'none';
+                
+                // 输入文字时自动收起面板
+                const morePanel = document.getElementById('chatMorePanel');
+                if (morePanel && morePanel.style.display === 'grid') {
+                    morePanel.style.display = 'none';
+                    document.getElementById('chatInputBar').style.paddingBottom = '30px';
+                }
                 const stickerPanel = document.getElementById('stickerPickerPanel');
-                if (stickerPanel) stickerPanel.classList.remove('active');
+                if (stickerPanel && stickerPanel.classList.contains('active')) {
+                    stickerPanel.classList.remove('active');
+                }
             } else {
                 sendBtn.style.display = 'none';
                 addons.style.display = 'flex';
-                aiMicBtn.style.display = 'flex';
+                // 没有文字时恢复麦克风显示
+                if (aiMicBtn) aiMicBtn.style.display = 'flex';
             }
 
             // 保存草稿

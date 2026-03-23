@@ -860,6 +860,13 @@
             color: #000;
         }
 
+#chatInput {
+            max-height: 4.5em; /* Approximately 3 lines with 1.5 line-height */
+            overflow-y: auto !important;
+            line-height: 1.5;
+            resize: none;
+        }
+
         .wechat-search-input::placeholder {
             color: #999;
         }
@@ -2842,8 +2849,7 @@
 
         .legend-item {
             display: flex;
-            align-items: center;
-            font-size: 12px;
+            align-items: center; font-size: 12px;
             color: #888;
             gap: 6px;
         }
@@ -3316,18 +3322,18 @@
             background: #f9f9f9;
         }
 
-        /* 聊天更多功能面板 */
-        .chat-more-panel {
-            display: none;
-            background: #f7f7f7;
-            border-top: 1px solid #dbdbdb;
-            padding: 20px 10px;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            height: 300px;
-            box-sizing: border-box;
-            align-content: start;
-        }
+/* 聊天更多功能面板 */
+.chat-more-panel {
+    display: none;
+    background: #f7f7f7;
+    border-top: 1px solid #dbdbdb;
+    padding: 15px 15px 5px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px 10px;
+    height: auto;
+    box-sizing: border-box;
+    align-content: start;
+}
 
         .chat-more-item {
             display: flex;
@@ -3709,7 +3715,7 @@
 .chat-sticker-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 10px;
     padding: 15px;
     overflow-y: auto;
     flex: 1;
@@ -3752,12 +3758,14 @@
     background: #fff;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     transition: transform 0.1s;
     border: 1px solid #f0f0f0;
-    padding: 6px;
+    padding: 5px;
+    margin: 0;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .chat-sticker-item:active {
@@ -3770,6 +3778,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 8px;
+    box-sizing: border-box;
 }
 
 .chat-sticker-img {

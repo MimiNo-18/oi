@@ -100,6 +100,8 @@ let currentElement = null;
                         name: m.type === 'sent' ? myName : partnerName,
                         avatar: m.type === 'sent' ? (wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || '') : (partner ? partner.avatar : ''),
                         content: m.content,
+                        msgType: m.msgType || 'text',
+                        stickerName: m.stickerName || '',
                         time: m.time
                     };
                 });
@@ -239,6 +241,8 @@ let currentElement = null;
                             name: m.type === 'sent' ? myName : partnerName,
                             avatar: m.type === 'sent' ? (wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || '') : (partner ? partner.avatar : ''),
                             content: m.content,
+                            msgType: m.msgType || 'text',
+                            stickerName: m.stickerName || '',
                             time: m.time
                         };
                     });
@@ -269,7 +273,14 @@ let currentElement = null;
             // 更新该联系人的最后一条消息
             const friend = chatList.find(f => f.id === friendId);
             if (friend) {
-                friend.message = isMerged ? '[聊天记录]' : (messagesToSend[messagesToSend.length - 1].content);
+                const lastMsg = messagesToSend[messagesToSend.length - 1];
+                if (isMerged) {
+                    friend.message = '[聊天记录]';
+                } else if (lastMsg.msgType === 'sticker') {
+                    friend.message = `[${lastMsg.stickerName || '表情'}]`;
+                } else {
+                    friend.message = lastMsg.content;
+                }
                 friend.time = formatTime(new Date());
             }
 
@@ -3184,7 +3195,7 @@ let currentElement = null;
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = `[表情: ${sticker.name}]`;
+                friend.message = `[${sticker.name}]`;
                 friend.time = formatTime(new Date());
             }
 
@@ -3381,7 +3392,11 @@ let currentElement = null;
                     historyToPreview.slice(0, 3).forEach(h => {
                         const item = document.createElement('div');
                         item.className = 'merged-forward-preview-item';
-                        item.textContent = `${h.name}：${h.content}`;
+                        let displayContent = h.content;
+                        if (h.msgType === 'sticker') {
+                            displayContent = `[${h.stickerName || '表情'}]`;
+                        }
+                        item.textContent = `${h.name}：${displayContent}`;
                         preview.appendChild(item);
                     });
                     if (historyToPreview.length > 3) {
@@ -3447,7 +3462,7 @@ let currentElement = null;
                     const contentEl = document.getElementById('mergedDetailContent');
                     
                     titleEl.textContent = msg.title || '聊天记录';
-                    contentEl.innerHTML = '';
+                        contentEl.innerHTML = '';
                     
                     (msg.fullHistory || []).forEach(h => {
                         const item = document.createElement('div');
@@ -3456,6 +3471,11 @@ let currentElement = null;
                         const date = new Date(h.time || Date.now());
                         const timeStr = `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                         
+                        let displayContent = h.content;
+                        if (h.msgType === 'sticker') {
+                            displayContent = `<img src="${h.content}" class="msg-sticker-img" style="margin-top: 5px;">`;
+                        }
+                        
                         item.innerHTML = `
                             <img src="${h.avatar || ''}" class="merged-msg-avatar">
                             <div class="merged-msg-info">
@@ -3463,7 +3483,7 @@ let currentElement = null;
                                     <div class="merged-msg-name">${h.name}</div>
                                     <div class="merged-msg-time">${timeStr}</div>
                                 </div>
-                                <div class="merged-msg-text">${h.content}</div>
+                                <div class="merged-msg-text">${displayContent}</div>
                             </div>
                         `;
                         contentEl.appendChild(item);
@@ -3749,7 +3769,7 @@ let currentElement = null;
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = sticker ? `[表情: ${sticker.name}]` : content;
+                friend.message = sticker ? `[${sticker.name}]` : content;
                 friend.time = formatTime(new Date());
             }
 
@@ -5071,6 +5091,14 @@ let currentElement = null;
             filtered.forEach(item => {
                 const isSelected = selectedFavIds.has(item.id);
                 if (item.isMergedForward) {
+                    const previewHtml = (item.fullHistory || []).slice(0, 2).map(h => {
+                        let displayContent = h.content;
+                        if (h.msgType === 'sticker') {
+                            displayContent = `[${h.stickerName || '表情'}]`;
+                        }
+                        return `<div class="merged-forward-preview-item">${h.name}：${displayContent}</div>`;
+                    }).join('');
+
                     html += `
                         <div class="favorite-item ${item.isPinned ? 'pinned' : ''} ${favSelectMode ? 'selecting' : ''}" 
                              data-id="${item.id}"
@@ -5079,7 +5107,7 @@ let currentElement = null;
                             <div class="merged-forward-bubble" style="width: 100%; border: none !important; box-shadow: none !important; padding: 0 !important; pointer-events: none; background: transparent !important;">
                                 <div class="merged-forward-title">${item.title || '聊天记录'}</div>
                                 <div class="merged-forward-preview">
-                                    ${(item.fullHistory || []).slice(0, 2).map(h => `<div class="merged-forward-preview-item">${h.name}：${h.content}</div>`).join('')}
+                                    ${previewHtml}
                                     ${(item.fullHistory || []).length > 2 ? '<div class="merged-forward-preview-item">...</div>' : ''}
                                 </div>
                                 <div class="merged-forward-line"></div>

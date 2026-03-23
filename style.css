@@ -3700,8 +3700,8 @@
 .chat-sticker-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    padding: 15px 10px;
+    gap: 12px;
+    padding: 15px;
     overflow-y: auto;
     flex: 1;
 }
@@ -3731,7 +3731,7 @@
 
 .chat-sticker-item {
     aspect-ratio: 1;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
     background: #fff;
     cursor: pointer;
@@ -3739,22 +3739,24 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.1s;
+    border: 1px solid #f0f0f0;
+    padding: 5px; /* 增加内边距，确保表情不贴边 */
 }
 
 .chat-sticker-item:active {
-    transform: scale(0.9);
+    transform: scale(0.95);
 }
 
 .chat-sticker-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* 确保表情完整显示且不被遮挡 */
 }
 
 /* 聊天中的表情包样式 */
 .msg-sticker-img {
-    max-width: 100px;
-    max-height: 100px;
+    max-width: 120px;
+    max-height: 120px;
     display: block;
     cursor: pointer;
 }
@@ -3766,26 +3768,4 @@
     border: none !important;
     padding: 0 !important;
     max-width: none !important;
-}
-
-.chat-sticker-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    padding: 15px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.chat-sticker-item {
-    aspect-ratio: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.1s;
-    border: 1px solid #eee;
 }

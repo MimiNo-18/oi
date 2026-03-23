@@ -259,17 +259,17 @@
         </div>
 
         <!-- 导航栏 -->
-        <div class="wechat-nav-bar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
-            <div class="wechat-nav-left" onclick="closeChat()">
+        <div class="wechat-nav-bar" id="chatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
+            <div class="wechat-nav-left" onclick="closeChat()" id="chatNavLeft">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;" id="chatNavCenter">
                 <div class="wechat-nav-title" id="chatPartnerName" style="font-size: 16px; font-weight: 600; color: #000;">网名</div>
                 <div id="chatStatus" style="font-size: 10px; color: #666; font-weight: normal; height: 12px; margin-top: 1px;"></div>
             </div>
-            <div class="wechat-nav-right" onclick="openChatInfo()">
+            <div class="wechat-nav-right" onclick="openChatInfo()" id="chatNavRight">
                 <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px;">
                     <circle cx="4" cy="12" r="2" fill="currentColor"/>
                     <circle cx="12" cy="12" r="2" fill="currentColor"/>

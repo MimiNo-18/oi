@@ -13,7 +13,16 @@ let currentElement = null;
                 selectedMsgIndexes.add(initialIndex);
             }
             
-            // UI 切换
+            // UI 切换 - 顶部导航
+            const navLeft = document.getElementById('chatNavLeft');
+            if (navLeft) {
+                navLeft.innerHTML = '<span style="font-size: 16px; color: #000; font-weight: normal; margin-left: 4px;">取消</span>';
+                navLeft.onclick = exitMultiSelectMode;
+            }
+            const navRight = document.getElementById('chatNavRight');
+            if (navRight) navRight.style.visibility = 'hidden';
+
+            // UI 切换 - 底部工具栏
             document.getElementById('multiSelectToolbar').classList.add('active');
             
             // 隐藏输入框
@@ -31,6 +40,15 @@ let currentElement = null;
             isMultiSelectMode = false;
             selectedMsgIndexes.clear();
             
+            // 恢复顶部导航
+            const navLeft = document.getElementById('chatNavLeft');
+            if (navLeft) {
+                navLeft.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M15 18l-6-6 6-6"/></svg>';
+                navLeft.onclick = closeChat;
+            }
+            const navRight = document.getElementById('chatNavRight');
+            if (navRight) navRight.style.visibility = 'visible';
+
             document.getElementById('multiSelectToolbar').classList.remove('active');
             
             // 恢复输入框
@@ -102,7 +120,10 @@ let currentElement = null;
                         content: m.content,
                         msgType: m.msgType || 'text',
                         stickerName: m.stickerName || '',
-                        time: m.time
+                        time: m.time,
+                        isMergedForward: m.isMergedForward || false,
+                        title: m.title || '',
+                        fullHistory: m.fullHistory || null
                     };
                 });
 
@@ -243,7 +264,10 @@ let currentElement = null;
                             content: m.content,
                             msgType: m.msgType || 'text',
                             stickerName: m.stickerName || '',
-                            time: m.time
+                            time: m.time,
+                            isMergedForward: m.isMergedForward || false,
+                            title: m.title || '',
+                            fullHistory: m.fullHistory || null
                         };
                     });
 
@@ -3462,49 +3486,7 @@ let currentElement = null;
                     bubble.appendChild(transDiv);
                 }
                 
-                // 处理合并转发详情页逻辑
-                window.openMergedChatDetail = function(msg) {
-                    const container = document.getElementById('mergedChatDetailContainer');
-                    const titleEl = document.getElementById('mergedDetailTitle');
-                    const contentEl = document.getElementById('mergedDetailContent');
-                    
-                    titleEl.textContent = msg.title || '聊天记录';
-                        contentEl.innerHTML = '';
-                    
-                    (msg.fullHistory || []).forEach(h => {
-                        const item = document.createElement('div');
-                        item.className = 'merged-msg-item';
-                        
-                        const date = new Date(h.time || Date.now());
-                        const timeStr = `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-                        
-                        let displayContent = h.content;
-                        if (h.msgType === 'sticker') {
-                            displayContent = `<img src="${h.content}" class="msg-sticker-img" style="margin-top: 5px;">`;
-                        }
-                        
-                        item.innerHTML = `
-                            <img src="${h.avatar || ''}" class="merged-msg-avatar">
-                            <div class="merged-msg-info">
-                                <div class="merged-msg-header">
-                                    <div class="merged-msg-name">${h.name}</div>
-                                    <div class="merged-msg-time">${timeStr}</div>
-                                </div>
-                                <div class="merged-msg-text">${displayContent}</div>
-                            </div>
-                        `;
-                        contentEl.appendChild(item);
-                    });
-                    
-                    container.style.display = 'flex';
-                    updateTime();
-                    saveUIState();
-                };
-
-                window.closeMergedChatDetail = function() {
-                    document.getElementById('mergedChatDetailContainer').style.display = 'none';
-                    saveUIState();
-                };
+                // 处理合并转发详情页逻辑已移出 renderMessages
 
                 if (msg.type === 'sent') {
                     row.appendChild(checkbox);
@@ -3752,6 +3734,73 @@ let currentElement = null;
                 receiveAIMessage("网络连接似乎有点问题...");
             }
         }
+
+        window.openMergedChatDetail = function(msg) {
+            const container = document.getElementById('mergedChatDetailContainer');
+            const titleEl = document.getElementById('mergedDetailTitle');
+            const contentEl = document.getElementById('mergedDetailContent');
+            
+            titleEl.textContent = msg.title || '聊天记录';
+            contentEl.innerHTML = '';
+            
+            (msg.fullHistory || []).forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'merged-msg-item';
+                
+                const date = new Date(h.time || Date.now());
+                const timeStr = `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                
+                let displayContent = '';
+                if (h.isMergedForward) {
+                    // 如果详情里还有合并转发，渲染成气泡样式
+                    displayContent = `
+                        <div class="msg-bubble merged-forward-bubble" style="margin: 5px 0; cursor: pointer;">
+                            <div class="merged-forward-title">${h.title || '聊天记录'}</div>
+                            <div class="merged-forward-preview">
+                                ${(h.fullHistory || []).slice(0, 2).map(prev => `${prev.name}：${prev.msgType === 'sticker' ? '[表情]' : prev.content}`).join('<br>')}
+                            </div>
+                            <div class="merged-forward-line"></div>
+                            <div class="merged-forward-footer">聊天记录</div>
+                        </div>
+                    `;
+                } else if (h.msgType === 'sticker') {
+                    displayContent = `<img src="${h.content}" class="msg-sticker-img" style="margin-top: 5px;">`;
+                } else {
+                    displayContent = h.content;
+                }
+                
+                item.innerHTML = `
+                    <img src="${h.avatar || ''}" class="merged-msg-avatar">
+                    <div class="merged-msg-info">
+                        <div class="merged-msg-header">
+                            <div class="merged-msg-name">${h.name}</div>
+                            <div class="merged-msg-time">${timeStr}</div>
+                        </div>
+                        <div class="merged-msg-text">${displayContent}</div>
+                    </div>
+                `;
+                
+                // 处理嵌套点击
+                const nestedBubble = item.querySelector('.merged-forward-bubble');
+                if (nestedBubble) {
+                    nestedBubble.onclick = (e) => {
+                        e.stopPropagation();
+                        openMergedChatDetail(h);
+                    };
+                }
+                
+                contentEl.appendChild(item);
+            });
+            
+            container.style.display = 'flex';
+            updateTime();
+            saveUIState();
+        };
+
+        window.closeMergedChatDetail = function() {
+            document.getElementById('mergedChatDetailContainer').style.display = 'none';
+            saveUIState();
+        };
 
         function receiveAIMessage(content, quote = null, sticker = null) {
             if (!currentChatFriendId) return;

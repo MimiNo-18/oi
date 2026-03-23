@@ -2988,6 +2988,12 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 10px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .favorites-list .empty-state {
+            margin: auto;
         }
 
         .favorite-item {
@@ -3315,9 +3321,10 @@
             border-top: 1px solid #dbdbdb;
             padding: 20px 10px;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px 0;
-            height: 240px;
+            gap: 20px;
+            height: 300px;
             box-sizing: border-box;
+            align-content: start;
         }
 
         .chat-more-item {
@@ -3684,7 +3691,7 @@
     display: none;
     flex-direction: column;
     z-index: 1000;
-    height: 320px;
+    height: 300px;
     animation: slideUp 0.3s ease;
 }
 
@@ -3704,6 +3711,7 @@
     padding: 15px;
     overflow-y: auto;
     flex: 1;
+    align-content: start;
 }
 
 .sticker-picker-footer {

@@ -5083,7 +5083,7 @@ let currentElement = null;
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state">未找到收藏内容</div>';
+                container.innerHTML = '<div class="empty-state">暂无收藏表情包</div>';
                 return;
             }
 

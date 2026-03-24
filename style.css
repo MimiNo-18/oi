@@ -3726,6 +3726,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
+}
+
+.sticker-empty-tip {
+    color: #999;
+    font-size: 14px;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .sticker-picker-footer {

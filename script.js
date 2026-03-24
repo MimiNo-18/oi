@@ -3160,35 +3160,11 @@ let currentElement = null;
             
             const list = currentStickerCategory === 'default' ? stickerList : favoriteStickers;
             
-            // 添加一个像收藏面一样的“添加”按钮在顶部
-            const addBtn = document.createElement('div');
-            addBtn.className = 'chat-sticker-item';
-            addBtn.style.border = '1px dashed #07c160';
-            addBtn.onclick = (e) => {
-                e.stopPropagation();
-                openStickerLibrary();
-            };
-            addBtn.innerHTML = `
-                <div class="chat-sticker-img-wrapper" style="color: #07c160;">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
-                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                    </svg>
-                </div>
-            `;
-            grid.appendChild(addBtn);
-
-            if (list.length === 0 && currentStickerCategory === 'default') {
-                // 如果默认分类为空，显示提示
+            if (list.length === 0) {
+                grid.classList.add('empty');
                 const tip = document.createElement('div');
-                tip.style.cssText = 'text-align: center; color: #999; font-size: 13px; padding: 20px;';
-                tip.textContent = '表情库为空';
-                grid.appendChild(tip);
-                return;
-            } else if (list.length === 0 && currentStickerCategory === 'favorites') {
-                // 如果收藏分类为空，显示提示
-                const tip = document.createElement('div');
-                tip.style.cssText = 'text-align: center; color: #999; font-size: 13px; padding: 20px;';
-                tip.textContent = '暂无收藏表情';
+                tip.className = 'sticker-empty-tip';
+                tip.textContent = currentStickerCategory === 'default' ? '表情库为空' : '暂无收藏表情包';
                 grid.appendChild(tip);
                 return;
             }

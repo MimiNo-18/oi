@@ -1508,6 +1508,38 @@ let currentElement = null;
             saveUIState();
         }
 
+        // 实时同步联系人编辑内容
+        function syncContactEdit() {
+            if (!editingContactId) return;
+            const contact = contacts.find(c => c.id === editingContactId);
+            if (!contact) return;
+
+            const name = document.getElementById('newContactName').value.trim();
+            const nickname = document.getElementById('newContactNickname').value.trim();
+            const netName = document.getElementById('newContactNetName').value.trim();
+            const wechat = document.getElementById('newContactWechat').value.trim();
+            const category = document.getElementById('newContactCategory').value;
+            const design = document.getElementById('newContactDesign').value.trim();
+
+            if (name) contact.name = name;
+            contact.nickname = nickname;
+            contact.netName = netName;
+            contact.wechat = wechat;
+            contact.phone = wechat || nickname || netName || '未设置';
+            if (category !== '__custom__') contact.category = category;
+            contact.design = design;
+
+            // 实时更新可能存在的聊天列表显示
+            const friend = chatList.find(f => f.contactId === editingContactId);
+            if (friend) {
+                friend.name = name || friend.name;
+                // 如果当前正在与该联系人聊天，更新标题
+                if (currentChatFriendId === friend.id) {
+                    document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);
+                }
+            }
+        }
+
         // 关闭添加联系人页面
         function closeAddContactPage() {
             document.getElementById('addContactContainer').style.display = 'none';

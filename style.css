@@ -1438,7 +1438,7 @@
 
         .add-contact-nav-right {
             color: #fff;
-            background: #007AFF;
+            background: #8e8e93;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -1573,7 +1573,7 @@
             left: 16px;
             width: 20px;
             height: 20px;
-            border: 2px solid #333;
+            border: 2px solid #000;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1582,7 +1582,7 @@
         }
 
         .contact-checkbox.checked {
-            background: #333;
+            background: #000;
             color: #fff;
         }
 
@@ -3042,8 +3042,8 @@
         }
 
         .favorite-checkbox.checked {
-            background: #07c160;
-            border-color: #07c160;
+            background: #000;
+            border-color: #000;
         }
 
         .favorite-checkbox.checked::after {
@@ -3187,8 +3187,8 @@
         }
 
         .selection-checkbox.checked {
-            background: #07c160;
-            border-color: #07c160;
+            background: #000;
+            border-color: #000;
         }
 
         .selection-checkbox.checked::after {

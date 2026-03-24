@@ -195,7 +195,7 @@
                 <div class="empty-state">暂无联系人，点击右上角"+"添加</div>
             </div>
             <!-- 删除按钮 -->
-            <button class="delete-bottom-btn inline" id="deleteBottomBtn" onclick="handleBottomDelete()" style="display: none;">
+            <button class="delete-bottom-btn" id="deleteBottomBtn" onclick="handleBottomDelete()" style="display: none;">
                 删除选中的联系人
             </button>
         </div>
@@ -1481,28 +1481,28 @@
             <div class="add-contact-form">
             <div class="form-field">
                 <label class="form-label">真名 (Name)</label>
-                <input type="text" class="form-input" id="newContactName" placeholder="角色名字">
+                <input type="text" class="form-input" id="newContactName" placeholder="角色名字" oninput="syncContactEdit()">
             </div>
 
             <div class="form-field">
                 <label class="form-label">昵称 (Nickname)</label>
-                <input type="text" class="form-input" id="newContactNickname" placeholder="角色昵称">
+                <input type="text" class="form-input" id="newContactNickname" placeholder="角色昵称" oninput="syncContactEdit()">
             </div>
 
             <div class="form-field">
                 <label class="form-label">网名 (Net Name)</label>
-                <input type="text" class="form-input" id="newContactNetName" placeholder="角色网名">
+                <input type="text" class="form-input" id="newContactNetName" placeholder="角色网名" oninput="syncContactEdit()">
             </div>
 
             <div class="form-field">
                 <label class="form-label">微信号 (WeChat account)</label>
-                <input type="text" class="form-input" id="newContactWechat" placeholder="角色微信号">
+                <input type="text" class="form-input" id="newContactWechat" placeholder="角色微信号" oninput="syncContactEdit()">
             </div>
 
             <div class="form-field">
                 <label class="form-label">分组 (Grouping)</label>
                 <div style="position: relative;">
-                    <select class="form-select" id="newContactCategory" onchange="handleCategoryChange()">
+                    <select class="form-select" id="newContactCategory" onchange="handleCategoryChange(); syncContactEdit();">
                         <option value="朋友">朋友</option>
                         <option value="恋人">恋人</option>
                         <option value="同事">同事</option>
@@ -1521,7 +1521,7 @@
 
             <div class="form-field">
                 <label class="form-label">人设 (Human design)</label>
-                <textarea class="form-textarea" id="newContactDesign" placeholder="请输入角色设定..."></textarea>
+                <textarea class="form-textarea" id="newContactDesign" placeholder="请输入角色设定..." oninput="syncContactEdit()"></textarea>
             </div>
 
             <!-- 删除按钮 - 仅在编辑模式显示 -->

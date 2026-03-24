@@ -2722,7 +2722,11 @@ let currentElement = null;
             // 加载设置
             const settings = getChatSettings(currentChatFriendId);
             document.getElementById('chatInfoMemCount').value = settings.memCount || 10;
-            document.getElementById('chatInfoAutoSum').checked = settings.autoSum || false;
+            const autoSum = settings.autoSum || false;
+            document.getElementById('chatInfoAutoSum').checked = autoSum;
+            document.getElementById('chatInfoSumRounds').value = settings.sumRounds || 5;
+            document.getElementById('chatInfoSumRoundsRow').style.display = autoSum ? 'flex' : 'none';
+            
             document.getElementById('chatInfoProactiveMsg').checked = settings.proactiveMsg || false;
             document.getElementById('chatInfoSenseTime').checked = settings.senseTime || false;
             document.getElementById('chatInfoProactiveMoment').checked = settings.proactiveMoment || false;
@@ -2797,9 +2801,15 @@ let currentElement = null;
             // 处理置顶
             friend.isPinned = document.getElementById('chatInfoSticky').checked;
 
+            const autoSum = document.getElementById('chatInfoAutoSum').checked;
+            document.getElementById('chatInfoSumRoundsRow').style.display = autoSum ? 'flex' : 'none';
+
+            const oldSettings = getChatSettings(currentChatFriendId);
             const settings = {
+                ...oldSettings,
                 memCount: document.getElementById('chatInfoMemCount').value,
-                autoSum: document.getElementById('chatInfoAutoSum').checked,
+                autoSum: autoSum,
+                sumRounds: document.getElementById('chatInfoSumRounds').value,
                 proactiveMsg: document.getElementById('chatInfoProactiveMsg').checked,
                 senseTime: document.getElementById('chatInfoSenseTime').checked,
                 proactiveMoment: document.getElementById('chatInfoProactiveMoment').checked,
@@ -3643,6 +3653,63 @@ let currentElement = null;
         }
 
 
+        async function autoSummarizeChat(friendId, config) {
+            const history = chatHistories[friendId] || [];
+            const settings = getChatSettings(friendId);
+            const sumRounds = parseInt(settings.sumRounds) || 5;
+            
+            // 获取最近需要总结的消息（最近的 N 轮，即 2*N 条消息）
+            const recentMsgs = history.filter(h => h.type !== 'system_withdrawn').slice(-(sumRounds * 2));
+            if (recentMsgs.length === 0) return;
+
+            let chatContent = "";
+            recentMsgs.forEach(m => {
+                const name = m.type === 'sent' ? '用户' : '联系人';
+                chatContent += `${name}: ${m.content}\n`;
+            });
+
+            try {
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) {
+                    apiUrl += '/chat/completions';
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.key}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: "你是一个记忆整理专家。请简要总结以下对话中的关键信息、约定的事项或重要的人设细节。总结要精炼，直接返回总结内容，不要有前缀。" },
+                            { role: "user", content: `请总结以下对话内容：\n${chatContent}` }
+                        ],
+                        temperature: 0.3
+                    })
+                });
+
+                const data = await response.json();
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const summary = data.choices[0].message.content.trim();
+                    
+                    // 更新记忆
+                    const oldMemory = settings.manualMemory || "";
+                    const newMemory = oldMemory ? `${oldMemory}\n\n【自动总结】：${summary}` : `【自动总结】：${summary}`;
+                    
+                    const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+                    if (!allSettings[friendId]) allSettings[friendId] = {};
+                    allSettings[friendId].manualMemory = newMemory;
+                    localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
+                    
+                    console.log("Auto-summary completed for", friendId);
+                }
+            } catch (e) {
+                console.error("Auto-summary failed:", e);
+            }
+        }
+
         async function callAI(userMsg, isPersonaTrigger = false) {
             const friend = chatList.find(f => f.id === currentChatFriendId);
             const contact = contacts.find(c => c.id === friend.contactId);
@@ -3714,7 +3781,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 systemPrompt += `\n\n【可用表情包】：${stickerNames}。你可以根据语境发送这些表情包，格式为 [表情: 表情名]。`;
             }
 
-            // 获取历史消息（最近 15 条）
+            // 获取历史消息
             const history = chatHistories[currentChatFriendId] || [];
             const messages = [
                 { role: "system", content: systemPrompt }
@@ -3723,8 +3790,13 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             // 过滤掉撤回的消息，但包含本地删除的消息
             const aiHistory = history.filter(h => h.type !== 'system_withdrawn');
             
+            // 根据设置读取上下文条数
+            const memCount = parseInt(settings.memCount) || 10;
+            // 如果用户设置的是1，就读取用户消息上面的一条消息。即包含当前消息在内共 memCount + 1 条
+            const sliceCount = memCount + 1;
+            
             // 映射历史消息，包含引用信息以提供上下文
-            aiHistory.slice(-15).forEach(h => {
+            aiHistory.slice(-sliceCount).forEach(h => {
                 let content = h.content;
                 if (h.msgType === 'sticker') {
                     content = `[发送了一个表情包: ${h.stickerName || '未知'}]`;
@@ -3822,6 +3894,27 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     // 只有当内容不为空，或者成功匹配到表情包时才发送消息
                     if (content || stickerObj) {
                         receiveAIMessage(content, quoteObj, stickerObj);
+                    }
+                }
+
+                // 检查自动总结
+                if (settings.autoSum) {
+                    const sumRounds = parseInt(settings.sumRounds) || 5;
+                    // 增加轮数计数 (用户的对话加上联系人的对话为一轮)
+                    // 我们在 callAI 结束时增加计数，因为此时一轮对话（用户发+AI回）已完成
+                    let roundCount = (settings.roundCount || 0) + 1;
+                    
+                    if (roundCount >= sumRounds) {
+                        // 触发总结
+                        await autoSummarizeChat(currentChatFriendId, config);
+                        roundCount = 0; // 重置
+                    }
+                    
+                    // 保存轮数计数
+                    const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+                    if (allSettings[currentChatFriendId]) {
+                        allSettings[currentChatFriendId].roundCount = roundCount;
+                        localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
                     }
                 }
             } catch (e) {

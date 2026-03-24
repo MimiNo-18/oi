@@ -1182,10 +1182,10 @@
                 </div>
             </div>
 
-            <!-- 读取记忆条数 -->
+            <!-- 读取上下文条数 -->
             <div class="chat-info-group">
                 <div class="chat-info-item">
-                    <div class="chat-info-label">读取记忆条数</div>
+                    <div class="chat-info-label">读取上下文条数</div>
                     <div class="chat-info-value">
                         <input type="number" id="chatInfoMemCount" class="chat-info-underline-input" value="10" onchange="saveChatInfoSettings()">
                         <span style="color: #333;">条</span>
@@ -1201,6 +1201,13 @@
                         <input type="checkbox" id="chatInfoAutoSum" onchange="saveChatInfoSettings()">
                         <span class="slider"></span>
                     </label>
+                </div>
+                <div class="chat-info-item" id="chatInfoSumRoundsRow" style="display: none;">
+                    <div class="chat-info-label">总结轮数</div>
+                    <div class="chat-info-value">
+                        <input type="number" id="chatInfoSumRounds" class="chat-info-underline-input" value="5" onchange="saveChatInfoSettings()">
+                        <span style="color: #333;">轮</span>
+                    </div>
                 </div>
                 <div class="chat-info-item">
                     <div class="chat-info-label">主动发消息</div>

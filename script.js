@@ -3163,7 +3163,6 @@ let currentElement = null;
             // 添加一个像收藏面一样的“添加”按钮在顶部
             const addBtn = document.createElement('div');
             addBtn.className = 'chat-sticker-item';
-            addBtn.style.marginBottom = '12px';
             addBtn.style.border = '1px dashed #07c160';
             addBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -3175,7 +3174,6 @@ let currentElement = null;
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                     </svg>
                 </div>
-                <div class="chat-sticker-name" style="color: #07c160;">添加表情</div>
             `;
             grid.appendChild(addBtn);
 
@@ -3231,7 +3229,6 @@ let currentElement = null;
                     <div class="chat-sticker-img-wrapper">
                         <img src="${sticker.src}" class="chat-sticker-img">
                     </div>
-                    <div class="chat-sticker-name">${sticker.name}</div>
                 `;
                 grid.appendChild(item);
             });

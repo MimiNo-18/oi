@@ -3713,12 +3713,13 @@
 }
 
 .chat-sticker-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     padding: 15px;
     overflow-y: auto;
     flex: 1;
+    align-content: start;
 }
 
 .chat-sticker-grid.empty {
@@ -3751,13 +3752,13 @@
 }
 
 .chat-sticker-item {
-    width: 100%;
+    aspect-ratio: 1/1;
     background: #fff;
     border-radius: 12px;
-    padding: 12px 16px;
+    padding: 8px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: center;
     cursor: pointer;
     border: 1px solid #f0f0f0;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -3766,17 +3767,16 @@
 }
 
 .chat-sticker-item:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
     background: #f9f9f9;
 }
 
 .chat-sticker-img-wrapper {
-    width: 50px;
-    height: 50px;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
 }
 
 .chat-sticker-img {
@@ -3786,10 +3786,7 @@
 }
 
 .chat-sticker-name {
-    display: block;
-    font-size: 15px;
-    color: #333;
-    font-weight: 500;
+    display: none;
 }
 
 /* 聊天中的表情包样式 */

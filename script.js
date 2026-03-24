@@ -2735,6 +2735,44 @@ let currentElement = null;
             saveUIState();
         }
 
+        function openManualMemory() {
+            if (!currentChatFriendId) return;
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (!friend) return;
+            
+            const contact = contacts.find(c => c.id === friend.contactId);
+            const realName = contact ? contact.name : friend.name;
+            
+            document.getElementById('manualMemoryTitle').textContent = `${realName}的记忆`;
+            
+            const settings = getChatSettings(currentChatFriendId);
+            document.getElementById('manualMemoryInput').value = settings.manualMemory || '';
+            
+            document.getElementById('chatInfoContainer').style.display = 'none';
+            document.getElementById('manualMemoryContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function closeManualMemory() {
+            document.getElementById('manualMemoryContainer').style.display = 'none';
+            document.getElementById('chatInfoContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function saveManualMemory() {
+            if (!currentChatFriendId) return;
+            
+            const memoryText = document.getElementById('manualMemoryInput').value.trim();
+            const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+            if (!allSettings[currentChatFriendId]) allSettings[currentChatFriendId] = {};
+            
+            allSettings[currentChatFriendId].manualMemory = memoryText;
+            localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
+            
+            alert('记忆已保存');
+            closeManualMemory();
+        }
+
         function closeChatInfo() {
             document.getElementById('chatInfoContainer').style.display = 'none';
             saveUIState();
@@ -3634,6 +3672,10 @@ let currentElement = null;
                 return;
             }
 
+            // 获取手动记忆
+            const settings = getChatSettings(currentChatFriendId);
+            const manualMemory = settings.manualMemory || "";
+
             // 构建系统提示词 - 增强真实感
             let systemPrompt = `你现在的身份是：${contact.netName || contact.name}。
 【重要】：你不是AI助手，你就是用户设置好的这个联系人。你是一个真实的、有血有肉的人。
@@ -3643,9 +3685,10 @@ let currentElement = null;
 - 微信网名：${contact.netName}
 - 亲近昵称：${contact.nickname}
 - 你的性格、经历与核心人设：${contact.design || '一个普通的微信好友，态度自然亲切。'}
+${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}
 
 请严格遵守以下【真实社交】准则：
-1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。
+1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。**严禁做出任何违反你人设的行为。**
 2. **回复相关性**：仔细阅读用户发送的每一句话，确保你的回复不答非所问，逻辑连贯。
 3. **引用功能**：如果你想引用某条历史消息进行针对性回复，请在你的回复开头使用格式 \`(引用: 消息内容) 你的回复\`。例如：\`(引用: 晚上一起吃饭吗) 好啊，去哪吃？\`。你可以引用用户说的话，也可以引用你自己说的话。
 4. **拒绝AI腔调**：禁止使用“作为一个AI...”、“我无法...”、“我可以为您提供...”等客服式用语。说话要随性、自然。
@@ -3656,6 +3699,8 @@ let currentElement = null;
    - 微信聊天通常不需要完美的标点符号。
 6. **社交距离**：根据人设（恋人、死党、同事等）动态调整亲疏远近和说话语气。
 7. **表情包使用**：你可以发送表情包。如果你想发送表情包，请在回复中使用格式 \`[表情: 表情名]\`。例如：\`[表情: 哭泣]\`。请确保表情名与上下文中提到的或你认为对方有的表情名一致。
+8. **记忆读取与提及**：请读取并记住“共同记忆”中的内容。当用户提及相关内容时，你应该能够准确回忆并以此进行回复。即使在日常对话中，也可以适当地提及这些记忆来增加真实感。
+9. **人设驱动的表情包**：发送表情包时，必须符合你的人设。例如，高冷的人设不应发送过于卖萌的表情，活泼的人设可以多发一些搞怪的表情。**严禁发送任何违反你人设的表情包。**
 
 现在，请开始以 ${contact.netName || contact.name} 的身份与用户进行真实的微信对话。`;
 

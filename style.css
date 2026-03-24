@@ -3813,3 +3813,30 @@
     padding: 0 !important;
     max-width: none !important;
 }
+
+/* 全屏页面容器 */
+.full-page-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 300;
+}
+
+/* 手动记忆输入框 */
+.memory-textarea {
+    width: 100%;
+    height: 300px;
+    padding: 15px;
+    border: 1px solid #d3d3d3; /* 灰色边框 */
+    border-radius: 12px; /* 圆角矩形 */
+    font-size: 16px;
+    background: #fff;
+    resize: none;
+    outline: none;
+    color: #333;
+    line-height: 1.6;
+}

@@ -3665,7 +3665,8 @@ let currentElement = null;
             let chatContent = "";
             recentMsgs.forEach(m => {
                 const name = m.type === 'sent' ? '用户' : '联系人';
-                chatContent += `${name}: ${m.content}\n`;
+                const content = m.msgType === 'sticker' ? `[表情: ${m.stickerName || '未知'}]` : m.content;
+                chatContent += `${name}: ${content}\n`;
             });
 
             try {
@@ -3683,8 +3684,8 @@ let currentElement = null;
                     body: JSON.stringify({
                         model: config.model,
                         messages: [
-                            { role: "system", content: "你是一个记忆整理专家。请简要总结以下对话中的关键信息、约定的事项或重要的人设细节。总结要精炼，直接返回总结内容，不要有前缀。" },
-                            { role: "user", content: `请总结以下对话内容：\n${chatContent}` }
+                            { role: "system", content: "你是一个聊天记录总结专家。请根据提供的对话内容进行总结，提取其中的关键信息、约定的事项或重要的互动细节。总结要精炼，直接返回总结内容，不要有前缀。" },
+                            { role: "user", content: `请总结以下聊天内容：\n${chatContent}` }
                         ],
                         temperature: 0.3
                     })
@@ -3710,12 +3711,18 @@ let currentElement = null;
             }
         }
 
-        async function callAI(userMsg, isPersonaTrigger = false) {
-            const friend = chatList.find(f => f.id === currentChatFriendId);
+        async function callAI(userMsg, isPersonaTrigger = false, targetFriendId = null) {
+            const friendId = targetFriendId || currentChatFriendId;
+            if (!friendId) return;
+
+            const friend = chatList.find(f => f.id === friendId);
+            if (!friend) return;
             const contact = contacts.find(c => c.id === friend.contactId);
             if (!contact) return;
 
-            const chatStatus = document.getElementById('chatStatus');
+            const isCurrentChat = (friendId === currentChatFriendId);
+            const chatStatus = isCurrentChat ? document.getElementById('chatStatus') : null;
+            
             if (chatStatus) {
                 chatStatus.textContent = '正在输入...';
                 chatStatus.classList.add('typing-status');
@@ -3728,19 +3735,21 @@ let currentElement = null;
 
             if (!config || !config.url || !config.key) {
                 console.log('API config missing');
-                // 模拟回复
-                setTimeout(() => {
-                    if (chatStatus) {
-                        chatStatus.textContent = '';
-                        chatStatus.classList.remove('typing-status');
-                    }
-                    receiveAIMessage("（请在设置中配置有效的 API 以启用 AI 聊天）");
-                }, 1000);
+                if (isCurrentChat) {
+                    // 模拟回复
+                    setTimeout(() => {
+                        if (chatStatus) {
+                            chatStatus.textContent = '';
+                            chatStatus.classList.remove('typing-status');
+                        }
+                        receiveAIMessage("（请在设置中配置有效的 API 以启用 AI 聊天）");
+                    }, 1000);
+                }
                 return;
             }
 
             // 获取手动记忆
-            const settings = getChatSettings(currentChatFriendId);
+            const settings = getChatSettings(friendId);
             const manualMemory = settings.manualMemory || "";
 
             // 构建系统提示词 - 增强真实感
@@ -3752,9 +3761,16 @@ let currentElement = null;
 - 微信网名：${contact.netName}
 - 亲近昵称：${contact.nickname}
 - 你的性格、经历与核心人设：${contact.design || '一个普通的微信好友，态度自然亲切。'}
-${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}
+${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}`;
 
-请严格遵守以下【真实社交】准则：
+            // 感知真实时间
+            if (settings.senseTime) {
+                const now = new Date();
+                const timeStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}点${now.getMinutes()}分${now.getSeconds()}秒`;
+                systemPrompt += `\n- 当前真实时间：${timeStr}`;
+            }
+
+            systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
 1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。**严禁做出任何违反你人设的行为。**
 2. **回复相关性**：仔细阅读用户发送的每一句话，确保你的回复不答非所问，逻辑连贯。
 3. **引用功能**：如果你想引用某条历史消息进行针对性回复，请在你的回复开头使用格式 \`(引用: 消息内容) 你的回复\`。例如：\`(引用: 晚上一起吃饭吗) 好啊，去哪吃？\`。你可以引用用户说的话，也可以引用你自己说的话。
@@ -3772,7 +3788,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 现在，请开始以 ${contact.netName || contact.name} 的身份与用户进行真实的微信对话。`;
 
             if (isPersonaTrigger) {
-                systemPrompt += "\n\n【场景提醒】：用户主动触发了你的人设读取。请根据当前对话的上下文，表现得像你突然想起某事，或者单纯想找对方聊天一样，主动发起一个符合你人设的新话题或延伸旧话题。";
+                systemPrompt += "\n\n【场景提醒】：你现在正主动想找用户聊天。请根据当前对话的上下文，表现得像你突然想起某事，或者单纯想找对方聊天一样，主动发起一个符合你人设的新话题或延伸旧话题。不要生硬。";
             }
 
             // 告知 AI 有哪些可用的表情包
@@ -3782,7 +3798,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             }
 
             // 获取历史消息
-            const history = chatHistories[currentChatFriendId] || [];
+            const history = chatHistories[friendId] || [];
             const messages = [
                 { role: "system", content: systemPrompt }
             ];
@@ -3893,7 +3909,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
                     // 只有当内容不为空，或者成功匹配到表情包时才发送消息
                     if (content || stickerObj) {
-                        receiveAIMessage(content, quoteObj, stickerObj);
+                        receiveAIMessage(content, quoteObj, stickerObj, friendId);
                     }
                 }
 
@@ -3906,16 +3922,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     
                     if (roundCount >= sumRounds) {
                         // 触发总结
-                        await autoSummarizeChat(currentChatFriendId, config);
+                        await autoSummarizeChat(friendId, config);
                         roundCount = 0; // 重置
                     }
                     
                     // 保存轮数计数
                     const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
-                    if (allSettings[currentChatFriendId]) {
-                        allSettings[currentChatFriendId].roundCount = roundCount;
-                        localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
-                    }
+                    if (!allSettings[friendId]) allSettings[friendId] = {};
+                    allSettings[friendId].roundCount = roundCount;
+                    localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
                 }
             } catch (e) {
                 if (chatStatus) {
@@ -3994,8 +4009,11 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             saveUIState();
         };
 
-        function receiveAIMessage(content, quote = null, sticker = null) {
-            if (!currentChatFriendId) return;
+        function receiveAIMessage(content, quote = null, sticker = null, targetFriendId = null) {
+            const friendId = targetFriendId || currentChatFriendId;
+            if (!friendId) return;
+
+            if (!chatHistories[friendId]) chatHistories[friendId] = [];
 
             const newMessage = {
                 type: 'received',
@@ -4013,18 +4031,49 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 newMessage.stickerName = sticker.name;
             }
             
-            chatHistories[currentChatFriendId].push(newMessage);
+            chatHistories[friendId].push(newMessage);
             
-            const friend = chatList.find(f => f.id === currentChatFriendId);
+            const friend = chatList.find(f => f.id === friendId);
             if (friend) {
-                friend.message = sticker ? `[${sticker.name}]` : content;
+                friend.message = sticker ? `[${sticker.name}]` : (content || "[收到一条消息]");
                 friend.time = formatTime(new Date());
             }
 
-            renderMessages();
+            if (friendId === currentChatFriendId) {
+                renderMessages();
+            }
+            
             saveChatHistories();
             saveChatListToStorage();
             renderChatList();
+        }
+
+        // 主动发消息定时检查
+        function startProactiveMsgCheck() {
+            setInterval(async () => {
+                const now = new Date().getTime();
+                const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+                
+                for (const friendId in allSettings) {
+                    const settings = allSettings[friendId];
+                    if (settings.proactiveMsg) {
+                        const history = chatHistories[friendId] || [];
+                        // 如果从未聊过天，可以尝试开启
+                        let lastTime = 0;
+                        if (history.length > 0) {
+                            lastTime = history[history.length - 1].time || 0;
+                        }
+                        
+                        const idleTime = now - lastTime;
+                        // 设想闲置超过1小时且随机概率触发，或者从未聊过天
+                        // 为了演示效果，这里缩短为5分钟，概率增加
+                        if ((lastTime === 0 || idleTime > 5 * 60 * 1000) && Math.random() > 0.7) {
+                            console.log(`Triggering proactive message for friend: ${friendId}`);
+                            await callAI(null, true, parseInt(friendId));
+                        }
+                    }
+                }
+            }, 60000); // 每分钟检查一次
         }
 
         // 点击模态框外部关闭
@@ -6049,6 +6098,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             loadStickers();
             loadFavoriteStickers();
             renderTopTagBar();
+            startProactiveMsgCheck();
 
             // 微信页面点开没有联系人
             if (chatList.length === 0) {

@@ -3716,25 +3716,36 @@ let currentElement = null;
 
                     let content = parts[i];
                     let stickerObj = null;
-                    
-                    // 匹配 [表情: 名字]
-                    const stickerMatch = content.match(/\[表情:\s*(.*?)\]/);
+                    let quoteObj = null;
+
+                    // 1. 解析引用 (引用: ...) - 引用必须要有内容
+                    const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
+                    if (quoteMatch) {
+                        const quotedContent = quoteMatch[1].trim();
+                        if (quotedContent) {
+                            quoteObj = { content: quotedContent };
+                        }
+                        content = quoteMatch[2];
+                    }
+
+                    // 2. 匹配并处理表情包 [表情: 名字] 或 表情：名字
+                    // 使用正则匹配，支持中英文冒号，捕获表情包名称
+                    const stickerMatch = content.match(/\[表情[:：]\s*(.*?)\]/) || content.match(/表情[:：]\s*(\S+)/);
                     if (stickerMatch) {
                         const sName = stickerMatch[1].trim();
+                        // 无论库里是否有该表情，都从文字内容中移除标签，防止出现“表情：xxx”字样
+                        content = content.replace(stickerMatch[0], '').trim();
+                        
                         const foundSticker = stickerList.find(s => s.name === sName);
                         if (foundSticker) {
                             stickerObj = foundSticker;
                         }
                     }
 
-                    let quoteObj = null;
-                    // 解析 AI 想要引用的内容格式 (引用: ...)
-                    const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
-                    if (quoteMatch) {
-                        quoteObj = { content: quoteMatch[1] };
-                        content = quoteMatch[2];
+                    // 只有当内容不为空，或者成功匹配到表情包时才发送消息
+                    if (content || stickerObj) {
+                        receiveAIMessage(content, quoteObj, stickerObj);
                     }
-                    receiveAIMessage(content, quoteObj, stickerObj);
                 }
             } catch (e) {
                 if (chatStatus) {

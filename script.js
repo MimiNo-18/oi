@@ -770,6 +770,35 @@ let currentElement = null;
         let groupList = [];
 
         // 设置页面相关函数
+        async function updateApp() {
+            if (confirm('确定要检查并更新到最新版本吗？\n更新将清理页面缓存并重新加载，您的聊天记录、联系人、主题等核心数据将保留。')) {
+                try {
+                    // 1. 清除 Service Worker 缓存
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        for (const name of cacheNames) {
+                            await caches.delete(name);
+                        }
+                    }
+                    
+                    // 2. 取消注册 Service Worker
+                    if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                            await registration.unregister();
+                        }
+                    }
+                    
+                    // 3. 提示并刷新
+                    alert('缓存已清理，即将重新加载以更新到最新版本');
+                    window.location.reload();
+                } catch (e) {
+                    console.error("Update failed:", e);
+                    alert("更新失败：" + e.message);
+                }
+            }
+        }
+
         function openSettings() {
             document.querySelector('.phone-container').style.display = 'none';
             document.getElementById('settingsContainer').style.display = 'flex';

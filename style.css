@@ -255,6 +255,9 @@
             font-weight: 600;
             color: #000;
             z-index: 20;
+            position: sticky;
+            top: 0;
+            background: inherit;
         }
 
         .status-left {

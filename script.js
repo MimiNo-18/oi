@@ -430,9 +430,23 @@ let currentElement = null;
             }
         }
 
+        function toggleStatusBar(enabled) {
+            const statusBars = document.querySelectorAll('.status-bar, .wechat-status-bar, .add-contact-status-bar');
+            statusBars.forEach(bar => {
+                bar.style.display = enabled ? 'none' : 'flex';
+            });
+            safeLocalStorageSet('mimi_status_bar_hide_pref', enabled ? 'true' : 'false');
+            
+            // 同步所有状态栏开关
+            document.querySelectorAll('[id="statusBarToggle"]').forEach(toggle => {
+                toggle.checked = enabled;
+            });
+        }
+
         function loadDisplayExtras() {
             const borderPref = localStorage.getItem('mimi_border_pref') === 'true';
             const notchPref = localStorage.getItem('mimi_notch_pref') === 'true';
+            const statusBarHidePref = localStorage.getItem('mimi_status_bar_hide_pref') === 'true';
             
             if (borderPref) {
                 document.body.classList.add('has-phone-border');
@@ -444,6 +458,10 @@ let currentElement = null;
                 document.body.classList.add('has-notch');
                 const toggle = document.getElementById('notchToggle');
                 if (toggle) toggle.checked = true;
+            }
+
+            if (statusBarHidePref) {
+                toggleStatusBar(true);
             }
         }
 
@@ -483,13 +501,13 @@ let currentElement = null;
             const enabled = localStorage.getItem('mimi_battery_alert_enabled') === 'true';
             if (!enabled) return;
 
-            if (level < 20 && !window.lowBatteryAlerted) {
+            if (level <= 20 && !window.lowBatteryAlerted) {
                 const customText = localStorage.getItem('mimi_battery_alert_text') || "当前电量低于20%请及时充电";
                 const customCss = localStorage.getItem('mimi_battery_alert_css') || "";
                 
                 showCustomBatteryAlert(customText, customCss);
                 window.lowBatteryAlerted = true;
-            } else if (level >= 20) {
+            } else if (level > 20) {
                 window.lowBatteryAlerted = false;
             }
         }
@@ -578,8 +596,13 @@ let currentElement = null;
 
         function updateBatteryConfigUI(enabled) {
             const line = document.getElementById('batteryTextLine');
+            const input = document.getElementById('batteryAlertText');
             if (line) {
                 line.style.borderBottomColor = enabled ? '#000' : '#ddd';
+            }
+            if (input) {
+                input.disabled = !enabled;
+                input.style.color = enabled ? '#fff' : '#888';
             }
         }
 

@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MimiPhone">
-    <link rel="apple-touch-icon" href="https://img.heliar.top/file/1774447278473_无标题27_20260325215951.png">
+    <link rel="apple-touch-icon" href="https://img.heliar.top/file/1774448251294_无标题27_20260325221510.png">
     <link rel="manifest" href="manifest.json">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -1756,6 +1756,15 @@
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
+            <div class="settings-item">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">关闭顶部状态栏</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="statusBarToggle" onchange="toggleStatusBar(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -1788,7 +1797,7 @@
         <div class="settings-group">
             <div class="settings-item">
                 <div class="settings-item-content">
-                    <span class="settings-item-label">低于20%提醒充电</span>
+                    <span class="settings-item-label">充电提醒</span>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="batteryAlertToggle" onchange="toggleBatteryAlert(this.checked)">
@@ -1801,8 +1810,8 @@
                     <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
                     <div id="batteryTextLine" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
                         <input type="text" id="batteryAlertText" placeholder="请输入提醒文案" 
-                               style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #333;"
-                               oninput="saveBatterySettings()">
+                               style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #888;"
+                               oninput="saveBatterySettings()" disabled>
                     </div>
                 </div>
 

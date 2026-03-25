@@ -859,6 +859,45 @@ let currentElement = null;
             saveUIState();
         }
 
+        function openRealNamePage() {
+            document.getElementById('accountInfoContainer').style.display = 'none';
+            document.getElementById('realNameContainer').style.display = 'flex';
+            
+            document.getElementById('realName-name').value = realNameInfo.name === '未设置' ? '' : realNameInfo.name;
+            document.getElementById('realName-age').value = realNameInfo.age === '未设置' ? '' : realNameInfo.age;
+            document.getElementById('realName-gender').value = realNameInfo.gender === '未设置' ? '' : realNameInfo.gender;
+            document.getElementById('realName-job').value = realNameInfo.job === '未设置' ? '' : realNameInfo.job;
+            document.getElementById('realName-location').value = realNameInfo.location === '未设置' ? '' : realNameInfo.location;
+            document.getElementById('realName-hometown').value = realNameInfo.hometown === '未设置' ? '' : realNameInfo.hometown;
+            document.getElementById('realName-persona').value = realNameInfo.persona === '未设置' ? '' : realNameInfo.persona;
+            
+            updateTime();
+            updateBattery();
+            saveUIState();
+        }
+
+        function closeRealNamePage() {
+            realNameInfo.name = document.getElementById('realName-name').value.trim() || '未设置';
+            realNameInfo.age = document.getElementById('realName-age').value.trim() || '未设置';
+            realNameInfo.gender = document.getElementById('realName-gender').value.trim() || '未设置';
+            realNameInfo.job = document.getElementById('realName-job').value.trim() || '未设置';
+            realNameInfo.location = document.getElementById('realName-location').value.trim() || '未设置';
+            realNameInfo.hometown = document.getElementById('realName-hometown').value.trim() || '未设置';
+            realNameInfo.persona = document.getElementById('realName-persona').value.trim() || '未设置';
+            
+            saveRealNameInfo();
+
+            // 更新实名状态显示
+            const statusEl = document.getElementById('real-name-status');
+            if (statusEl) {
+                statusEl.textContent = (realNameInfo.name !== '未设置') ? '已实名' : '未实名';
+            }
+            
+            document.getElementById('realNameContainer').style.display = 'none';
+            document.getElementById('accountInfoContainer').style.display = 'flex';
+            saveUIState();
+        }
+
         // API配置相关函数
         let apiConfigs = [];
         let currentConfigId = 'default';
@@ -1881,6 +1920,27 @@ let currentElement = null;
             patPat: '未设置',
             signature: '未设置'
         };
+
+        let realNameInfo = {
+            name: '未设置',
+            age: '未设置',
+            gender: '未设置',
+            job: '未设置',
+            location: '未设置',
+            hometown: '未设置',
+            persona: '未设置'
+        };
+
+        function loadRealNameInfo() {
+            const saved = localStorage.getItem('mimi_real_name_info');
+            if (saved) {
+                realNameInfo = { ...realNameInfo, ...JSON.parse(saved) };
+            }
+        }
+
+        function saveRealNameInfo() {
+            safeLocalStorageSet('mimi_real_name_info', JSON.stringify(realNameInfo));
+        }
 
         function loadWechatUserInfo() {
             const saved = localStorage.getItem('wechat_user_info');
@@ -3902,7 +3962,21 @@ let currentElement = null;
 - 微信网名：${contact.netName}
 - 亲近昵称：${contact.nickname}
 - 你的性格、经历与核心人设：${contact.design || '一个普通的微信好友，态度自然亲切。'}
-${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}`;
+${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}
+
+用户的实名信息（用于你了解对方，但请根据你的人设决定是否知道这些内容）：
+- 姓名：${realNameInfo.name}
+- 年龄：${realNameInfo.age}
+- 性别：${realNameInfo.gender}
+- 职业：${realNameInfo.job}
+- 现居地：${realNameInfo.location}
+- 籍贯：${realNameInfo.hometown}
+- 人设：${realNameInfo.persona}
+
+【重要逻辑约束】：
+1. 如果你的人设设定是不知道用户的真实姓名、职业等（例如刚认识、网友关系等），即使实名信息里有这些内容，你也必须表现出不知道。
+2. 只有当你的人设是用户的熟人、家人或在对话中用户主动告知后，你才能表现出知道这些实名信息的内容。
+3. 请严格按照你设定的角色性格进行交流。`;
 
             // 感知真实时间
             if (settings.senseTime) {
@@ -6084,7 +6158,8 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 activeChatId: currentChatFriendId
             };
             
-            if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
+            if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
+            else if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
             else if (document.getElementById('wechatFavoritesContainer').style.display === 'flex') state.activeContainer = 'wechatFavoritesContainer';
@@ -6198,6 +6273,12 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openAccount();
                 openAccountInfo();
             }
+            else if (state.activeContainer === 'realNameContainer') {
+                openSettings();
+                openAccount();
+                openAccountInfo();
+                openRealNamePage();
+            }
             else if (state.activeContainer === 'apiConfigContainer') {
                 openSettings();
                 openApiConfig();
@@ -6244,6 +6325,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             loadGroupListFromStorage();
             loadChatHistories();
             loadWechatUserInfo();
+            loadRealNameInfo();
             loadTopCategories();
             loadFavoritesFromStorage();
             loadStickers();

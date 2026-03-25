@@ -63,7 +63,9 @@
         body.has-phone-border #wechatFavoritesContainer,
         body.has-phone-border #stickerLibraryContainer,
         body.has-phone-border #stickerManagementContainer,
-        body.has-phone-border #mergedChatDetailContainer {
+        body.has-phone-border #mergedChatDetailContainer,
+        body.has-phone-border #realNameContainer,
+        body.has-phone-border #manualMemoryContainer {
             width: 375px !important;
             height: 812px !important;
             border: none !important;
@@ -119,7 +121,9 @@
         body.has-phone-border #categoryManagementContainer,
         body.has-phone-border #stickerLibraryContainer,
         body.has-phone-border #stickerManagementContainer,
-        body.has-phone-border #mergedChatDetailContainer { z-index: 10300 !important; }
+        body.has-phone-border #mergedChatDetailContainer,
+        body.has-phone-border #realNameContainer,
+        body.has-phone-border #manualMemoryContainer { z-index: 10300 !important; }
 
         /* 首页容器在边框模式下需允许内容滚动且隐藏滚动条 */
         body.has-phone-border .phone-container {
@@ -1982,6 +1986,11 @@
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
+        }
+
+        #accountInfoContainer .me-rounded-box {
+            margin: 0;
+            border-radius: 0;
         }
 
         .wechat-settings-footer {
@@ -3870,4 +3879,56 @@
     outline: none;
     color: #333;
     line-height: 1.6;
+}
+
+/* 实名信息页面样式补充 */
+#realNameContainer .info-group {
+    margin-top: 10px;
+    background: #fff;
+}
+
+#realNameContainer .info-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#realNameContainer .info-item:last-child {
+    border-bottom: none;
+}
+
+#realNameContainer .info-label {
+    font-size: 15px;
+    color: #333;
+    min-width: 120px;
+}
+
+#realNameContainer .info-content {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#realNameContainer .chat-info-input {
+    border: none;
+    text-align: right;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    color: #666;
+    background: transparent;
+}
+
+#realNameContainer .form-textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    color: #666;
+    resize: none;
+    outline: none;
+    padding: 0;
+    line-height: 1.5;
 }

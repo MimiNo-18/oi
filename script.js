@@ -866,6 +866,7 @@ let currentElement = null;
             document.getElementById('realName-name').value = realNameInfo.name === '未设置' ? '' : realNameInfo.name;
             document.getElementById('realName-age').value = realNameInfo.age === '未设置' ? '' : realNameInfo.age;
             document.getElementById('realName-gender').value = realNameInfo.gender === '未设置' ? '' : realNameInfo.gender;
+            document.getElementById('realName-birthday').value = realNameInfo.birthday === '未设置' ? '' : realNameInfo.birthday;
             document.getElementById('realName-job').value = realNameInfo.job === '未设置' ? '' : realNameInfo.job;
             document.getElementById('realName-location').value = realNameInfo.location === '未设置' ? '' : realNameInfo.location;
             document.getElementById('realName-hometown').value = realNameInfo.hometown === '未设置' ? '' : realNameInfo.hometown;
@@ -880,6 +881,7 @@ let currentElement = null;
             realNameInfo.name = document.getElementById('realName-name').value.trim() || '未设置';
             realNameInfo.age = document.getElementById('realName-age').value.trim() || '未设置';
             realNameInfo.gender = document.getElementById('realName-gender').value.trim() || '未设置';
+            realNameInfo.birthday = document.getElementById('realName-birthday').value.trim() || '未设置';
             realNameInfo.job = document.getElementById('realName-job').value.trim() || '未设置';
             realNameInfo.location = document.getElementById('realName-location').value.trim() || '未设置';
             realNameInfo.hometown = document.getElementById('realName-hometown').value.trim() || '未设置';
@@ -1925,6 +1927,7 @@ let currentElement = null;
             name: '未设置',
             age: '未设置',
             gender: '未设置',
+            birthday: '未设置',
             job: '未设置',
             location: '未设置',
             hometown: '未设置',

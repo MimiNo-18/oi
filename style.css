@@ -686,10 +686,14 @@
         .modal-btn.confirm, 
         .image-option-btn,
         .theme-action-btn,
-        .add-contact-nav-right,
         .security-primary-btn,
         .settings-full-btn.export {
             background: #000 !important;
+            color: #fff !important;
+        }
+
+        .add-contact-nav-right {
+            background: #8e8e93 !important;
             color: #fff !important;
         }
 
@@ -3889,8 +3893,8 @@
 
 #realNameContainer .info-item {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 12px 20px;
     border-bottom: 1px solid #f0f0f0;
 }
@@ -3900,35 +3904,44 @@
 }
 
 #realNameContainer .info-label {
-    font-size: 15px;
+    font-size: 14px;
     color: #333;
-    min-width: 120px;
+    margin-bottom: 8px;
+    width: 100%;
 }
 
 #realNameContainer .info-content {
-    flex: 1;
+    width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 #realNameContainer .chat-info-input {
-    border: none;
-    text-align: right;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: left;
     font-size: 15px;
     width: 100%;
     outline: none;
-    color: #666;
-    background: transparent;
+    color: #333;
+    background: #fcfcfc;
+}
+
+#realNameContainer .persona-item .info-content {
+    margin-top: 5px;
 }
 
 #realNameContainer .form-textarea {
     width: 100%;
-    border: none;
-    background: transparent;
+    border: 1px solid #eee;
+    background: #fcfcfc;
+    border-radius: 8px;
     font-size: 15px;
-    color: #666;
+    color: #333;
     resize: none;
     outline: none;
-    padding: 0;
+    padding: 12px;
     line-height: 1.5;
+    min-height: 120px;
 }

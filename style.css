@@ -47,6 +47,7 @@
         body.has-phone-border #wechatContainer,
         body.has-phone-border #settingsContainer,
         body.has-phone-border #accountContainer,
+        body.has-phone-border #accountInfoContainer,
         body.has-phone-border #displaySettingsContainer,
         body.has-phone-border #batterySettingsContainer,
         body.has-phone-border #apiConfigContainer,
@@ -102,6 +103,7 @@
         /* 二级页面层级 (聊天、微信设置、账号等) */
         body.has-phone-border #chatPageContainer,
         body.has-phone-border #accountContainer,
+        body.has-phone-border #accountInfoContainer,
         body.has-phone-border #displaySettingsContainer,
         body.has-phone-border #batterySettingsContainer,
         body.has-phone-border #apiConfigContainer,
@@ -1864,6 +1866,14 @@
             height: 60px;
             border-radius: 8px;
             object-fit: cover;
+        }
+
+        .account-info-avatar-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #eee;
         }
 
         .info-text {

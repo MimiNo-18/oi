@@ -1807,7 +1807,7 @@
             
             <div class="battery-config-area" id="batteryConfigArea" style="padding: 10px 20px;">
                 <div style="margin-bottom: 20px;">
-                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
+                    <div id="batteryAlertLabel" style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
                     <div id="batteryTextLine" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
                         <input type="text" id="batteryAlertText" placeholder="请输入提醒文案" 
                                style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #888;"
@@ -1869,7 +1869,7 @@
             <div class="account-info-text" id="txt-account-phone" onclick="editText(this, '手机号')">请输入手机号</div>
         </div>
         <div class="settings-group" style="margin-top: 0;">
-            <div class="settings-item" onclick="alert('账号信息功能开发中')">
+            <div class="settings-item" onclick="openAccountInfo()">
                 <span class="settings-item-label">账号信息</span>
                 <span class="settings-item-arrow">〉</span>
             </div>
@@ -1886,6 +1886,110 @@
             <div class="account-action-item" onclick="alert('退出账号成功')">
                 <span class="account-action-label danger">退出账号</span>
                 <span class="settings-item-arrow">〉</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 账号信息容器 -->
+    <div id="accountInfoContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="wechat-time-sync">23:41</span>
+            </div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon">
+                        <div class="battery-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeAccountInfo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="settings-title">账号信息</div>
+        </div>
+        
+        <div class="settings-group" style="padding-top: 10px;">
+            <div class="me-rounded-box">
+                <div class="me-menu-item" onclick="changeImage('accountAvatarImg')">
+                    <div class="me-menu-label">头像</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="me-divider"></div>
+
+            <div class="me-rounded-box">
+                <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-nickname'), '昵称')">
+                    <div class="me-menu-label">昵称</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="info-nickname" style="color: #888; font-size: 15px;"></span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-phone'), '手机号')">
+                    <div class="me-menu-label">手机号</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="info-phone" style="color: #888; font-size: 15px;"></span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-menu-item">
+                    <div class="me-menu-label">邮箱</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #888; font-size: 15px;">未绑定</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-menu-item">
+                    <div class="me-menu-label">Mimi号</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="info-mimi-id" style="color: #888; font-size: 15px;"></span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="me-divider"></div>
+
+            <div class="me-rounded-box">
+                <div class="me-menu-item">
+                    <div class="me-menu-label">实名信息</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #888; font-size: 15px;">未实名</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="me-divider"></div>
+
+            <div class="me-rounded-box">
+                <div class="me-menu-item">
+                    <div class="me-menu-label">注册国家</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #888; font-size: 15px;">中国</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+                <div class="me-menu-item">
+                    <div class="me-menu-label">所在地</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #888; font-size: 15px;">未设置</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

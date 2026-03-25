@@ -597,12 +597,16 @@ let currentElement = null;
         function updateBatteryConfigUI(enabled) {
             const line = document.getElementById('batteryTextLine');
             const input = document.getElementById('batteryAlertText');
+            const label = document.getElementById('batteryAlertLabel');
             if (line) {
                 line.style.borderBottomColor = enabled ? '#000' : '#ddd';
             }
             if (input) {
                 input.disabled = !enabled;
-                input.style.color = enabled ? '#fff' : '#888';
+                input.style.color = enabled ? '#000' : '#888';
+            }
+            if (label) {
+                label.style.color = enabled ? '#000' : '#666';
             }
         }
 
@@ -791,6 +795,38 @@ let currentElement = null;
         function closeAccount() {
             document.getElementById('accountContainer').style.display = 'none';
             document.getElementById('settingsContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function openAccountInfo() {
+            document.getElementById('accountContainer').style.display = 'none';
+            document.getElementById('accountInfoContainer').style.display = 'flex';
+            
+            // 同步账号信息显示
+            const nickname = document.getElementById('txt-account-nickname').textContent;
+            const phone = document.getElementById('txt-account-phone').textContent;
+            const avatarSrc = document.getElementById('accountAvatarImg').src;
+            
+            const infoNickname = document.getElementById('info-nickname');
+            const infoPhone = document.getElementById('info-phone');
+            const infoAvatar = document.getElementById('accountInfoAvatarPreview');
+            const infoMimi = document.getElementById('info-mimi-id');
+
+            if (infoNickname) infoNickname.textContent = nickname === '请输入昵称' ? '未设置' : nickname;
+            if (infoPhone) infoPhone.textContent = phone === '请输入手机号' ? '未设置' : phone;
+            if (infoAvatar) infoAvatar.src = avatarSrc;
+            if (infoMimi && !infoMimi.textContent) {
+                infoMimi.textContent = 'M' + Math.floor(Math.random() * 10000000);
+            }
+
+            updateTime();
+            updateBattery();
+            saveUIState();
+        }
+
+        function closeAccountInfo() {
+            document.getElementById('accountInfoContainer').style.display = 'none';
+            document.getElementById('accountContainer').style.display = 'flex';
             saveUIState();
         }
 
@@ -6034,6 +6070,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (document.getElementById('addContactContainer').style.display !== 'none') state.activeContainer = 'addContactContainer';
             else if (document.getElementById('settingsContainer').style.display === 'flex') state.activeContainer = 'settingsContainer';
             else if (document.getElementById('accountContainer').style.display === 'flex') state.activeContainer = 'accountContainer';
+            else if (document.getElementById('accountInfoContainer').style.display === 'flex') state.activeContainer = 'accountInfoContainer';
             else if (document.getElementById('apiConfigContainer').style.display === 'flex') state.activeContainer = 'apiConfigContainer';
             else if (document.getElementById('mineContainer').style.display === 'flex') state.activeContainer = 'mineContainer';
             else if (document.getElementById('themeContainer').style.display === 'flex') {
@@ -6126,6 +6163,11 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (state.activeContainer === 'accountContainer') {
                 openSettings();
                 openAccount();
+            }
+            else if (state.activeContainer === 'accountInfoContainer') {
+                openSettings();
+                openAccount();
+                openAccountInfo();
             }
             else if (state.activeContainer === 'apiConfigContainer') {
                 openSettings();

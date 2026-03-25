@@ -1,4 +1,4 @@
-<![CDATA[<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -279,7 +279,7 @@
         </div>
 
         <!-- 聊天记录区域 -->
-        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; background: #ffffff;">
+        <div id="chatMessages" onclick="if(event.target === this) openChatBackgroundModal()" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; background: #ffffff;">
             <!-- 消息动态生成 -->
         </div>
 
@@ -371,6 +371,11 @@
             <div class="chat-more-item" onclick="alert('位置功能开发中')">
                 <div class="chat-more-icon">📍</div>
                 <div class="chat-more-label">位置</div>
+            </div>
+            <!-- 需求 3: 聊天背景设置 -->
+            <div class="chat-more-item" onclick="openChatBackgroundModal()">
+                <div class="chat-more-icon">🖼️</div>
+                <div class="chat-more-label">聊天背景</div>
             </div>
             <div class="chat-more-item" onclick="alert('红包功能开发中')">
                 <div class="chat-more-icon">🧧</div>
@@ -1248,8 +1253,11 @@
 
             <!-- 聊天背景 -->
             <div class="chat-info-group">
-                <div class="chat-info-item chat-info-clickable" onclick="alert('聊天背景设置开发中')">
+                <div class="chat-info-item chat-info-clickable" onclick="openChatBackgroundModal()">
                     <div class="chat-info-label">聊天背景</div>
+                    <div class="chat-info-value">
+                        <span class="chat-info-arrow">〉</span>
+                    </div>
                 </div>
             </div>
 
@@ -1795,7 +1803,7 @@
                 <div style="margin-bottom: 20px;">
                     <div style="font-size: 14px; color: #666; margin-bottom: 12px;">内置弹窗美化模板</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #007AFF; color: #007AFF;" onclick="applyBatteryTemplate('ios')">iOS 风格</button>
+                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #000; color: #000;" onclick="applyBatteryTemplate('ios')">iOS 风格</button>
                         <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #FF3B30; color: #FF3B30;" onclick="applyBatteryTemplate('neon')">霓虹风格</button>
                         <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #07C160; color: #07C160;" onclick="applyBatteryTemplate('minimal')">极简风格</button>
                         <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #8E8E93; color: #8E8E93;" onclick="applyBatteryTemplate('dark')">暗黑风格</button>
@@ -1938,7 +1946,7 @@
 
             
             <div style="margin-top: 30px; padding: 0 20px;">
-                <button class="theme-action-btn" type="button" onclick="saveCurrentApiConfig()" style="width: 100%; background: #007AFF; color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">保存配置</button>
+                <button class="theme-action-btn" type="button" onclick="saveCurrentApiConfig()" style="width: 100%; background: #000; color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">保存配置</button>
             </div>
         </div>
     </div>

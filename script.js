@@ -525,7 +525,7 @@ let currentElement = null;
             alertBox.innerHTML = `
                 <div class="battery-alert-content" style="margin-bottom: 20px; font-size: 16px; line-height: 1.5;">${text}</div>
                 <button onclick="document.getElementById('batteryAlertOverlay').remove()" 
-                        style="width: 100%; padding: 12px; background: #007AFF; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                        style="width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">
                     好的
                 </button>
             `;
@@ -1434,7 +1434,7 @@ let currentElement = null;
             
             const selectBtn = document.getElementById('contactsSelectBtn');
             if (selectBtn) {
-                selectBtn.style.color = contactSelectMode ? '#007AFF' : '#000';
+                selectBtn.style.color = contactSelectMode ? '#000' : '#000';
             }
             
             updateDeleteButton();
@@ -2972,17 +2972,6 @@ let currentElement = null;
                     return;
                 }
 
-                // 1.翻译的内容有特殊符号或者emoji表情的直接保存过来无需翻译。
-                const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/u;
-                const specialSymbolRegex = /[^\u0000-\u007F\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef\s\w,.?!，。？！]/;
-                
-                if (emojiRegex.test(content) || specialSymbolRegex.test(content)) {
-                    msg.translation = content;
-                    saveChatHistories();
-                    renderMessages();
-                    return;
-                }
-
                 const chatStatus = document.getElementById('chatStatus');
                 if (chatStatus) {
                     chatStatus.textContent = '翻译中...';
@@ -3027,7 +3016,7 @@ let currentElement = null;
                         body: JSON.stringify({
                             model: config.model,
                             messages: [
-                                { role: "system", content: "你是一个翻译专家。请将用户提供的文本（通常是非中文）翻译成简洁自然的中文。如果文本已经是中文，请保持原样。只返回翻译后的中文内容，不要有任何解释。" },
+                                { role: "system", content: "你是一个翻译专家。请将用户提供的文本翻译成系统语言（中文）。如果文本中包含emoji表情、特殊符号或图形，请在翻译结果中原封不动地保留它们在相应的位置。只返回翻译后的内容，不要有任何解释。" },
                                 { role: "user", content: content }
                             ],
                             temperature: 0.3
@@ -3148,6 +3137,10 @@ let currentElement = null;
             document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);
             document.getElementById('chatStatus').textContent = '';
             
+            // 加载聊天背景
+            const settings = getChatSettings(friendId);
+            applyChatBackground(settings.background);
+
             // 加载草稿
             const drafts = JSON.parse(localStorage.getItem('wechat_chat_drafts') || '{}');
             const draft = drafts[friendId] || '';
@@ -3162,6 +3155,65 @@ let currentElement = null;
             renderMessages();
             handleChatInput(input);
             saveUIState();
+        }
+
+        function openChatBackgroundModal() {
+            if (!currentChatFriendId) return;
+            
+            const originalConfirmUrl = window.confirmUrl;
+            const originalHandleFileSelect = window.handleFileSelect;
+
+            window.confirmUrl = function() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (url) {
+                    setChatBackground(url);
+                    closeModal();
+                }
+                window.confirmUrl = originalConfirmUrl;
+                document.querySelector('#imageModal .modal-title').textContent = '更改图片';
+            };
+
+            window.handleFileSelect = function(event) {
+                const file = event.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        setChatBackground(e.target.result);
+                        closeModal();
+                    };
+                    reader.readAsDataURL(file);
+                }
+                window.handleFileSelect = originalHandleFileSelect;
+                document.querySelector('#imageModal .modal-title').textContent = '更改图片';
+            };
+
+            document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('imageModal').classList.add('active');
+            document.querySelector('#imageModal .modal-title').textContent = '设置聊天背景';
+        }
+
+        function setChatBackground(src) {
+            if (!currentChatFriendId) return;
+            
+            const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+            if (!allSettings[currentChatFriendId]) allSettings[currentChatFriendId] = {};
+            
+            allSettings[currentChatFriendId].background = src;
+            localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
+            
+            applyChatBackground(src);
+            alert('聊天背景已设置');
+        }
+
+        function applyChatBackground(src) {
+            const container = document.getElementById('chatMessages');
+            if (src) {
+                container.style.backgroundImage = `url('${src}')`;
+                container.style.backgroundSize = 'cover';
+                container.style.backgroundPosition = 'center';
+            } else {
+                container.style.backgroundImage = 'none';
+            }
         }
 
         let currentStickerCategory = 'default';
@@ -3206,7 +3258,8 @@ let currentElement = null;
                 if (inputBar) inputBar.style.paddingBottom = '30px';
                 
                 document.activeElement.blur();
-                switchStickerCategory('favorites');
+                // 需求 2: 聊天页面表情包预览点开优先显示默认页面
+                switchStickerCategory('default');
                 panel.classList.add('active');
             } else {
                 panel.classList.remove('active');

@@ -665,13 +665,23 @@
         }
 
         .modal-btn.cancel {
-            background: #f0f0f0;
-            color: #333;
+            background: #000;
+            color: #fff;
         }
 
         .modal-btn.confirm {
-            background: #007AFF;
+            background: #000;
             color: #fff;
+        }
+
+        .modal-btn.confirm, 
+        .image-option-btn,
+        .theme-action-btn,
+        .add-contact-nav-right,
+        .security-primary-btn,
+        .settings-full-btn.export {
+            background: #000 !important;
+            color: #fff !important;
         }
 
         .image-options {
@@ -682,7 +692,8 @@
 
         .image-option-btn {
             padding: 12px;
-            background: #f0f0f0;
+            background: #000;
+            color: #fff;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -1062,6 +1073,13 @@
             border-radius: 18px; /* 更加圆润的矩形 */
         }
 
+        /* 聊天背景样式 */
+        #chatMessages {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         /* 多选复选框样式 */
         .msg-checkbox {
             width: 22px;
@@ -1438,7 +1456,7 @@
 
         .add-contact-nav-right {
             color: #fff;
-            background: #8e8e93;
+            background: #000;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -2023,7 +2041,7 @@
         }
 
         .theme-action-btn {
-            background: #007AFF;
+            background: #000;
             color: white;
             border: none;
             padding: 15px;
@@ -2031,7 +2049,7 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             transition: transform 0.2s;
         }
 
@@ -2056,7 +2074,7 @@
         }
 
         .theme-card.active {
-            border-color: #007AFF;
+            border-color: #000;
             background: #eef6ff;
         }
 
@@ -2216,7 +2234,7 @@
         }
 
         .wallpaper-item.active {
-            border-color: #007AFF;
+            border-color: #000;
         }
 
         .wallpaper-thumb {
@@ -2328,7 +2346,7 @@
         }
 
         .font-item.active {
-            border-color: #007AFF;
+            border-color: #000;
             background: #eef6ff;
         }
 
@@ -2493,7 +2511,7 @@
         }
 
         input:checked + .slider {
-            background-color: #4cd964;
+            background-color: #000;
         }
 
         input:checked + .slider:before {
@@ -2519,14 +2537,14 @@
         }
 
         .settings-full-btn.export {
-            background: #007AFF;
+            background: #000;
             color: #fff;
         }
 
         .settings-full-btn.import {
             background: #fff;
-            color: #007AFF;
-            border: 1px solid #007AFF;
+            color: #000;
+            border: 1px solid #000;
         }
 
         .settings-full-btn.delete {
@@ -2719,7 +2737,7 @@
         }
 
         .api-input:focus {
-            border-color: #007AFF;
+            border-color: #000;
         }
 
         .search-model-btn {
@@ -2753,7 +2771,7 @@
             width: 26px;
             height: 26px;
             background: #fff;
-            border: 2px solid #007AFF;
+            border: 2px solid #000;
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
@@ -2761,7 +2779,7 @@
 
         #tempValue {
             font-size: 14px;
-            color: #007AFF;
+            color: #000;
             font-weight: 600;
         }
 

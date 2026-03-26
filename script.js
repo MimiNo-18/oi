@@ -921,18 +921,18 @@ let currentElement = null;
         
         // 图标配置
         const iconConfig = [
-            { id: 'avatar1', name: '头像1' },
-            { id: 'avatar2', name: '头像2' },
-            { id: 'illustration', name: '插画' },
-            { id: 'app1', name: '微信' },
-            { id: 'app2', name: '小游戏' },
-            { id: 'app3', name: '世界书' },
-            { id: 'app4', name: '网易云音乐' },
-            { id: 'dock1', name: '电话' },
-            { id: 'dock2', name: '联系人' },
-            { id: 'dock3', name: '主题' },
-            { id: 'dock4', name: '设置' },
-            { id: 'accountAvatarImg', name: '账号头像' }
+            { id: 'avatar1', name: '头像1', default: '' },
+            { id: 'avatar2', name: '头像2', default: '' },
+            { id: 'illustration', name: '插画', default: '' },
+            { id: 'app1', name: '微信', default: '' },
+            { id: 'app2', name: '小游戏', default: '' },
+            { id: 'app3', name: '世界书', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E" },
+            { id: 'app4', name: '网易云音乐', default: '' },
+            { id: 'dock1', name: '电话', default: '' },
+            { id: 'dock2', name: '联系人', default: '' },
+            { id: 'dock3', name: '主题', default: '' },
+            { id: 'dock4', name: '设置', default: '' },
+            { id: 'accountAvatarImg', name: '账号头像', default: '' }
         ];
         
         // 加载保存的图标和普通图片
@@ -5192,7 +5192,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     await dbClear('icons');
                     iconConfig.forEach(icon => {
                         const el = document.getElementById(icon.id);
-                        if (el) el.src = '';
+                        if (el) el.src = icon.default || '';
                     });
                     if (document.getElementById('themeContainer').style.display === 'flex') {
                         renderIconList();

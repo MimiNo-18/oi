@@ -75,16 +75,9 @@
                     <img src="" class="app-icon" id="app2" onclick="changeImage('app2')" alt="应用图标">
                     <div class="app-label">小游戏</div>
                 </div>
-                <div class="app-item world-book-app" onclick="openWorldBook()">
-                    <div class="app-icon world-book-icon-box" id="app3-container">
-                        <div class="world-book-icon-content">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="world-book-svg">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 0-4-4H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 1 4-4h6z"></path>
-                            </svg>
-                            <div class="world-book-icon-text">世界书</div>
-                        </div>
-                    </div>
+                <div class="app-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E" class="app-icon" id="app3" onclick="openWorldBook()" alt="世界书">
+                    <div class="app-label">世界书</div>
                 </div>
                 <div class="app-item">
                     <img src="" class="app-icon" id="app4" onclick="changeImage('app4')" alt="应用图标">
@@ -2383,10 +2376,10 @@
         
         <!-- 图标设置页面 -->
         <div class="theme-content" id="iconPage">
-            <div class="icon-list" id="iconList">
+            <div class="icon-list" id="iconList" style="padding-bottom: 80px;">
                 <!-- 图标列表动态生成 -->
             </div>
-            <button class="wallpaper-action-btn" type="button" onclick="resetIcons()" style="margin-top: 20px; background: #ff3b30; color: white; flex-shrink: 0;">重置默认图标</button>
+            <button class="delete-bottom-btn" type="button" onclick="resetIcons()">重置默认图标</button>
         </div>
     </div>
 

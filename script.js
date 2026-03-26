@@ -840,13 +840,24 @@ let currentElement = null;
             const infoPhone = document.getElementById('info-phone');
             const infoAvatar = document.getElementById('accountInfoAvatarPreview');
             const infoMimi = document.getElementById('info-mimi-id');
+            const infoCountry = document.getElementById('info-country');
+            const infoLocation = document.getElementById('info-location');
 
             if (infoNickname) infoNickname.textContent = nickname === '请输入昵称' ? '未设置' : nickname;
             if (infoPhone) infoPhone.textContent = phone === '请输入手机号' ? '未设置' : phone;
             if (infoAvatar) infoAvatar.src = avatarSrc;
-            if (infoMimi && !infoMimi.textContent) {
-                infoMimi.textContent = 'M' + Math.floor(Math.random() * 10000000);
+            
+            // 使用持久化 Mimi ID
+            if (infoMimi) {
+                if (!wechatUserInfo.mimiId) {
+                    wechatUserInfo.mimiId = 'Mid' + Math.floor(Math.random() * 100000000);
+                    saveWechatUserInfo();
+                }
+                infoMimi.textContent = wechatUserInfo.mimiId;
             }
+
+            if (infoCountry) infoCountry.textContent = wechatUserInfo.country || '中国';
+            if (infoLocation) infoLocation.textContent = wechatUserInfo.location || '未设置';
 
             updateTime();
             updateBattery();
@@ -1920,7 +1931,10 @@ let currentElement = null;
             phone: '未设置',
             region: '未设置',
             patPat: '未设置',
-            signature: '未设置'
+            signature: '未设置',
+            country: '中国',
+            location: '未设置',
+            mimiId: ''
         };
 
         let realNameInfo = {
@@ -2253,6 +2267,36 @@ let currentElement = null;
                 document.querySelector('#textModal .modal-title').textContent = '编辑文字';
             };
         }
+
+        function editAccountInfo(field, label) {
+            const originalConfirmText = window.confirmText;
+            const input = document.getElementById('textInput');
+            
+            document.querySelector('#textModal .modal-title').textContent = '修改' + label;
+            
+            let currentValue = wechatUserInfo[field] || (field === 'country' ? '中国' : '未设置');
+            input.value = currentValue === '未设置' ? '' : currentValue;
+            document.getElementById('textModal').classList.add('active');
+
+            window.confirmText = function() {
+                const newValue = input.value.trim();
+                if (newValue) {
+                    wechatUserInfo[field] = newValue;
+                    
+                    // 同步所有相关的显示元素
+                    document.querySelectorAll('#info-' + field).forEach(el => {
+                        el.textContent = newValue;
+                    });
+                    
+                    saveWechatUserInfo();
+                }
+                closeModal();
+                window.confirmText = originalConfirmText;
+                document.querySelector('#textModal .modal-title').textContent = '编辑文字';
+            };
+        }
+        
+        window.editWechatAccountInfo = editAccountInfo;
 
         // 微信主页搜索功能
         function searchWechat() {

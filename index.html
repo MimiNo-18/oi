@@ -890,22 +890,22 @@
         </div>
         <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7;">
             <div class="settings-list-wrapper">
-                <div class="me-rounded-box">
-                    <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()">
-                        <div class="me-menu-label">个人资料</div>
+            <div class="me-rounded-box">
+                <div class="me-menu-item" onclick="editWechatAccountInfo('country', '注册国家')">
+                    <div class="me-menu-label">注册国家</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="info-country" style="color: #888; font-size: 15px;">中国</span>
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="me-divider"></div>
-                <div class="me-rounded-box">
-                    <div class="me-menu-item setting-item" data-search="通知">
-                        <div class="me-menu-label">新消息通知</div>
+                <div class="me-menu-item" onclick="editWechatAccountInfo('location', '所在地')">
+                    <div class="me-menu-label">所在地</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="info-location" style="color: #888; font-size: 15px;">未设置</span>
                         <span class="me-arrow">〉</span>
                     </div>
-                    <div class="me-menu-item setting-item" data-search="显示" onclick="openWechatDisplaySettings()">
-                        <div class="me-menu-label">显示</div>
-                        <span class="me-arrow">〉</span>
-                    </div>
+                </div>
+            </div>
                     <div class="me-menu-item setting-item" data-search="朋友权限">
                         <div class="me-menu-label">朋友权限</div>
                         <span class="me-arrow">〉</span>
@@ -1983,17 +1983,17 @@
             <div class="me-divider"></div>
 
             <div class="me-rounded-box">
-                <div class="me-menu-item">
+                <div class="me-menu-item" onclick="editAccountInfo('country', '注册国家')">
                     <div class="me-menu-label">注册国家</div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #888; font-size: 15px;">中国</span>
+                        <span id="info-country" style="color: #888; font-size: 15px;">中国</span>
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="me-menu-item">
+                <div class="me-menu-item" onclick="editAccountInfo('location', '所在地')">
                     <div class="me-menu-label">所在地</div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #888; font-size: 15px;">未设置</span>
+                        <span id="info-location" style="color: #888; font-size: 15px;">未设置</span>
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>

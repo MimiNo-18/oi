@@ -4027,7 +4027,6 @@
     z-index: 1000;
     right: 40px; /* 位于两个点的左边 */
     top: -10px;
-    animation: fadeIn 0.2s ease;
 }
 
 .moment-action-item {

@@ -537,7 +537,47 @@ let currentElement = null;
                     moment.likes.push(myName);
                 }
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                renderMoments();
+                
+                // 优化：仅更新当前动态的 UI，实现立刻反应
+                const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
+                if (momentEl) {
+                    const feedbackSection = momentEl.querySelector('.moment-feedback-section');
+                    
+                    let likesHtml = '';
+                    if (moment.likes && moment.likes.length > 0) {
+                        likesHtml = `
+                            <div class="moment-likes-box">
+                                <span class="heart-hollow">♡</span>
+                                ${moment.likes.join(', ')}
+                            </div>
+                        `;
+                    }
+
+                    let dividerHtml = (moment.likes && moment.likes.length > 0 && moment.comments && moment.comments.length > 0) 
+                        ? '<div class="moment-feedback-divider"></div>' 
+                        : '';
+
+                    let commentsHtml = '';
+                    if (moment.comments && moment.comments.length > 0) {
+                        commentsHtml = `<div class="moment-comments-list">
+                            ${moment.comments.map((c, cIdx) => {
+                                let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
+                                return `<div class="moment-comment-item" onclick="handleCommentClick(${moment.id}, ${cIdx}, event)">
+                                    <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
+                                </div>`;
+                            }).join('')}
+                        </div>`;
+                    }
+
+                    if (!likesHtml && !commentsHtml) {
+                        feedbackSection.style.display = 'none';
+                    } else {
+                        feedbackSection.style.display = 'flex';
+                        feedbackSection.innerHTML = `${likesHtml}${dividerHtml}${commentsHtml}`;
+                    }
+                } else {
+                    renderMoments();
+                }
             }
             document.getElementById('momentActionPopup').style.display = 'none';
         }
@@ -574,6 +614,7 @@ let currentElement = null;
             if (!content || !currentMomentId) return;
 
             const moment = momentsData.find(m => m.id === currentMomentId);
+            const id = currentMomentId;
             if (moment) {
                 const myNickname = wechatUserInfo.nickname || '我';
                 const newComment = {
@@ -586,7 +627,43 @@ let currentElement = null;
                 }
                 moment.comments.push(newComment);
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                renderMoments();
+                
+                // 优化：立刻局部更新 UI
+                const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
+                if (momentEl) {
+                    const feedbackSection = momentEl.querySelector('.moment-feedback-section');
+                    
+                    let likesHtml = '';
+                    if (moment.likes && moment.likes.length > 0) {
+                        likesHtml = `
+                            <div class="moment-likes-box">
+                                <span class="heart-hollow">♡</span>
+                                ${moment.likes.join(', ')}
+                            </div>
+                        `;
+                    }
+
+                    let dividerHtml = (moment.likes && moment.likes.length > 0 && moment.comments && moment.comments.length > 0) 
+                        ? '<div class="moment-feedback-divider"></div>' 
+                        : '';
+
+                    let commentsHtml = '';
+                    if (moment.comments && moment.comments.length > 0) {
+                        commentsHtml = `<div class="moment-comments-list">
+                            ${moment.comments.map((c, cIdx) => {
+                                let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
+                                return `<div class="moment-comment-item" onclick="handleCommentClick(${moment.id}, ${cIdx}, event)">
+                                    <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
+                                </div>`;
+                            }).join('')}
+                        </div>`;
+                    }
+
+                    feedbackSection.style.display = 'flex';
+                    feedbackSection.innerHTML = `${likesHtml}${dividerHtml}${commentsHtml}`;
+                } else {
+                    renderMoments();
+                }
             }
 
             const inputBar = document.getElementById('momentCommentInputBar');

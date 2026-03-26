@@ -485,6 +485,48 @@
                 </div>
             </div>
 
+            <!-- 微信“发现”页面 -->
+            <div id="wechatDiscoverPage" style="display: none; padding-bottom: 80px; background: #f7f7f7;">
+                <div class="discover-group">
+                    <div class="discover-item" onclick="openMoments()">
+                        <div class="discover-icon" style="color: #ff9800;">🖼️</div>
+                        <div class="discover-label">朋友圈</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+
+                <div class="discover-group">
+                    <div class="discover-item" onclick="alert('扫一扫功能开发中')">
+                        <div class="discover-icon" style="color: #2196F3;">📷</div>
+                        <div class="discover-label">扫一扫</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="discover-item" onclick="alert('听一听功能开发中')">
+                        <div class="discover-icon" style="color: #4CAF50;">🎵</div>
+                        <div class="discover-label">听一听</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="discover-item" onclick="alert('搜一搜功能开发中')">
+                        <div class="discover-icon" style="color: #f44336;">🔍</div>
+                        <div class="discover-label">搜一搜</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+
+                <div class="discover-group">
+                    <div class="discover-item" onclick="alert('直播功能开发中')">
+                        <div class="discover-icon" style="color: #ff5722;">📺</div>
+                        <div class="discover-label">直播</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                    <div class="discover-item" onclick="alert('游戏功能开发中')">
+                        <div class="discover-icon" style="color: #ffc107;">🎮</div>
+                        <div class="discover-label">游戏</div>
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 微信“我”页面 -->
             <div id="wechatMePage" style="display: none; padding-bottom: 80px;">
                 <div class="me-header" onclick="openPersonalInfo()">
@@ -600,11 +642,12 @@
             <div id="momentsScrollArea" style="flex: 1; overflow-y: auto;" onscroll="handleMomentsScroll(this)">
                 <!-- 朋友圈个人背景区 -->
                 <div class="moments-profile">
-                    <img id="momentsBg" src="https://img.heliar.top/file/1774448251294_无标题27_20260325221510.png" class="moments-bg-img" onclick="changeMomentsBg()">
+                    <img id="momentsBg" src="" class="moments-bg-img" onclick="changeMomentsBg()" style="background-color: #d0d0d0;">
                     <div class="moments-user-info">
-                        <img id="momentsAvatar" src="" class="moments-user-avatar">
-                        <div id="momentsSignature" class="moments-signature">个性签名...</div>
+                        <div id="momentsUsername" class="moments-user-name">未设置网名</div>
+                        <img id="momentsAvatar" src="" class="moments-user-avatar" style="background-color: #d0d0d0;">
                     </div>
+                    <div id="momentsSignature" class="moments-signature">个性签名...</div>
                 </div>
 
                 <!-- 朋友圈列表内容 -->

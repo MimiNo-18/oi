@@ -33,9 +33,11 @@ let currentElement = null;
             // 初始化个人信息
             const me = wechatUserInfo;
             const avatarImg = document.getElementById('momentsAvatar');
+            const nameEl = document.getElementById('momentsUsername');
             const sigEl = document.getElementById('momentsSignature');
             
-            if (avatarImg) avatarImg.src = me.avatar || 'https://img.heliar.top/file/1774448251294_无标题27_20260325221510.png';
+            if (avatarImg) avatarImg.src = me.avatar || '';
+            if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
             if (sigEl) sigEl.textContent = me.signature || '个性签名...';
             
             renderMoments();
@@ -1599,6 +1601,7 @@ let currentElement = null;
         function switchWechatTab(tab, element) {
             const chatList = document.getElementById('chatList');
             const contactsPage = document.getElementById('wechatContactsPage');
+            const discoverPage = document.getElementById('wechatDiscoverPage');
             const mePage = document.getElementById('wechatMePage');
             const tagBar = document.getElementById('wechatTagBar');
             const searchBar = document.getElementById('wechatSearchBar');
@@ -1615,6 +1618,7 @@ let currentElement = null;
             // 默认隐藏所有内容区域
             chatList.style.display = 'none';
             contactsPage.style.display = 'none';
+            if (discoverPage) discoverPage.style.display = 'none';
             mePage.style.display = 'none';
             
             // 默认显示搜索栏 (消息和通讯录页需要)
@@ -1637,9 +1641,7 @@ let currentElement = null;
                 navTitle.textContent = '通讯录';
                 renderWechatContacts();
             } else if (tab === 'discover') {
-                // 进入朋友圈
-                openMoments();
-                // 保持在发现tab的视觉状态，但不显示默认发现页内容
+                if (discoverPage) discoverPage.style.display = 'block';
                 navTitle.textContent = '发现';
             } else if (tab === 'me') {
                 mePage.style.display = 'block';

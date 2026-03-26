@@ -65,12 +65,13 @@ let currentElement = null;
             }
         }
 
+        let momentImages = []; // 存储朋友圈图片（真实图片或内容图片）
+
         function openMomentsEdit() {
             document.getElementById('momentsEditPage').style.display = 'flex';
             document.getElementById('momentTextInput').value = '';
-            document.getElementById('momentImagePreview').style.display = 'none';
-            document.getElementById('momentImagePreview').src = '';
-            currentMomentImage = '';
+            momentImages = [];
+            renderEditImages();
             updatePostBtnState();
         }
 
@@ -81,7 +82,7 @@ let currentElement = null;
         function updatePostBtnState() {
             const text = document.getElementById('momentTextInput').value.trim();
             const btn = document.getElementById('momentsPostBtn');
-            if (text || currentMomentImage || momentImageContent) {
+            if (text || momentImages.length > 0) {
                 btn.classList.add('active');
                 btn.style.backgroundColor = '#000';
             } else {
@@ -96,11 +97,19 @@ let currentElement = null;
             if (area) {
                 area.addEventListener('input', updatePostBtnState);
             }
+            
+            // 点击卡片以外关闭图片展示
+            const detailModal = document.getElementById('imageDetailModal');
+            if (detailModal) {
+                detailModal.addEventListener('click', (e) => {
+                    if (e.target === detailModal) {
+                        closeImageDetail();
+                    }
+                });
+            }
         });
 
-        let momentImageContent = '';
         function selectMomentImage() {
-            // 需求 2: 点击加号弹出输入图片内容的弹窗
             document.getElementById('imageContentModal').classList.add('active');
             document.getElementById('imageContentInput').value = '';
             document.getElementById('imageContentInput').focus();
@@ -113,26 +122,44 @@ let currentElement = null;
         function confirmImageContent() {
             const content = document.getElementById('imageContentInput').value.trim();
             if (content) {
-                momentImageContent = content;
-                currentMomentImage = ''; // 清除真实的图片
-                
-                // 显示灰色图片预览
-                const placeholder = document.getElementById('momentImagePlaceholder');
-                const plus = document.querySelector('.uploader-plus');
-                const preview = document.getElementById('momentImagePreview');
-                
-                if (preview) preview.style.display = 'none';
-                if (plus) plus.style.display = 'none';
-                if (placeholder) {
-                    placeholder.style.display = 'flex';
-                    placeholder.onclick = (e) => {
-                        e.stopPropagation();
-                        showMomentImageDetail(momentImageContent);
-                    };
-                }
+                momentImages.push({
+                    type: 'text',
+                    content: content
+                });
+                renderEditImages();
                 updatePostBtnState();
             }
             closeImageContentModal();
+        }
+
+        function renderEditImages() {
+            const container = document.getElementById('momentEditImages');
+            if (!container) return;
+            
+            // 保留上传按钮
+            const uploader = document.querySelector('.moment-image-uploader');
+            container.innerHTML = '';
+            
+            momentImages.forEach((img, idx) => {
+                const item = document.createElement('div');
+                item.className = 'moment-preview-image';
+                if (img.type === 'text') {
+                    item.innerHTML = `<span>${img.content}</span>`;
+                } else {
+                    item.style.backgroundImage = `url(${img.content})`;
+                    item.style.backgroundSize = 'cover';
+                }
+                item.onclick = () => {
+                    if (confirm('是否删除这张图片？')) {
+                        momentImages.splice(idx, 1);
+                        renderEditImages();
+                        updatePostBtnState();
+                    }
+                };
+                container.appendChild(item);
+            });
+            
+            container.appendChild(uploader);
         }
 
         function showMomentImageDetail(content) {
@@ -142,6 +169,10 @@ let currentElement = null;
                 textEl.textContent = content;
                 modal.classList.add('active');
             }
+        }
+
+        function closeImageDetail() {
+            document.getElementById('imageDetailModal').classList.remove('active');
         }
 
         function handleMomentImageSelect(event) {
@@ -168,7 +199,7 @@ let currentElement = null;
 
         function postMoment() {
             const text = document.getElementById('momentTextInput').value.trim();
-            if (!text && !currentMomentImage && !momentImageContent) return;
+            if (!text && momentImages.length === 0) return;
 
             const me = wechatUserInfo;
             const newMoment = {
@@ -176,8 +207,7 @@ let currentElement = null;
                 nickname: me.nickname || '我',
                 avatar: me.avatar || wechatUserInfo.avatar || '',
                 content: text,
-                image: currentMomentImage,
-                imageContent: momentImageContent,
+                images: JSON.parse(JSON.stringify(momentImages)),
                 time: Date.now(),
                 likes: [],
                 comments: [],
@@ -187,16 +217,9 @@ let currentElement = null;
             momentsData.unshift(newMoment);
             localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
             
-            momentImageContent = '';
-            currentMomentImage = '';
-            const placeholder = document.getElementById('momentImagePlaceholder');
-            if (placeholder) placeholder.style.display = 'none';
-            const plus = document.querySelector('.uploader-plus');
-            if (plus) plus.style.display = 'flex';
-
+            momentImages = [];
             closeMomentsEdit();
             renderMoments();
-            alert('发表成功');
         }
 
         let currentMomentId = null;
@@ -209,38 +232,24 @@ let currentElement = null;
                 const momentEl = document.createElement('div');
                 momentEl.className = 'moment-item';
                 
-                // 长按处理
-                let longPressTimer;
-                momentEl.ontouchstart = (e) => {
-                    if (item.isMine) {
-                        longPressTimer = setTimeout(() => {
-                            showMomentMenu(item.id, e.touches[0]);
-                        }, 800);
-                    }
-                };
-                momentEl.ontouchend = () => clearTimeout(longPressTimer);
-                momentEl.ontouchmove = () => clearTimeout(longPressTimer);
-
                 let imagesHtml = '';
-                if (item.image) {
-                    imagesHtml = `
-                        <div class="moment-images">
-                            <img src="${item.image}" class="moment-img" onclick="previewImage('${item.image}')">
-                        </div>
-                    `;
-                } else if (item.imageContent) {
-                    imagesHtml = `
-                        <div class="moment-images">
-                            <div class="moment-image-placeholder" onclick="showMomentImageDetail('${item.imageContent}')">图片内容</div>
-                        </div>
-                    `;
+                if (item.images && item.images.length > 0) {
+                    imagesHtml = `<div class="moment-images" style="grid-template-columns: repeat(${item.images.length === 1 ? 1 : (item.images.length === 2 || item.images.length === 4 ? 2 : 3)}, 1fr);">`;
+                    item.images.forEach(img => {
+                        if (img.type === 'text') {
+                            imagesHtml += `<div class="moment-img" onclick="showMomentImageDetail('${img.content}')" style="display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; padding:5px; text-align:center;">${img.content}</div>`;
+                        } else {
+                            imagesHtml += `<img src="${img.content}" class="moment-img" onclick="previewImage('${img.content}')">`;
+                        }
+                    });
+                    imagesHtml += `</div>`;
                 }
 
                 let likesHtml = '';
                 if (item.likes && item.likes.length > 0) {
                     likesHtml = `
                         <div class="moment-likes-box">
-                            <span style="margin-right: 5px; color: #576b95;">❤</span>
+                            <span class="heart-hollow">♡</span>
                             ${item.likes.join(', ')}
                         </div>
                     `;
@@ -248,8 +257,8 @@ let currentElement = null;
 
                 let commentsHtml = '';
                 if (item.comments && item.comments.length > 0) {
-                    commentsHtml = `<div class="moment-comments-box">
-                        ${item.comments.map(c => `<div><span class="comment-nickname">${c.nickname}:</span> ${c.content}</div>`).join('')}
+                    commentsHtml = `<div class="moment-comments-list">
+                        ${item.comments.map(c => `<div class="moment-comment-item">${c.nickname}：${c.content}</div>`).join('')}
                     </div>`;
                 }
 
@@ -298,24 +307,20 @@ let currentElement = null;
             event.stopPropagation();
             const popup = document.getElementById('momentActionPopup');
             const btn = event.currentTarget;
-            const rect = btn.getBoundingClientRect();
             
-            if (currentMomentId === id && popup.classList.contains('active')) {
-                popup.classList.remove('active');
+            if (currentMomentId === id && popup.style.display === 'flex') {
+                popup.style.display = 'none';
                 return;
             }
 
             currentMomentId = id;
+            
+            // 将弹窗插入到当前按钮所在的 footer 中，以利用相对定位
+            const footer = btn.closest('.moment-footer');
+            footer.appendChild(popup);
+            
             popup.style.display = 'flex';
-            popup.classList.add('active');
             
-            // 计算位置：按钮左侧
-            const scrollArea = document.getElementById('momentsScrollArea');
-            const containerRect = document.getElementById('momentsContainer').getBoundingClientRect();
-            
-            popup.style.top = (rect.top - containerRect.top - 8) + 'px';
-            popup.style.left = (rect.left - containerRect.left - 185) + 'px'; // 弹窗宽度约 180px
-
             // 设置点赞按钮文本
             const moment = momentsData.find(m => m.id === id);
             const myName = wechatUserInfo.nickname || '我';
@@ -358,20 +363,19 @@ let currentElement = null;
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
                 renderMoments();
             }
-            document.getElementById('momentActionPopup').classList.remove('active');
+            document.getElementById('momentActionPopup').style.display = 'none';
         }
 
         function showMomentCommentInput(id, event) {
             event.stopPropagation();
             currentMomentId = id;
             const inputBar = document.getElementById('momentCommentInputBar');
-            inputBar.classList.add('active');
             inputBar.style.display = 'flex';
             const input = document.getElementById('momentCommentInput');
             input.value = '';
             input.focus();
             updateMomentCommentSendBtn();
-            document.getElementById('momentActionPopup').classList.remove('active');
+            document.getElementById('momentActionPopup').style.display = 'none';
         }
 
         function updateMomentCommentSendBtn() {
@@ -401,7 +405,6 @@ let currentElement = null;
             }
 
             const inputBar = document.getElementById('momentCommentInputBar');
-            inputBar.classList.remove('active');
             inputBar.style.display = 'none';
             document.getElementById('momentCommentInput').blur();
         }

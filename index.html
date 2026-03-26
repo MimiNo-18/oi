@@ -697,8 +697,10 @@
 
         <!-- 图片详情显示模态框 (点击灰色图片放大) -->
         <div class="modal" id="imageDetailModal" onclick="this.classList.remove('active')">
-            <div class="image-detail-content" onclick="event.stopPropagation()">
-                <div id="imageDetailText"></div>
+            <div class="image-detail-content">
+                <div class="image-card" onclick="event.stopPropagation()">
+                    <div id="imageDetailText"></div>
+                </div>
             </div>
         </div>
 
@@ -710,9 +712,10 @@
             </div>
             <div class="moments-edit-content">
                 <textarea id="momentTextInput" class="moment-text-area" placeholder="这一刻的想法..."></textarea>
-                <div class="moment-image-uploader" onclick="selectMomentImage()">
-                    <div class="uploader-plus">+</div>
-                    <img id="momentImagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                <div class="moment-edit-images-container" id="momentEditImagesContainer">
+                    <div class="moment-image-uploader" onclick="selectMomentImage()">
+                        <div class="uploader-plus">+</div>
+                    </div>
                 </div>
                 <div class="moment-edit-options">
                     <div class="moment-option-item">

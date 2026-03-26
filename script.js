@@ -133,11 +133,18 @@ let currentElement = null;
         }
 
         function renderEditImages() {
-            const container = document.getElementById('momentEditImages');
+            const container = document.getElementById('momentEditImagesContainer');
             if (!container) return;
             
-            // 保留上传按钮
-            const uploader = document.querySelector('.moment-image-uploader');
+            // 获取上传按钮（如果不存在则创建一个）
+            let uploader = container.querySelector('.moment-image-uploader');
+            if (!uploader) {
+                uploader = document.createElement('div');
+                uploader.className = 'moment-image-uploader';
+                uploader.onclick = selectMomentImage;
+                uploader.innerHTML = '<div class="uploader-plus">+</div>';
+            }
+            
             container.innerHTML = '';
             
             momentImages.forEach((img, idx) => {
@@ -231,7 +238,25 @@ let currentElement = null;
             momentsData.forEach((item, index) => {
                 const momentEl = document.createElement('div');
                 momentEl.className = 'moment-item';
+                momentEl.setAttribute('data-moment-id', item.id);
                 
+                // 添加长按事件
+                let momentLongPressTimer;
+                momentEl.addEventListener('touchstart', (e) => {
+                    momentLongPressTimer = setTimeout(() => {
+                        showMomentContextMenu(item, e.touches[0]);
+                    }, 600);
+                }, { passive: true });
+                momentEl.addEventListener('touchend', () => clearTimeout(momentLongPressTimer));
+                momentEl.addEventListener('touchmove', () => clearTimeout(momentLongPressTimer));
+                momentEl.addEventListener('mousedown', (e) => {
+                    momentLongPressTimer = setTimeout(() => {
+                        showMomentContextMenu(item, e);
+                    }, 600);
+                });
+                momentEl.addEventListener('mouseup', () => clearTimeout(momentLongPressTimer));
+                momentEl.addEventListener('mouseleave', () => clearTimeout(momentLongPressTimer));
+
                 let imagesHtml = '';
                 if (item.images && item.images.length > 0) {
                     imagesHtml = `<div class="moment-images" style="grid-template-columns: repeat(${item.images.length === 1 ? 1 : (item.images.length === 2 || item.images.length === 4 ? 2 : 3)}, 1fr);">`;
@@ -326,7 +351,7 @@ let currentElement = null;
             const myName = wechatUserInfo.nickname || '我';
             const likeBtn = document.getElementById('momentLikeBtn');
             if (moment && likeBtn) {
-                likeBtn.textContent = moment.likes.includes(myName) ? '取消' : '点赞';
+                likeBtn.innerHTML = moment.likes.includes(myName) ? '取消' : '点赞';
                 likeBtn.onclick = (e) => {
                     handleMomentLike(id, e);
                 };
@@ -340,9 +365,98 @@ let currentElement = null;
             }
         }
 
+        function showMomentContextMenu(item, pos) {
+            const menu = document.getElementById('momentContextMenu');
+            currentMomentId = item.id;
+            
+            menu.style.display = 'flex';
+            
+            const top = pos.clientY - 20;
+            const left = Math.max(10, Math.min(window.innerWidth - 250, pos.clientX - 120));
+            
+            menu.style.top = top + 'px';
+            menu.style.left = left + 'px';
+
+            const editBtn = document.getElementById('momentMenuEdit');
+            const deleteBtn = document.getElementById('momentMenuDelete');
+            const repostBtn = document.getElementById('momentMenuRepost');
+
+            // 根据是否是自己的朋友圈显示不同按钮
+            if (item.isMine) {
+                editBtn.style.display = 'block';
+                deleteBtn.style.display = 'block';
+                repostBtn.style.display = 'none';
+                
+                editBtn.style.width = '50%';
+                deleteBtn.style.width = '50%';
+            } else {
+                editBtn.style.display = 'block';
+                deleteBtn.style.display = 'block';
+                repostBtn.style.display = 'block';
+                
+                editBtn.style.width = '33.3%';
+                deleteBtn.style.width = '33.3%';
+                repostBtn.style.width = '33.3%';
+            }
+
+            editBtn.onclick = () => handleMomentLongAction('edit', item);
+            deleteBtn.onclick = () => handleMomentLongAction('delete', item);
+            repostBtn.onclick = () => handleMomentLongAction('repost', item);
+
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function handleMomentLongAction(action, item) {
+            document.getElementById('momentContextMenu').style.display = 'none';
+            
+            if (action === 'delete') {
+                if (confirm('是否删除这条朋友圈？')) {
+                    momentsData = momentsData.filter(m => m.id !== item.id);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }
+            } else if (action === 'edit') {
+                const modal = document.getElementById('momentEditModal');
+                const input = document.getElementById('momentEditTextInput');
+                input.value = item.content;
+                modal.classList.add('active');
+            } else if (action === 'repost') {
+                if (confirm('确定要重发这条朋友圈吗？')) {
+                    // 删除旧的
+                    momentsData = momentsData.filter(m => m.id !== item.id);
+                    // 创建新的（更新时间）
+                    const newMoment = {
+                        ...item,
+                        id: Date.now(),
+                        time: Date.now(),
+                        likes: [],
+                        comments: []
+                    };
+                    momentsData.unshift(newMoment);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }
+            }
+        }
+
+        function confirmMomentEdit() {
+            const newValue = document.getElementById('momentEditTextInput').value.trim();
+            if (currentMomentId) {
+                const moment = momentsData.find(m => m.id === currentMomentId);
+                if (moment) {
+                    moment.content = newValue;
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }
+            }
+            document.getElementById('momentEditModal').classList.remove('active');
+        }
+
         function hideMomentPopups() {
             const popup = document.getElementById('momentActionPopup');
-            if (popup) popup.classList.remove('active');
+            if (popup) popup.style.display = 'none';
+            const contextMenu = document.getElementById('momentContextMenu');
+            if (contextMenu) contextMenu.style.display = 'none';
             const inputBar = document.getElementById('momentCommentInputBar');
             if (inputBar && !inputBar.contains(document.activeElement)) {
                 // inputBar.classList.remove('active'); // 暂时不自动隐藏输入框，除非发送或取消

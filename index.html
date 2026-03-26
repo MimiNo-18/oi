@@ -76,7 +76,7 @@
                     <div class="app-label">小游戏</div>
                 </div>
                 <div class="app-item">
-                    <img src="" class="app-icon" id="app3" onclick="changeImage('app3')" alt="应用图标">
+                    <img src="" class="app-icon" id="app3" onclick="openWorldBook()" alt="应用图标">
                     <div class="app-label">世界书</div>
                 </div>
                 <div class="app-item">
@@ -2483,6 +2483,147 @@
                     <div class="real-name-label">人设 (Human Design)</div>
                     <textarea class="real-name-textarea" id="realName-persona" placeholder="请输入个人的人设设定..."></textarea>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 世界书应用容器 -->
+    <div id="worldBookContainer" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5000;">
+        <div class="status-bar">
+            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeWorldBook()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="wechat-nav-title">世界书</div>
+            <div class="wechat-nav-right" onclick="showAddWorldBookModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+        </div>
+        <div id="worldBookContent" style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div id="worldBookEmptyState" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="margin-bottom: 20px; color: #ccc;">
+                    <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        <line x1="8" y1="6" x2="16" y2="6"></line>
+                        <line x1="8" y1="10" x2="16" y2="10"></line>
+                        <line x1="8" y1="14" x2="16" y2="14"></line>
+                    </svg>
+                </div>
+                <div style="color: #999; font-size: 14px; text-align: center;">点击右上角“+”设置世界书吧！</div>
+            </div>
+            <div id="worldBookList" style="display: none; display: flex; flex-direction: column; gap: 15px;">
+                <!-- 世界书卡片 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 世界书编辑页面 -->
+    <div id="worldBookEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5100;">
+        <div class="status-bar">
+            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeWorldBookEdit()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="wechat-nav-right" onclick="showAddBookItemModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div style="display: flex; align-items: flex-end; gap: 8px; margin-bottom: 20px;">
+                <h1 id="editBookTitle" style="font-size: 28px; font-weight: bold; margin: 0;">书名</h1>
+                <div onclick="editWorldBookName()" style="cursor: pointer; padding-bottom: 4px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#999" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 8px;">简介</label>
+                <textarea id="editBookDesc" class="form-textarea" style="min-height: 80px;" placeholder="输入世界书简介..." oninput="updateBookDesc()"></textarea>
+            </div>
+            <div>
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 8px;">条目</label>
+                <div id="bookItemsList" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- 条目列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 条目编辑页面 -->
+    <div id="bookItemEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5200;">
+        <div class="status-bar">
+            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
+            <div class="status-right">
+                <div class="status-icons">
+                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
+                </div>
+                <div class="battery">
+                    <span class="battery-percent">100%</span>
+                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="wechat-nav-bar">
+            <div class="wechat-nav-left" onclick="closeBookItemEdit()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="wechat-nav-title" id="editItemTitle">条目名称</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 8px;">备注</label>
+                <input type="text" id="editItemRemark" class="form-input" placeholder="输入备注..." oninput="updateItemDetails()">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 8px;">内容</label>
+                <textarea id="editItemContent" class="form-textarea" style="min-height: 200px;" placeholder="输入内容..." oninput="updateItemDetails()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- 世界书添加弹窗 -->
+    <div class="modal" id="addWorldBookModal">
+        <div class="modal-content">
+            <div class="modal-title">世界书名称</div>
+            <input type="text" class="modal-input" id="newWorldBookName" style="border-radius: 8px;" placeholder="请输入世界书名称">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeAddWorldBookModal()">取消</button>
+                <button class="modal-btn confirm" onclick="confirmAddWorldBook()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 条目添加弹窗 -->
+    <div class="modal" id="addBookItemModal">
+        <div class="modal-content">
+            <div class="modal-title">输入条目名称</div>
+            <input type="text" class="modal-input" id="newBookItemName" style="border-radius: 8px;" placeholder="请输入条目名称">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeAddBookItemModal()">取消</button>
+                <button class="modal-btn confirm" onclick="confirmAddBookItem()">确定</button>
             </div>
         </div>
     </div>

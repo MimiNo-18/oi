@@ -4631,10 +4631,27 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             if (settings.senseTime) {
                 const now = new Date();
                 const timeStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}点${now.getMinutes()}分${now.getSeconds()}秒`;
-                systemPrompt += `\n- 当前真实时间：${timeStr}`;
-            }
+            systemPrompt += `\n- 当前真实时间：${timeStr}`;
+        }
 
-            systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
+        // 注入世界书信息
+        if (worldBooks && worldBooks.length > 0) {
+            let worldBookPrompt = "";
+            worldBooks.forEach(book => {
+                const activeItems = book.items.filter(item => item.enabled);
+                if (activeItems.length > 0) {
+                    worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
+                    activeItems.forEach(item => {
+                        worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
+                    });
+                }
+            });
+            if (worldBookPrompt) {
+                systemPrompt += `\n\n以下是关于你们所处世界的背景知识（请牢记并根据需要提及）：${worldBookPrompt}`;
+            }
+        }
+
+        systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
 1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。**严禁做出任何违反你人设的行为。**
 2. **回复相关性**：仔细阅读用户发送的每一句话，确保你的回复不答非所问，逻辑连贯。
 3. **引用功能**：如果你想引用某条历史消息进行针对性回复，请在你的回复开头使用格式 \`(引用: 消息内容) 你的回复\`。例如：\`(引用: 晚上一起吃饭吗) 好啊，去哪吃？\`。你可以引用用户说的话，也可以引用你自己说的话。注意：你无法引用合并聊天记录里面的具体聊天内容，但可以引用合并聊天记录本身（如其标题）。
@@ -6804,10 +6821,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             const state = {
                 activeContainer: '',
                 themePage: '',
-                activeChatId: currentChatFriendId
+                activeChatId: currentChatFriendId,
+                activeBookId: currentEditingBookId,
+                activeItemId: currentEditingItemId
             };
             
-            if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
+            if (document.getElementById('worldBookContainer').style.display === 'flex') state.activeContainer = 'worldBookContainer';
+            else if (document.getElementById('worldBookEditPage').style.display === 'flex') state.activeContainer = 'worldBookEditPage';
+            else if (document.getElementById('bookItemEditPage').style.display === 'flex') state.activeContainer = 'bookItemEditPage';
+            else if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
             else if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
@@ -6840,14 +6862,23 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
         // 加载UI状态
         function loadUIState() {
-            // 需求：用户每次进入网页都是首页页面。
-            localStorage.removeItem('mimi_ui_state');
-            return;
             const saved = localStorage.getItem('mimi_ui_state');
             if (!saved) return;
             const state = JSON.parse(saved);
-            
-            if (state.activeContainer === 'stickerManagementContainer') {
+
+            if (state.activeContainer === 'worldBookContainer') openWorldBook();
+            else if (state.activeContainer === 'worldBookEditPage') {
+                openWorldBook();
+                if (state.activeBookId) openWorldBookEdit(state.activeBookId);
+            }
+            else if (state.activeContainer === 'bookItemEditPage') {
+                openWorldBook();
+                if (state.activeBookId) {
+                    openWorldBookEdit(state.activeBookId);
+                    if (state.activeItemId) openBookItemEdit(state.activeItemId);
+                }
+            }
+            else if (state.activeContainer === 'stickerManagementContainer') {
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openStickerLibrary();
@@ -6962,6 +6993,227 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 }, 100);
             }
         });
+
+        // 世界书逻辑
+        let worldBooks = JSON.parse(localStorage.getItem('mimi_world_books') || '[]');
+        let currentEditingBookId = null;
+        let currentEditingItemId = null;
+
+        function saveWorldBooks() {
+            localStorage.setItem('mimi_world_books', JSON.stringify(worldBooks));
+        }
+
+        function openWorldBook() {
+            document.getElementById('worldBookContainer').style.display = 'flex';
+            document.querySelector('.phone-container').style.display = 'none';
+            renderWorldBookList();
+            updateTime();
+            saveUIState();
+        }
+
+        function closeWorldBook() {
+            document.getElementById('worldBookContainer').style.display = 'none';
+            document.querySelector('.phone-container').style.display = 'flex';
+            saveUIState();
+        }
+
+        function showAddWorldBookModal() {
+            document.getElementById('addWorldBookModal').classList.add('active');
+            document.getElementById('newWorldBookName').value = '';
+            document.getElementById('newWorldBookName').focus();
+        }
+
+        function closeAddWorldBookModal() {
+            document.getElementById('addWorldBookModal').classList.remove('active');
+        }
+
+        function confirmAddWorldBook() {
+            const name = document.getElementById('newWorldBookName').value.trim();
+            if (!name) return;
+
+            const newBook = {
+                id: Date.now(),
+                name: name,
+                description: '',
+                items: []
+            };
+
+            worldBooks.push(newBook);
+            saveWorldBooks();
+            closeAddWorldBookModal();
+            openWorldBookEdit(newBook.id);
+        }
+
+        function renderWorldBookList() {
+            const list = document.getElementById('worldBookList');
+            const empty = document.getElementById('worldBookEmptyState');
+            
+            if (worldBooks.length === 0) {
+                list.style.display = 'none';
+                empty.style.display = 'flex';
+                return;
+            }
+
+            list.style.display = 'flex';
+            empty.style.display = 'none';
+            list.innerHTML = '';
+
+            worldBooks.forEach(book => {
+                const card = document.createElement('div');
+                card.className = 'world-book-card';
+                card.onclick = () => openWorldBookEdit(book.id);
+                card.innerHTML = `
+                    <div class="world-book-name">${book.name}</div>
+                    <div class="world-book-desc">${book.description || '暂无简介'}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function openWorldBookEdit(id) {
+            currentEditingBookId = id;
+            const book = worldBooks.find(b => b.id === id);
+            if (!book) return;
+
+            document.getElementById('editBookTitle').textContent = book.name;
+            document.getElementById('editBookDesc').value = book.description;
+            renderBookItemsList();
+
+            document.getElementById('worldBookContainer').style.display = 'none';
+            document.getElementById('worldBookEditPage').style.display = 'flex';
+            updateTime();
+        }
+
+        function closeWorldBookEdit() {
+            document.getElementById('worldBookEditPage').style.display = 'none';
+            openWorldBook();
+        }
+
+        function editWorldBookName() {
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            const newName = prompt('修改世界书名称', book.name);
+            if (newName && newName.trim()) {
+                book.name = newName.trim();
+                document.getElementById('editBookTitle').textContent = book.name;
+                saveWorldBooks();
+                renderWorldBookList();
+            }
+        }
+
+        function updateBookDesc() {
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            book.description = document.getElementById('editBookDesc').value;
+            saveWorldBooks();
+        }
+
+        function showAddBookItemModal() {
+            document.getElementById('addBookItemModal').classList.add('active');
+            document.getElementById('newBookItemName').value = '';
+            document.getElementById('newBookItemName').focus();
+        }
+
+        function closeAddBookItemModal() {
+            document.getElementById('addBookItemModal').classList.remove('active');
+        }
+
+        function confirmAddBookItem() {
+            const name = document.getElementById('newBookItemName').value.trim();
+            if (!name) return;
+
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            const newItem = {
+                id: Date.now(),
+                name: name,
+                remark: '',
+                content: '',
+                enabled: true
+            };
+
+            book.items.push(newItem);
+            saveWorldBooks();
+            closeAddBookItemModal();
+            openBookItemEdit(newItem.id);
+        }
+
+        function renderBookItemsList() {
+            const list = document.getElementById('bookItemsList');
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            list.innerHTML = '';
+            book.items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'book-item-row';
+                row.onclick = () => openBookItemEdit(item.id);
+                
+                row.innerHTML = `
+                    <div class="book-item-content-left" style="display: flex; flex-direction: column; flex: 1; position: relative;">
+                        <div class="book-item-name">${item.name}</div>
+                        <div class="book-item-remark" style="font-size: 11px; color: #b2b2b2; text-align: right; margin-right: 10px; min-height: 12px; margin-top: 4px;">${item.remark || ''}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation()">
+                        <label class="switch">
+                            <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleItemRead(${item.id}, this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function toggleItemRead(itemId, enabled) {
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            const item = book.items.find(i => i.id === itemId);
+            if (item) {
+                item.enabled = enabled;
+                saveWorldBooks();
+                renderBookItemsList();
+            }
+        }
+
+        function openBookItemEdit(itemId) {
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            const item = book.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            currentEditingItemId = itemId;
+            document.getElementById('editItemTitle').textContent = item.name;
+            document.getElementById('editItemRemark').value = item.remark;
+            document.getElementById('editItemContent').value = item.content;
+
+            document.getElementById('worldBookEditPage').style.display = 'none';
+            document.getElementById('bookItemEditPage').style.display = 'flex';
+            updateTime();
+        }
+
+        function closeBookItemEdit() {
+            document.getElementById('bookItemEditPage').style.display = 'none';
+            document.getElementById('worldBookEditPage').style.display = 'flex';
+            renderBookItemsList();
+        }
+
+        function updateItemDetails() {
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            const item = book.items.find(i => i.id === currentEditingItemId);
+            if (item) {
+                item.remark = document.getElementById('editItemRemark').value;
+                item.content = document.getElementById('editItemContent').value;
+                saveWorldBooks();
+            }
+        }
 
         // 初始化
         (async function init() {

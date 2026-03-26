@@ -2709,7 +2709,7 @@ let currentElement = null;
         function clearWechatCache() {
             if (confirm('确定要清除缓存吗？\n清除缓存将重置 UI 状态，但不会删除聊天记录和资源文件。')) {
                 // 清除 UI 状态缓存
-                localStorage.removeItem('mimi_ui_state');
+                sessionStorage.removeItem('mimi_ui_state');
                 alert('缓存已清理，请重新计算存储空间');
                 calculateStorage();
             }
@@ -6857,12 +6857,12 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             }
             else state.activeContainer = 'phone-container';
             
-            localStorage.setItem('mimi_ui_state', JSON.stringify(state));
+            sessionStorage.setItem('mimi_ui_state', JSON.stringify(state));
         }
 
         // 加载UI状态
         function loadUIState() {
-            const saved = localStorage.getItem('mimi_ui_state');
+            const saved = sessionStorage.getItem('mimi_ui_state');
             if (!saved) return;
             const state = JSON.parse(saved);
 

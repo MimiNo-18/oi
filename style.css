@@ -266,10 +266,17 @@
             font-size: 15px;
             font-weight: 600;
             color: #000;
-            z-index: 20;
-            position: sticky;
+            z-index: 9999;
+            position: absolute;
             top: 0;
-            background: inherit;
+            left: 0;
+            right: 0;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        .status-left, .status-right {
+            pointer-events: auto;
         }
 
         .status-left {
@@ -4520,9 +4527,9 @@
     aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .world-book-card:active {

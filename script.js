@@ -3595,6 +3595,14 @@ let currentElement = null;
             
             // 加载设置
             const settings = getChatSettings(currentChatFriendId);
+
+            // 更新绑定世界书数量显示
+            const boundCountEl = document.getElementById('chatInfoBoundCount');
+            if (boundCountEl) {
+                const boundIds = settings.boundWorldBookIds || [];
+                boundCountEl.textContent = boundIds.length > 0 ? `已绑定 ${boundIds.length} 本` : '未绑定';
+            }
+
             document.getElementById('chatInfoMemCount').value = settings.memCount || 10;
             const autoSum = settings.autoSum || false;
             document.getElementById('chatInfoAutoSum').checked = autoSum;
@@ -4712,15 +4720,18 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
         }
 
         // 注入世界书信息
-        if (worldBooks && worldBooks.length > 0) {
+        const boundWorldBookIds = settings.boundWorldBookIds || [];
+        if (worldBooks && worldBooks.length > 0 && boundWorldBookIds.length > 0) {
             let worldBookPrompt = "";
             worldBooks.forEach(book => {
-                const activeItems = book.items.filter(item => item.enabled);
-                if (activeItems.length > 0) {
-                    worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
-                    activeItems.forEach(item => {
-                        worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
-                    });
+                if (boundWorldBookIds.includes(book.id)) {
+                    const activeItems = book.items.filter(item => item.enabled);
+                    if (activeItems.length > 0) {
+                        worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
+                        activeItems.forEach(item => {
+                            worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
+                        });
+                    }
                 }
             });
             if (worldBookPrompt) {
@@ -7290,6 +7301,80 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 item.content = document.getElementById('editItemContent').value;
                 saveWorldBooks();
             }
+        }
+
+        // 世界书绑定逻辑
+        let tempBoundWorldBookIds = [];
+
+        function openWorldBookBindingModal() {
+            if (!currentChatFriendId) return;
+            const settings = getChatSettings(currentChatFriendId);
+            tempBoundWorldBookIds = [...(settings.boundWorldBookIds || [])];
+            
+            document.getElementById('worldBookBindingModal').classList.add('active');
+            renderWorldBookBindingList();
+        }
+
+        function closeWorldBookBindingModal() {
+            document.getElementById('worldBookBindingModal').classList.remove('active');
+            tempBoundWorldBookIds = [];
+        }
+
+        function renderWorldBookBindingList() {
+            const container = document.getElementById('worldBookBindingList');
+            container.innerHTML = '';
+
+            if (worldBooks.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;">暂无世界书，请先创建</div>';
+                return;
+            }
+
+            worldBooks.forEach(book => {
+                const isChecked = tempBoundWorldBookIds.includes(book.id);
+                const item = document.createElement('div');
+                item.className = 'selection-contact-item';
+                item.style.padding = '12px 10px';
+                item.style.borderBottom = '1px solid #f0f0f0';
+                item.onclick = () => toggleWorldBookBinding(book.id);
+                
+                item.innerHTML = `
+                    <div class="selection-checkbox ${isChecked ? 'checked' : ''}"></div>
+                    <div style="flex: 1; margin-left: 10px;">
+                        <div style="font-size: 15px; color: #333; font-weight: 500;">${book.name}</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 2px;">${book.items.length} 个条目</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleWorldBookBinding(id) {
+            const index = tempBoundWorldBookIds.indexOf(id);
+            if (index > -1) {
+                tempBoundWorldBookIds.splice(index, 1);
+            } else {
+                tempBoundWorldBookIds.push(id);
+            }
+            renderWorldBookBindingList();
+        }
+
+        function confirmWorldBookBinding() {
+            if (!currentChatFriendId) return;
+
+            const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+            if (!allSettings[currentChatFriendId]) allSettings[currentChatFriendId] = {};
+            
+            allSettings[currentChatFriendId].boundWorldBookIds = tempBoundWorldBookIds;
+            localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
+
+            // 更新 UI
+            const boundCountEl = document.getElementById('chatInfoBoundCount');
+            if (boundCountEl) {
+                boundCountEl.textContent = tempBoundWorldBookIds.length > 0 ? `已绑定 ${tempBoundWorldBookIds.length} 本` : '未绑定';
+            }
+
+            closeWorldBookBindingModal();
+            alert('绑定成功');
         }
 
         // 初始化

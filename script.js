@@ -81,9 +81,9 @@ let currentElement = null;
         function updatePostBtnState() {
             const text = document.getElementById('momentTextInput').value.trim();
             const btn = document.getElementById('momentsPostBtn');
-            if (text || currentMomentImage) {
+            if (text || currentMomentImage || momentImageContent) {
                 btn.classList.add('active');
-                btn.style.backgroundColor = '#07c160';
+                btn.style.backgroundColor = '#000';
             } else {
                 btn.classList.remove('active');
                 btn.style.backgroundColor = '#e1e1e1';
@@ -98,19 +98,67 @@ let currentElement = null;
             }
         });
 
+        let momentImageContent = '';
         function selectMomentImage() {
-            document.getElementById('momentImageInput').click();
+            // 需求 2: 点击加号弹出输入图片内容的弹窗
+            document.getElementById('imageContentModal').classList.add('active');
+            document.getElementById('imageContentInput').value = '';
+            document.getElementById('imageContentInput').focus();
+        }
+
+        function closeImageContentModal() {
+            document.getElementById('imageContentModal').classList.remove('active');
+        }
+
+        function confirmImageContent() {
+            const content = document.getElementById('imageContentInput').value.trim();
+            if (content) {
+                momentImageContent = content;
+                currentMomentImage = ''; // 清除真实的图片
+                
+                // 显示灰色图片预览
+                const placeholder = document.getElementById('momentImagePlaceholder');
+                const plus = document.querySelector('.uploader-plus');
+                const preview = document.getElementById('momentImagePreview');
+                
+                if (preview) preview.style.display = 'none';
+                if (plus) plus.style.display = 'none';
+                if (placeholder) {
+                    placeholder.style.display = 'flex';
+                    placeholder.onclick = (e) => {
+                        e.stopPropagation();
+                        showMomentImageDetail(momentImageContent);
+                    };
+                }
+                updatePostBtnState();
+            }
+            closeImageContentModal();
+        }
+
+        function showMomentImageDetail(content) {
+            const modal = document.getElementById('imageDetailModal');
+            const textEl = document.getElementById('imageDetailText');
+            if (modal && textEl) {
+                textEl.textContent = content;
+                modal.classList.add('active');
+            }
         }
 
         function handleMomentImageSelect(event) {
+            // 此函数目前被 selectMomentImage 的弹窗逻辑替代，但保留作为兼容
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     currentMomentImage = e.target.result;
+                    momentImageContent = '';
                     const preview = document.getElementById('momentImagePreview');
-                    preview.src = currentMomentImage;
-                    preview.style.display = 'block';
+                    const placeholder = document.getElementById('momentImagePlaceholder');
+                    if (preview) {
+                        preview.src = currentMomentImage;
+                        preview.style.display = 'block';
+                    }
+                    if (placeholder) placeholder.style.display = 'none';
                     document.querySelector('.uploader-plus').style.display = 'none';
                     updatePostBtnState();
                 };
@@ -120,28 +168,38 @@ let currentElement = null;
 
         function postMoment() {
             const text = document.getElementById('momentTextInput').value.trim();
-            if (!text && !currentMomentImage) return;
+            if (!text && !currentMomentImage && !momentImageContent) return;
 
             const me = wechatUserInfo;
             const newMoment = {
                 id: Date.now(),
-                nickname: me.nickname || '未设置',
-                avatar: me.avatar || '',
+                nickname: me.nickname || '我',
+                avatar: me.avatar || wechatUserInfo.avatar || '',
                 content: text,
                 image: currentMomentImage,
+                imageContent: momentImageContent,
                 time: Date.now(),
                 likes: [],
-                comments: []
+                comments: [],
+                isMine: true
             };
 
             momentsData.unshift(newMoment);
             localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
             
+            momentImageContent = '';
+            currentMomentImage = '';
+            const placeholder = document.getElementById('momentImagePlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
+            const plus = document.querySelector('.uploader-plus');
+            if (plus) plus.style.display = 'flex';
+
             closeMomentsEdit();
             renderMoments();
-            alert('发布成功');
+            alert('发表成功');
         }
 
+        let currentMomentId = null;
         function renderMoments() {
             const list = document.getElementById('momentsList');
             if (!list) return;
@@ -151,11 +209,29 @@ let currentElement = null;
                 const momentEl = document.createElement('div');
                 momentEl.className = 'moment-item';
                 
+                // 长按处理
+                let longPressTimer;
+                momentEl.ontouchstart = (e) => {
+                    if (item.isMine) {
+                        longPressTimer = setTimeout(() => {
+                            showMomentMenu(item.id, e.touches[0]);
+                        }, 800);
+                    }
+                };
+                momentEl.ontouchend = () => clearTimeout(longPressTimer);
+                momentEl.ontouchmove = () => clearTimeout(longPressTimer);
+
                 let imagesHtml = '';
                 if (item.image) {
                     imagesHtml = `
                         <div class="moment-images">
                             <img src="${item.image}" class="moment-img" onclick="previewImage('${item.image}')">
+                        </div>
+                    `;
+                } else if (item.imageContent) {
+                    imagesHtml = `
+                        <div class="moment-images">
+                            <div class="moment-image-placeholder" onclick="showMomentImageDetail('${item.imageContent}')">图片内容</div>
                         </div>
                     `;
                 }
@@ -164,10 +240,17 @@ let currentElement = null;
                 if (item.likes && item.likes.length > 0) {
                     likesHtml = `
                         <div class="moment-likes-box">
-                            <span class="heart-hollow">♡</span>
+                            <span style="margin-right: 5px; color: #576b95;">❤</span>
                             ${item.likes.join(', ')}
                         </div>
                     `;
+                }
+
+                let commentsHtml = '';
+                if (item.comments && item.comments.length > 0) {
+                    commentsHtml = `<div class="moment-comments-box">
+                        ${item.comments.map(c => `<div><span class="comment-nickname">${c.nickname}:</span> ${c.content}</div>`).join('')}
+                    </div>`;
                 }
 
                 momentEl.innerHTML = `
@@ -177,21 +260,92 @@ let currentElement = null;
                         <div class="moment-text">${item.content}</div>
                         ${imagesHtml}
                         <div class="moment-footer">
+                            <div class="moment-time">${formatMomentTime(item.time)}</div>
                             <div class="moment-actions-btn" onclick="toggleMomentActions(${item.id}, event)">
                                 <div class="dot-icon"></div>
                                 <div class="dot-icon"></div>
                             </div>
                         </div>
-                        ${likesHtml}
+                        <div class="moment-feedback-section" style="${(!likesHtml && !commentsHtml) ? 'display:none' : ''}">
+                            ${likesHtml}
+                            ${commentsHtml}
+                        </div>
                     </div>
                 `;
                 list.appendChild(momentEl);
             });
         }
 
+        function formatMomentTime(ms) {
+            const now = Date.now();
+            const diff = now - ms;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+            return Math.floor(diff/86400000) + '天前';
+        }
+
+        function showMomentMenu(id, touch) {
+            if (navigator.vibrate) navigator.vibrate(50);
+            if (confirm('是否删除这条朋友圈？')) {
+                momentsData = momentsData.filter(m => m.id !== id);
+                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                renderMoments();
+            }
+        }
+
         function toggleMomentActions(id, event) {
             event.stopPropagation();
-            // 这里简单实现：直接点赞
+            const popup = document.getElementById('momentActionPopup');
+            const btn = event.currentTarget;
+            const rect = btn.getBoundingClientRect();
+            
+            if (currentMomentId === id && popup.classList.contains('active')) {
+                popup.classList.remove('active');
+                return;
+            }
+
+            currentMomentId = id;
+            popup.style.display = 'flex';
+            popup.classList.add('active');
+            
+            // 计算位置：按钮左侧
+            const scrollArea = document.getElementById('momentsScrollArea');
+            const containerRect = document.getElementById('momentsContainer').getBoundingClientRect();
+            
+            popup.style.top = (rect.top - containerRect.top - 8) + 'px';
+            popup.style.left = (rect.left - containerRect.left - 185) + 'px'; // 弹窗宽度约 180px
+
+            // 设置点赞按钮文本
+            const moment = momentsData.find(m => m.id === id);
+            const myName = wechatUserInfo.nickname || '我';
+            const likeBtn = document.getElementById('momentLikeBtn');
+            if (moment && likeBtn) {
+                likeBtn.textContent = moment.likes.includes(myName) ? '取消' : '点赞';
+                likeBtn.onclick = (e) => {
+                    handleMomentLike(id, e);
+                };
+            }
+            
+            const commentBtn = document.getElementById('momentCommentBtn');
+            if (commentBtn) {
+                commentBtn.onclick = (e) => {
+                    showMomentCommentInput(id, e);
+                };
+            }
+        }
+
+        function hideMomentPopups() {
+            const popup = document.getElementById('momentActionPopup');
+            if (popup) popup.classList.remove('active');
+            const inputBar = document.getElementById('momentCommentInputBar');
+            if (inputBar && !inputBar.contains(document.activeElement)) {
+                // inputBar.classList.remove('active'); // 暂时不自动隐藏输入框，除非发送或取消
+            }
+        }
+
+        function handleMomentLike(id, event) {
+            event.stopPropagation();
             const moment = momentsData.find(m => m.id === id);
             if (moment) {
                 const myName = wechatUserInfo.nickname || '我';
@@ -204,6 +358,52 @@ let currentElement = null;
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
                 renderMoments();
             }
+            document.getElementById('momentActionPopup').classList.remove('active');
+        }
+
+        function showMomentCommentInput(id, event) {
+            event.stopPropagation();
+            currentMomentId = id;
+            const inputBar = document.getElementById('momentCommentInputBar');
+            inputBar.classList.add('active');
+            inputBar.style.display = 'flex';
+            const input = document.getElementById('momentCommentInput');
+            input.value = '';
+            input.focus();
+            updateMomentCommentSendBtn();
+            document.getElementById('momentActionPopup').classList.remove('active');
+        }
+
+        function updateMomentCommentSendBtn() {
+            const val = document.getElementById('momentCommentInput').value.trim();
+            const btn = document.getElementById('momentCommentSendBtn');
+            if (val) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = '#000';
+            } else {
+                btn.classList.remove('active');
+                btn.style.backgroundColor = '#e1e1e1';
+            }
+        }
+
+        function sendMomentComment() {
+            const content = document.getElementById('momentCommentInput').value.trim();
+            if (!content || !currentMomentId) return;
+
+            const moment = momentsData.find(m => m.id === currentMomentId);
+            if (moment) {
+                moment.comments.push({
+                    nickname: wechatUserInfo.nickname || '我',
+                    content: content
+                });
+                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                renderMoments();
+            }
+
+            const inputBar = document.getElementById('momentCommentInputBar');
+            inputBar.classList.remove('active');
+            inputBar.style.display = 'none';
+            document.getElementById('momentCommentInput').blur();
         }
 
         function changeMomentsBg() {

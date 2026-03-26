@@ -558,7 +558,7 @@
                 </svg>
                 <span class="wechat-nav-label">通讯录</span>
             </div>
-            <div class="wechat-nav-item" onclick="alert('发现功能开发中')">
+            <div class="wechat-nav-item" onclick="switchWechatTab('discover', this)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M2 12h20"/>
@@ -580,6 +580,68 @@
             <div class="add-menu-item" onclick="showAddFriendModal()">添加朋友</div>
             <div class="add-menu-item" onclick="createGroupChat()">发起群聊</div>
             <div class="add-menu-item" onclick="alert('扫一扫功能开发中')">扫一扫</div>
+        </div>
+
+        <!-- 朋友圈容器 -->
+        <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 110; flex-direction: column; overflow: hidden;">
+            <!-- 朋友圈顶部透明导航栏 (初始) -->
+            <div id="momentsHeader" class="moments-header">
+                <div class="moments-header-left" onclick="closeMoments()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </div>
+                <div class="moments-header-title">朋友圈</div>
+                <div class="moments-header-right" onclick="openMomentsEdit()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="momentsScrollArea" style="flex: 1; overflow-y: auto;" onscroll="handleMomentsScroll(this)">
+                <!-- 朋友圈个人背景区 -->
+                <div class="moments-profile">
+                    <img id="momentsBg" src="https://img.heliar.top/file/1774448251294_无标题27_20260325221510.png" class="moments-bg-img" onclick="changeMomentsBg()">
+                    <div class="moments-user-info">
+                        <img id="momentsAvatar" src="" class="moments-user-avatar">
+                        <div id="momentsSignature" class="moments-signature">个性签名...</div>
+                    </div>
+                </div>
+
+                <!-- 朋友圈列表内容 -->
+                <div id="momentsList" class="moments-list">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 朋友圈编辑发布页面 -->
+        <div id="momentsEditPage" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 120; flex-direction: column;">
+            <div class="moments-edit-nav">
+                <div class="moments-edit-cancel" onclick="closeMomentsEdit()">取消</div>
+                <button class="moments-post-btn" id="momentsPostBtn" onclick="postMoment()">发布</button>
+            </div>
+            <div class="moments-edit-content">
+                <textarea id="momentTextInput" class="moment-text-area" placeholder="这一刻的想法..."></textarea>
+                <div class="moment-image-uploader" onclick="selectMomentImage()">
+                    <div class="uploader-plus">+</div>
+                    <img id="momentImagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                </div>
+                <div class="moment-edit-options">
+                    <div class="moment-option-item">
+                        <div class="option-label">所在位置</div>
+                        <div class="option-right">〉</div>
+                    </div>
+                    <div class="moment-option-item">
+                        <div class="option-label">提醒谁看</div>
+                        <div class="option-right">〉</div>
+                    </div>
+                    <div class="moment-option-item">
+                        <div class="option-label">谁可以看</div>
+                        <div class="option-right">公开 〉</div>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="momentImageInput" accept="image/*" style="display:none" onchange="handleMomentImageSelect(event)">
         </div>
 
         <!-- 添加好友模态框 - 从联系人选择 -->

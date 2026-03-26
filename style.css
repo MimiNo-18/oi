@@ -3946,3 +3946,266 @@
     border-color: #07c160;
     box-shadow: 0 2px 12px rgba(7, 193, 96, 0.08);
 }
+
+/* 朋友圈样式 */
+.moments-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 16px 0;
+    z-index: 10;
+    transition: background-color 0.3s, color 0.3s;
+    color: #fff;
+}
+
+.moments-header.scrolled {
+    background-color: #ededed;
+    color: #000;
+}
+
+.moments-header-left, .moments-header-right {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.moments-header-left svg, .moments-header-right svg {
+    width: 24px;
+    height: 24px;
+}
+
+.moments-header-title {
+    font-size: 17px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.moments-header.scrolled .moments-header-title {
+    opacity: 1;
+}
+
+.moments-profile {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: #333;
+    margin-bottom: 40px;
+}
+
+.moments-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.moments-user-info {
+    position: absolute;
+    right: 16px;
+    bottom: -20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.moments-user-avatar {
+    width: 70px;
+    height: 70px;
+    background: #fff;
+    border-radius: 8px; /* 圆角正方形 */
+    padding: 2px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.moments-signature {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #888;
+    text-align: right;
+    max-width: 200px;
+}
+
+.moments-list {
+    padding: 20px 0;
+}
+
+.moment-item {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.moment-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.moment-content-box {
+    flex: 1;
+    min-width: 0;
+}
+
+.moment-nickname {
+    font-size: 16px;
+    font-weight: 600;
+    color: #576b95;
+    margin-bottom: 6px;
+}
+
+.moment-text {
+    font-size: 15px;
+    color: #000;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.moment-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.moment-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.moment-footer {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+}
+
+.moment-actions-btn {
+    width: 32px;
+    height: 18px;
+    background: #f7f7f7;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+}
+
+.dot-icon {
+    width: 3px;
+    height: 3px;
+    background: #576b95;
+    border-radius: 50%;
+}
+
+.moment-likes-box {
+    margin-top: 8px;
+    background: #f7f7f7;
+    border-radius: 4px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #576b95;
+}
+
+.heart-hollow {
+    color: #576b95;
+    font-size: 14px;
+}
+
+/* 朋友圈发布页面 */
+.moments-edit-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 16px 12px;
+}
+
+.moments-edit-cancel {
+    font-size: 16px;
+    color: #000;
+    cursor: pointer;
+}
+
+.moments-post-btn {
+    background: #e1e1e1;
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.moments-post-btn.active {
+    background: #07c160;
+    color: #fff;
+}
+
+.moments-edit-content {
+    flex: 1;
+    padding: 16px;
+}
+
+.moment-text-area {
+    width: 100%;
+    height: 120px;
+    border: none;
+    outline: none;
+    font-size: 17px;
+    resize: none;
+    font-family: inherit;
+    margin-bottom: 20px;
+}
+
+.moment-image-uploader {
+    width: 80px;
+    height: 80px;
+    background: #f7f7f7;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 30px;
+}
+
+.uploader-plus {
+    font-size: 40px;
+    color: #ccc;
+    font-weight: 300;
+}
+
+.moment-edit-options {
+    border-top: 1px solid #f0f0f0;
+}
+
+.moment-option-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+    color: #000;
+}
+
+.option-right {
+    color: #ccc;
+}

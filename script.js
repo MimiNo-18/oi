@@ -6,6 +6,210 @@ let currentElement = null;
         let selectedMsgIndexes = new Set();
         let currentForwardMode = 'single'; // 'single', 'multi-one-by-one', 'multi-combine'
 
+        // Mimi号逻辑
+        function initMimiId() {
+            let mimiId = localStorage.getItem('mimi_unique_id');
+            if (!mimiId) {
+                // 生成唯一的Mimi号：Mimi_ + 随机字符串
+                mimiId = 'Mimi_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                localStorage.setItem('mimi_unique_id', mimiId);
+            }
+            // 更新UI上的显示
+            const idDisplay = document.getElementById('info-mimi-id');
+            if (idDisplay) idDisplay.textContent = mimiId;
+            
+            const meIdDisplay = document.getElementById('wechatMeID');
+            if (meIdDisplay) meIdDisplay.textContent = 'Mimi号：' + mimiId;
+        }
+
+        // 朋友圈逻辑
+        let momentsData = JSON.parse(localStorage.getItem('mimi_moments') || '[]');
+        let currentMomentImage = '';
+
+        function openMoments() {
+            const container = document.getElementById('momentsContainer');
+            container.style.display = 'flex';
+            
+            // 初始化个人信息
+            const me = wechatUserInfo;
+            const avatarImg = document.getElementById('momentsAvatar');
+            const sigEl = document.getElementById('momentsSignature');
+            
+            if (avatarImg) avatarImg.src = me.avatar || 'https://img.heliar.top/file/1774448251294_无标题27_20260325221510.png';
+            if (sigEl) sigEl.textContent = me.signature || '个性签名...';
+            
+            renderMoments();
+            updateTime();
+            saveUIState();
+        }
+
+        function closeMoments() {
+            document.getElementById('momentsContainer').style.display = 'none';
+            saveUIState();
+        }
+
+        function handleMomentsScroll(el) {
+            const header = document.getElementById('momentsHeader');
+            if (!header) return;
+            const scrollThreshold = 100;
+            if (el.scrollTop > scrollThreshold) {
+                header.classList.add('scrolled');
+                header.style.backgroundColor = '#ededed';
+                header.style.color = '#000';
+            } else {
+                header.classList.remove('scrolled');
+                header.style.backgroundColor = 'transparent';
+                header.style.color = '#fff';
+            }
+        }
+
+        function openMomentsEdit() {
+            document.getElementById('momentsEditPage').style.display = 'flex';
+            document.getElementById('momentTextInput').value = '';
+            document.getElementById('momentImagePreview').style.display = 'none';
+            document.getElementById('momentImagePreview').src = '';
+            currentMomentImage = '';
+            updatePostBtnState();
+        }
+
+        function closeMomentsEdit() {
+            document.getElementById('momentsEditPage').style.display = 'none';
+        }
+
+        function updatePostBtnState() {
+            const text = document.getElementById('momentTextInput').value.trim();
+            const btn = document.getElementById('momentsPostBtn');
+            if (text || currentMomentImage) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = '#07c160';
+            } else {
+                btn.classList.remove('active');
+                btn.style.backgroundColor = '#e1e1e1';
+            }
+        }
+
+        // 监听朋友圈输入
+        document.addEventListener('DOMContentLoaded', () => {
+            const area = document.getElementById('momentTextInput');
+            if (area) {
+                area.addEventListener('input', updatePostBtnState);
+            }
+        });
+
+        function selectMomentImage() {
+            document.getElementById('momentImageInput').click();
+        }
+
+        function handleMomentImageSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentMomentImage = e.target.result;
+                    const preview = document.getElementById('momentImagePreview');
+                    preview.src = currentMomentImage;
+                    preview.style.display = 'block';
+                    document.querySelector('.uploader-plus').style.display = 'none';
+                    updatePostBtnState();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function postMoment() {
+            const text = document.getElementById('momentTextInput').value.trim();
+            if (!text && !currentMomentImage) return;
+
+            const me = wechatUserInfo;
+            const newMoment = {
+                id: Date.now(),
+                nickname: me.nickname || '未设置',
+                avatar: me.avatar || '',
+                content: text,
+                image: currentMomentImage,
+                time: Date.now(),
+                likes: [],
+                comments: []
+            };
+
+            momentsData.unshift(newMoment);
+            localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+            
+            closeMomentsEdit();
+            renderMoments();
+            alert('发布成功');
+        }
+
+        function renderMoments() {
+            const list = document.getElementById('momentsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            momentsData.forEach((item, index) => {
+                const momentEl = document.createElement('div');
+                momentEl.className = 'moment-item';
+                
+                let imagesHtml = '';
+                if (item.image) {
+                    imagesHtml = `
+                        <div class="moment-images">
+                            <img src="${item.image}" class="moment-img" onclick="previewImage('${item.image}')">
+                        </div>
+                    `;
+                }
+
+                let likesHtml = '';
+                if (item.likes && item.likes.length > 0) {
+                    likesHtml = `
+                        <div class="moment-likes-box">
+                            <span class="heart-hollow">♡</span>
+                            ${item.likes.join(', ')}
+                        </div>
+                    `;
+                }
+
+                momentEl.innerHTML = `
+                    <img src="${item.avatar}" class="moment-avatar">
+                    <div class="moment-content-box">
+                        <div class="moment-nickname">${item.nickname}</div>
+                        <div class="moment-text">${item.content}</div>
+                        ${imagesHtml}
+                        <div class="moment-footer">
+                            <div class="moment-actions-btn" onclick="toggleMomentActions(${item.id}, event)">
+                                <div class="dot-icon"></div>
+                                <div class="dot-icon"></div>
+                            </div>
+                        </div>
+                        ${likesHtml}
+                    </div>
+                `;
+                list.appendChild(momentEl);
+            });
+        }
+
+        function toggleMomentActions(id, event) {
+            event.stopPropagation();
+            // 这里简单实现：直接点赞
+            const moment = momentsData.find(m => m.id === id);
+            if (moment) {
+                const myName = wechatUserInfo.nickname || '我';
+                const idx = moment.likes.indexOf(myName);
+                if (idx > -1) {
+                    moment.likes.splice(idx, 1);
+                } else {
+                    moment.likes.push(myName);
+                }
+                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                renderMoments();
+            }
+        }
+
+        function changeMomentsBg() {
+            currentImageId = 'momentsBg';
+            document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('imageModal').classList.add('active');
+        }
+
         function enterMultiSelectMode(initialIndex) {
             isMultiSelectMode = true;
             selectedMsgIndexes.clear();
@@ -1432,6 +1636,11 @@ let currentElement = null;
                 searchBar.style.display = 'block';
                 navTitle.textContent = '通讯录';
                 renderWechatContacts();
+            } else if (tab === 'discover') {
+                // 进入朋友圈
+                openMoments();
+                // 保持在发现tab的视觉状态，但不显示默认发现页内容
+                navTitle.textContent = '发现';
             } else if (tab === 'me') {
                 mePage.style.display = 'block';
                 if (navBar) navBar.style.display = 'none';
@@ -6379,6 +6588,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             loadFavoriteStickers();
             renderTopTagBar();
             startProactiveMsgCheck();
+            initMimiId();
 
             // 微信页面点开没有联系人
             if (chatList.length === 0) {

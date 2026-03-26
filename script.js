@@ -63,6 +63,8 @@ let currentElement = null;
                 header.style.backgroundColor = 'transparent';
                 header.style.color = '#fff';
             }
+            // 滑动时关闭弹窗
+            hideMomentPopups();
         }
 
         let momentImages = []; // 存储朋友圈图片（真实图片或内容图片）
@@ -280,10 +282,20 @@ let currentElement = null;
                     `;
                 }
 
+                let dividerHtml = (item.likes && item.likes.length > 0 && item.comments && item.comments.length > 0) 
+                    ? '<div class="moment-feedback-divider"></div>' 
+                    : '';
+
                 let commentsHtml = '';
                 if (item.comments && item.comments.length > 0) {
                     commentsHtml = `<div class="moment-comments-list">
-                        ${item.comments.map(c => `<div class="moment-comment-item">${c.nickname}：${c.content}</div>`).join('')}
+                        ${item.comments.map((c, cIdx) => {
+                            // 严格按照格式：网名 回复 备注：回复内容
+                            let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
+                            return `<div class="moment-comment-item" onclick="handleCommentClick(${item.id}, ${cIdx}, event)">
+                                <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
+                            </div>`;
+                        }).join('')}
                     </div>`;
                 }
 
@@ -302,6 +314,7 @@ let currentElement = null;
                         </div>
                         <div class="moment-feedback-section" style="${(!likesHtml && !commentsHtml) ? 'display:none' : ''}">
                             ${likesHtml}
+                            ${dividerHtml}
                             ${commentsHtml}
                         </div>
                     </div>
@@ -328,19 +341,68 @@ let currentElement = null;
             }
         }
 
+        let currentCommentIndex = null;
+        function handleCommentClick(momentId, commentIdx, event) {
+            event.stopPropagation();
+            const moment = momentsData.find(m => m.id === momentId);
+            if (!moment) return;
+            const comment = moment.comments[commentIdx];
+            if (!comment) return;
+
+            const myNickname = wechatUserInfo.nickname || '我';
+            if (comment.nickname === myNickname) {
+                // 自己的评论
+                currentMomentId = momentId;
+                currentCommentIndex = commentIdx;
+                document.getElementById('commentActionModal').classList.add('active');
+            } else {
+                // 联系人的评论 -> 回复
+                showMomentCommentInput(momentId, event, comment.nickname);
+            }
+        }
+
+        function deleteComment() {
+            if (currentMomentId && currentCommentIndex !== null) {
+                const moment = momentsData.find(m => m.id === currentMomentId);
+                if (moment) {
+                    moment.comments.splice(currentCommentIndex, 1);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }
+            }
+            document.getElementById('commentActionModal').classList.remove('active');
+        }
+
+        function copyComment() {
+            if (currentMomentId && currentCommentIndex !== null) {
+                const moment = momentsData.find(m => m.id === currentMomentId);
+                if (moment) {
+                    const comment = moment.comments[currentCommentIndex];
+                    navigator.clipboard.writeText(comment.content).then(() => {
+                        alert('已复制');
+                    });
+                }
+            }
+            document.getElementById('commentActionModal').classList.remove('active');
+        }
+
         function toggleMomentActions(id, event) {
             event.stopPropagation();
             const popup = document.getElementById('momentActionPopup');
             const btn = event.currentTarget;
             
-            if (currentMomentId === id && popup.style.display === 'flex') {
+            // 检查是否已经在当前这条动态且显示中
+            const isShownOnSame = currentMomentId === id && popup.style.display === 'flex' && popup.parentElement === btn.closest('.moment-footer');
+
+            if (isShownOnSame) {
                 popup.style.display = 'none';
+                currentMomentId = null;
                 return;
             }
 
             currentMomentId = id;
             
-            // 将弹窗插入到当前按钮所在的 footer 中，以利用相对定位
+            // 将弹窗插入到当前按钮所在的 footer 中
             const footer = btn.closest('.moment-footer');
             footer.appendChild(popup);
             
@@ -351,7 +413,7 @@ let currentElement = null;
             const myName = wechatUserInfo.nickname || '我';
             const likeBtn = document.getElementById('momentLikeBtn');
             if (moment && likeBtn) {
-                likeBtn.innerHTML = moment.likes.includes(myName) ? '取消' : '点赞';
+                likeBtn.textContent = (moment.likes && moment.likes.includes(myName)) ? '取消' : '点赞';
                 likeBtn.onclick = (e) => {
                     handleMomentLike(id, e);
                 };
@@ -480,13 +542,16 @@ let currentElement = null;
             document.getElementById('momentActionPopup').style.display = 'none';
         }
 
-        function showMomentCommentInput(id, event) {
+        let currentReplyTo = null;
+        function showMomentCommentInput(id, event, replyTo = null) {
             event.stopPropagation();
             currentMomentId = id;
+            currentReplyTo = replyTo;
             const inputBar = document.getElementById('momentCommentInputBar');
             inputBar.style.display = 'flex';
             const input = document.getElementById('momentCommentInput');
             input.value = '';
+            input.placeholder = replyTo ? `回复 ${replyTo}` : '评论';
             input.focus();
             updateMomentCommentSendBtn();
             document.getElementById('momentActionPopup').style.display = 'none';
@@ -510,17 +575,26 @@ let currentElement = null;
 
             const moment = momentsData.find(m => m.id === currentMomentId);
             if (moment) {
-                moment.comments.push({
-                    nickname: wechatUserInfo.nickname || '我',
-                    content: content
-                });
+                const myNickname = wechatUserInfo.nickname || '我';
+                const newComment = {
+                    nickname: myNickname,
+                    content: content,
+                    time: Date.now()
+                };
+                if (currentReplyTo) {
+                    newComment.replyTo = currentReplyTo;
+                }
+                moment.comments.push(newComment);
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
                 renderMoments();
             }
 
             const inputBar = document.getElementById('momentCommentInputBar');
             inputBar.style.display = 'none';
+            document.getElementById('momentCommentInput').value = '';
             document.getElementById('momentCommentInput').blur();
+            currentReplyTo = null;
+            updateMomentCommentSendBtn();
         }
 
         function changeMomentsBg() {

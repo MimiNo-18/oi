@@ -711,8 +711,21 @@
             </div>
         </div>
 
-        <!-- 朋友圈文字修改模态框 -->
-        <div class="modal" id="momentEditModal">
+    <!-- 朋友圈评论操作模态框 (删除/复制) -->
+    <div class="modal" id="commentActionModal">
+        <div class="modal-content" style="padding: 10px; width: 200px;">
+            <div class="modal-buttons" style="flex-direction: column; gap: 0;">
+                <button class="modal-btn" style="background: #fff; color: #000; border-bottom: 1px solid #eee; border-radius: 0;" onclick="copyComment()">复制</button>
+                <button class="modal-btn" style="background: #fff; color: #fa5151; border-radius: 0;" onclick="deleteComment()">删除</button>
+            </div>
+            <div class="modal-buttons" style="margin-top: 10px;">
+                <button class="modal-btn cancel" type="button" onclick="document.getElementById('commentActionModal').classList.remove('active')" style="background: #f2f2f2; color: #333;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 朋友圈文字修改模态框 -->
+    <div class="modal" id="momentEditModal">
             <div class="modal-content">
                 <div class="modal-title">编辑朋友圈</div>
                 <textarea id="momentEditTextInput" class="modal-input" style="height: 120px; resize: none; font-family: inherit;"></textarea>

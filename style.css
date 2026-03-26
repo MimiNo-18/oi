@@ -4286,8 +4286,15 @@
 
 .moment-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     position: relative;
+    margin-top: 8px;
+}
+
+.moment-time {
+    font-size: 13px;
+    color: #888;
 }
 
 .moment-actions-btn {
@@ -4309,42 +4316,67 @@
     border-radius: 50%;
 }
 
-.moment-likes-box {
+.moment-feedback-section {
     margin-top: 8px;
-    background: #ededed; /* 灰色 */
-    border-radius: 8px; /* 圆角矩形条 */
+    background: #f3f3f5; /* 微信朋友圈评论区浅灰色 */
+    border-radius: 4px;
+    position: relative;
+    width: 100%; /* 确保与网名左对齐且与两个点右对齐 */
+    display: flex;
+    flex-direction: column;
+}
+
+.moment-likes-box {
     padding: 6px 12px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #333; /* 黑色感文字 */
-    width: fit-content; /* 保持内容宽度 */
-    min-width: 60px;
+    gap: 4px;
+    font-size: 13px;
+    color: #576b95;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .heart-hollow {
-    color: #333;
-    font-size: 16px;
+    color: #576b95;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.moment-feedback-divider {
+    height: 1px;
+    background: #e5e5e5; /* 浅灰色分隔线 */
+    margin: 0 10px;
 }
 
 /* 评论列表样式 */
 .moment-comments-list {
-    margin-top: 4px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
 }
 
 .moment-comment-item {
-    background: #ededed; /* 灰色圆角矩形框 */
-    border-radius: 8px;
-    padding: 6px 12px;
+    padding: 4px 12px;
     font-size: 14px;
-    color: #000; /* 黑色的文字 */
-    width: fit-content; /* 根据内容改变长度 */
-    max-width: 100%;
+    line-height: 1.6;
+    color: #000;
     word-break: break-all;
+    cursor: pointer;
+}
+
+.moment-comment-item:active {
+    background: #eee;
+}
+
+.moment-comment-nickname {
+    color: #576b95;
+    font-weight: 600;
+}
+
+.moment-comment-reply {
+    color: #000;
+    margin: 0 4px;
 }
 
 /* 朋友圈发布页面 */

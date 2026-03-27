@@ -129,7 +129,9 @@
         body.has-phone-border #manualMemoryContainer,
         body.has-phone-border #worldBookContainer,
         body.has-phone-border #worldBookEditPage,
-        body.has-phone-border #bookItemEditPage { z-index: 10300 !important; }
+        body.has-phone-border #bookItemEditPage,
+        body.has-phone-border #servicePageContainer,
+        body.has-phone-border #momentsContainer { z-index: 10300 !important; }
 
         /* 首页容器在边框模式下需允许内容滚动且隐藏滚动条 */
         body.has-phone-border .phone-container {
@@ -276,7 +278,7 @@
             height: 44px; /* 固定状态栏高度 */
         }
 
-        /* 统一页面顶部间距：状态栏高度44px + 20px距离 = 64px */
+        /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
         .phone-container,
         #worldBookContainer,
         #settingsContainer,
@@ -307,7 +309,7 @@
         #bookItemEditPage,
         #batterySettingsContainer,
         #apiConfigContainer {
-            padding-top: 64px !important;
+            padding-top: 49px !important;
         }
 
         .status-left, .status-right {
@@ -385,7 +387,7 @@
             justify-content: center;
             gap: 40px;
             padding: 20px;
-            margin-top: 10px;
+            margin-top: 0;
             margin-bottom: 20px;
         }
 
@@ -893,7 +895,7 @@
             background: #ffffff;
             padding: 8px 16px 12px;
             position: sticky;
-            top: 64px;
+            top: 49px;
             z-index: 99;
         }
 
@@ -4195,11 +4197,11 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 64px;
+    height: 49px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 16px 0;
+    padding: 10px 16px 0;
     z-index: 10;
     transition: background-color 0.3s, color 0.3s;
     color: #fff;

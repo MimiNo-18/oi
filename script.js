@@ -2680,6 +2680,17 @@ let currentElement = null;
             saveUIState();
         }
 
+        function openServicePage() {
+            document.getElementById('servicePageContainer').style.display = 'flex';
+            updateTime();
+            saveUIState();
+        }
+
+        function closeServicePage() {
+            document.getElementById('servicePageContainer').style.display = 'none';
+            saveUIState();
+        }
+
         // 微信存储空间相关
         function openWechatStorage() {
             document.getElementById('wechatStorageContainer').style.display = 'flex';
@@ -6918,6 +6929,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (document.getElementById('worldBookEditPage').style.display === 'flex') state.activeContainer = 'worldBookEditPage';
             else if (document.getElementById('bookItemEditPage').style.display === 'flex') state.activeContainer = 'bookItemEditPage';
             else if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
+            else if (document.getElementById('servicePageContainer').style.display === 'flex') state.activeContainer = 'servicePageContainer';
             else if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
@@ -7010,6 +7022,11 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openPersonalInfo();
+            }
+            else if (state.activeContainer === 'servicePageContainer') {
+                openWechat();
+                switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
+                openServicePage();
             }
             else if (state.activeContainer === 'wechatDisplaySettingsContainer') {
                 openWechat();

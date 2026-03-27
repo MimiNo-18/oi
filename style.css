@@ -273,6 +273,41 @@
             right: 0;
             background: transparent;
             pointer-events: none;
+            height: 44px; /* 固定状态栏高度 */
+        }
+
+        /* 统一页面顶部间距：状态栏高度44px + 20px距离 = 64px */
+        .phone-container,
+        #worldBookContainer,
+        #settingsContainer,
+        #accountContainer,
+        #accountInfoContainer,
+        #displaySettingsContainer,
+        #themeContainer,
+        #contactsContainer,
+        #servicePageContainer,
+        #wechatContainer,
+        #chatPageContainer,
+        #momentsContainer,
+        #personalInfoContainer,
+        #wechatSettingsContainer,
+        #wechatDisplaySettingsContainer,
+        #wechatStorageContainer,
+        #categoryManagementContainer,
+        #chatInfoContainer,
+        #addContactContainer,
+        #wechatFavoritesContainer,
+        #stickerLibraryContainer,
+        #stickerManagementContainer,
+        #mergedChatDetailContainer,
+        #realNameContainer,
+        #manualMemoryContainer,
+        #mineContainer,
+        #worldBookEditPage,
+        #bookItemEditPage,
+        #batterySettingsContainer,
+        #apiConfigContainer {
+            padding-top: 64px !important;
         }
 
         .status-left, .status-right {
@@ -814,6 +849,12 @@
             font-weight: 600;
             color: #000;
             background: #ffffff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            z-index: 1000;
         }
 
         .wechat-nav-bar {
@@ -4597,4 +4638,112 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+}
+
+/* 服务页面样式 */
+.service-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #f7f7f7;
+}
+
+.service-nav-left, .service-nav-right {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.service-nav-left svg {
+    width: 24px;
+    height: 24px;
+    color: #000;
+}
+
+.service-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+}
+
+.service-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.service-top-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    padding: 20px 0;
+    position: relative;
+}
+
+.service-card-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.service-card-icon {
+    font-size: 28px;
+}
+
+.service-card-label {
+    font-size: 14px;
+    color: #333;
+}
+
+.service-card-divider {
+    width: 1px;
+    height: 40px;
+    border-left: 1px dashed #ccc;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.service-bottom-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 20px;
+}
+
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px 10px;
+}
+
+.service-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.service-grid-icon {
+    font-size: 24px;
+}
+
+.service-grid-label {
+    font-size: 12px;
+    color: #333;
+    text-align: center;
 }

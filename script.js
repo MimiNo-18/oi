@@ -1052,11 +1052,8 @@ let currentElement = null;
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const timeStr = `${hours}:${minutes}`;
             
-            const ids = ['time', 'wechatTime', 'contactsTime', 'addContactTime', 'mineTime', 'themeTime', 'settingsTime', 'accountTime', 'apiTime', 'chatStatusTime'];
-            ids.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = timeStr;
-            });
+            const globalTime = document.getElementById('globalTime');
+            if (globalTime) globalTime.textContent = timeStr;
 
             // 同步所有使用 wechat-time-sync 类的元素
             document.querySelectorAll('.wechat-time-sync').forEach(el => {
@@ -1113,10 +1110,10 @@ let currentElement = null;
         }
 
         function toggleStatusBar(enabled) {
-            const statusBars = document.querySelectorAll('.status-bar, .wechat-status-bar, .add-contact-status-bar');
-            statusBars.forEach(bar => {
-                bar.style.display = enabled ? 'none' : 'flex';
-            });
+            const statusBar = document.getElementById('globalStatusBar');
+            if (statusBar) {
+                statusBar.style.display = enabled ? 'none' : 'flex';
+            }
             safeLocalStorageSet('mimi_status_bar_hide_pref', enabled ? 'true' : 'false');
             
             // 同步所有状态栏开关

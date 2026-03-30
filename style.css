@@ -268,15 +268,24 @@
             font-size: 15px;
             font-weight: 600;
             color: #000;
-            z-index: 9999;
-            position: sticky;
+            z-index: 20005; /* 确保在所有页面之上 */
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: #ffffff !important;
+            background: transparent !important; /* 没有任何背景色 */
             pointer-events: none;
-            height: 44px; /* 固定状态栏高度 */
-            flex-shrink: 0; /* 确保不被压缩 */
+            height: 44px;
+            flex-shrink: 0;
+        }
+
+        /* 边框模式下的状态栏适配 */
+        body.has-phone-border .status-bar {
+            width: 375px !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -324.8px) scale(0.8) !important;
+            transform-origin: top center;
         }
 
         /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
@@ -2538,6 +2547,7 @@
             background: #f8f8f8;
             flex-direction: column;
             overflow-y: auto;
+            scroll-behavior: smooth;
         }
 
         .settings-header {
@@ -2546,8 +2556,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: sticky;
-            top: 0;
+            position: relative; /* 改为 relative，使其随页面滚动 */
+            width: 100%;
             z-index: 100;
         }
 
@@ -2559,10 +2569,14 @@
 
         .settings-back {
             position: absolute;
-            left: 20px;
-            font-size: 24px;
+            left: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #333;
             cursor: pointer;
+            width: 40px;
+            height: 40px;
         }
 
         .settings-group {
@@ -4203,7 +4217,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 16px 0;
+    padding: 0 16px; /* 移除顶部 padding 以便更好对齐 */
     z-index: 2000;
     transition: background-color 0.3s, color 0.3s;
     color: #000;
@@ -4215,13 +4229,13 @@
 }
 
 .moments-header-left, .moments-header-right {
-    width: 44px;
-    height: 44px;
+    width: 40px; /* 与其他页面导航栏图标尺寸一致 */
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    pointer-events: auto !important; /* 确保可点击 */
+    pointer-events: auto !important;
 }
 
 .moments-header-left svg, .moments-header-right svg {

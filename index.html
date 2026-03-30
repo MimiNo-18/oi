@@ -16,25 +16,25 @@
 </head>
 <body>
     <div class="notch"></div>
-    <div class="phone-container">
-        <!-- 状态栏 -->
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="time">23:41</span>
+    <!-- 统一全局状态栏 -->
+    <div class="status-bar" id="globalStatusBar">
+        <div class="status-left">
+            <span id="globalTime">23:41</span>
+        </div>
+        <div class="status-right">
+            <div class="status-icons">
+                <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
             </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
+            <div class="battery">
+                <span class="battery-percent">100%</span>
+                <div class="battery-icon">
+                    <div class="battery-fill" style="width: 100%;"></div>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="phone-container">
         <!-- 头像区 -->
         <div class="avatar-section">
             <div class="avatar-item">
@@ -147,25 +147,6 @@
 
     <!-- 联系人容器 -->
     <div id="contactsContainer" style="display: none;">
-        <!-- 状态栏 -->
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="contactsTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 导航栏 -->
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeContacts()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -246,24 +227,6 @@
 
     <!-- 聊天详情页面 -->
     <div id="chatPageContainer" style="display: none; width: 100%; top: 0; bottom: 0; background: #ffffff; flex-direction: column; position: fixed; left: 0; z-index: 150;">
-        <!-- 状态栏 -->
-        <div class="wechat-status-bar" style="background: #ffffff;">
-            <div class="status-left">
-                <span id="chatStatusTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 导航栏 -->
         <div class="wechat-nav-bar" id="chatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
             <div class="wechat-nav-left" onclick="closeChat()" id="chatNavLeft">
@@ -408,24 +371,6 @@
 
     <!-- 微信容器 -->
     <div id="wechatContainer">
-        <!-- 状态栏 -->
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span id="wechatTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 顶部导航栏 -->
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="goBack()">
@@ -635,23 +580,6 @@
 
         <!-- 朋友圈容器 -->
         <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
-            <!-- 状态栏 -->
-            <div class="wechat-status-bar" style="background: #ffffff; position: absolute; top: 0; left: 0; right: 0; z-index: 150; pointer-events: none;">
-                <div class="status-left">
-                    <span class="wechat-time-sync">23:41</span>
-                </div>
-                <div class="status-right">
-                    <div class="status-icons">
-                        <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                    </div>
-                    <div class="battery">
-                        <span class="battery-percent">100%</span>
-                        <div class="battery-icon">
-                            <div class="battery-fill" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <!-- 朋友圈操作弹窗 (点赞/评论) -->
             <div id="momentActionPopup" class="moment-action-popup">
                 <div id="momentLikeBtn" class="moment-action-item">点赞</div>
@@ -755,23 +683,6 @@
 
         <!-- 朋友圈编辑发布页面 -->
         <div id="momentsEditPage" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 120; flex-direction: column;">
-            <!-- 状态栏 -->
-            <div class="wechat-status-bar">
-                <div class="status-left">
-                    <span class="wechat-time-sync">23:41</span>
-                </div>
-                <div class="status-right">
-                    <div class="status-icons">
-                        <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                    </div>
-                    <div class="battery">
-                        <span class="battery-percent">100%</span>
-                        <div class="battery-icon">
-                            <div class="battery-fill" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="moments-edit-nav">
                 <div class="moments-edit-cancel" onclick="closeMomentsEdit()">取消</div>
                 <button class="moments-post-btn" id="momentsPostBtn" onclick="postMoment()">发布</button>
@@ -884,23 +795,6 @@
 
     <!-- 合并转发详情页 -->
     <div id="mergedChatDetailContainer">
-        <!-- 状态栏 -->
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="merged-detail-header">
             <div class="merged-detail-back" onclick="closeMergedChatDetail()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -917,22 +811,6 @@
 
     <!-- 表情库页面 -->
     <div id="stickerLibraryContainer">
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeStickerLibrary()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -973,22 +851,6 @@
 
     <!-- 表情库管理页面 -->
     <div id="stickerManagementContainer">
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeStickerManagement()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1090,22 +952,6 @@
 
     <!-- 服务页面 -->
     <div id="servicePageContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 250;">
-        <div class="status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="service-nav-bar">
             <div class="service-nav-left" onclick="closeServicePage()" style="font-size: 24px; font-weight: 300; color: #000;"><</div>
             <div class="service-nav-title">服务</div>
@@ -1148,22 +994,6 @@
 
     <!-- 微信设置页面 -->
     <div id="wechatSettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 210;">
-        <div class="wechat-status-bar" style="background: #f7f7f7;">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeWechatSettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1233,22 +1063,6 @@
 
     <!-- 微信显示设置页面 -->
     <div id="wechatDisplaySettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 215;">
-        <div class="wechat-status-bar" style="background: #f7f7f7;">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeWechatDisplaySettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1292,22 +1106,6 @@
 
     <!-- 微信存储空间页面 -->
     <div id="wechatStorageContainer">
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeWechatStorage()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1383,22 +1181,6 @@
 
     <!-- 微信顶部分组管理页面 -->
     <div id="categoryManagementContainer">
-        <div class="wechat-status-bar" style="background: #f7f7f7;">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeCategoryManagement()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1438,23 +1220,6 @@
 
     <!-- 聊天信息页面 -->
     <div id="chatInfoContainer">
-        <!-- 状态栏 -->
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="chat-info-header">
             <div class="chat-info-back" onclick="closeChatInfo()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -1621,22 +1386,6 @@
 
     <!-- 微信收藏页面 -->
     <div id="wechatFavoritesContainer">
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeWechatFavorites()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1675,22 +1424,6 @@
 
     <!-- 微信个人资料页面 -->
     <div id="personalInfoContainer">
-        <div class="wechat-status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closePersonalInfo()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1771,24 +1504,6 @@
 
     <!-- 添加联系人页面 -->
     <div id="addContactContainer">
-        <!-- 状态栏 -->
-        <div class="add-contact-status-bar">
-            <div class="status-left">
-                <span id="addContactTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 导航栏 -->
         <div class="add-contact-nav">
             <div class="add-contact-nav-left" onclick="closeAddContactPage()">
@@ -1890,24 +1605,6 @@
 
     <!-- 我的页面 -->
     <div id="mineContainer">
-        <!-- 状态栏 -->
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="mineTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 顶部标题栏 -->
         <div class="theme-header">
             <div class="theme-back" onclick="closeMinePage()">
@@ -1937,22 +1634,6 @@
     <!-- 主题美化页面 -->
     <!-- 设置容器 -->
     <div id="settingsContainer">
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="settingsTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeSettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2016,22 +1697,6 @@
 
     <!-- 显示设置容器 -->
     <div id="displaySettingsContainer">
-        <div class="status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeDisplaySettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2088,22 +1753,6 @@
 
     <!-- 电量提醒设置容器 -->
     <div id="batterySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
-        <div class="status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeBatterySettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2157,22 +1806,6 @@
 
     <!-- 账号容器 -->
     <div id="accountContainer">
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="accountTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeAccount()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2210,22 +1843,6 @@
 
     <!-- 账号信息容器 -->
     <div id="accountInfoContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
-        <div class="status-bar">
-            <div class="status-left">
-                <span class="wechat-time-sync">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeAccountInfo()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2314,22 +1931,6 @@
 
     <!-- API配置容器 -->
     <div id="apiConfigContainer">
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="apiTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="settings-header">
             <div class="settings-back" onclick="closeApiConfig()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2396,24 +1997,6 @@
     </div>
 
     <div id="themeContainer">
-        <!-- 状态栏 -->
-        <div class="status-bar">
-            <div class="status-left">
-                <span id="themeTime">23:41</span>
-            </div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon">
-                        <div class="battery-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 顶部标题栏 -->
         <div class="theme-header">
             <div class="theme-back" onclick="closeThemePage()">
@@ -2510,18 +2093,6 @@
 
     <!-- 手动输入记忆页面 -->
     <div id="manualMemoryContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 300;">
-        <div class="wechat-status-bar" style="background: #f7f7f7;">
-            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeManualMemory()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2538,18 +2109,6 @@
 
     <!-- 实名信息页面 -->
     <div id="realNameContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 350;">
-        <div class="wechat-status-bar" style="background: #f7f7f7;">
-            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: 1px solid #eee;">
             <div class="wechat-nav-left" onclick="closeRealNamePage()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2599,18 +2158,6 @@
 
     <!-- 世界书应用容器 -->
     <div id="worldBookContainer" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5000;">
-        <div class="status-bar">
-            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeWorldBook()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -2641,18 +2188,6 @@
 
     <!-- 世界书编辑页面 -->
     <div id="worldBookEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5100;">
-        <div class="status-bar">
-            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeWorldBookEdit()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -2683,18 +2218,6 @@
 
     <!-- 条目编辑页面 -->
     <div id="bookItemEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5200;">
-        <div class="status-bar">
-            <div class="status-left"><span class="wechat-time-sync">23:41</span></div>
-            <div class="status-right">
-                <div class="status-icons">
-                    <svg class="signal-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 13.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5v-3zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v6.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V10zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v10c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V6.5zm4-3.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v13.5c0 .28-.22.5-.5.5h-2a.5.5 0 0 1-.5-.5V3z"/></svg>
-                </div>
-                <div class="battery">
-                    <span class="battery-percent">100%</span>
-                    <div class="battery-icon"><div class="battery-fill" style="width: 100%;"></div></div>
-                </div>
-            </div>
-        </div>
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeBookItemEdit()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>

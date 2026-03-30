@@ -636,7 +636,7 @@
         <!-- 朋友圈容器 -->
         <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
             <!-- 状态栏 -->
-            <div class="wechat-status-bar" style="background: transparent; position: absolute; top: 0; left: 0; right: 0; z-index: 150; pointer-events: none;">
+            <div class="wechat-status-bar" style="background: #ffffff; position: absolute; top: 0; left: 0; right: 0; z-index: 150; pointer-events: none;">
                 <div class="status-left">
                     <span class="wechat-time-sync">23:41</span>
                 </div>
@@ -667,13 +667,13 @@
             </div>
 
             <!-- 朋友圈顶部透明导航栏 (初始) -->
-            <div id="momentsHeader" class="moments-header">
-                <div class="moments-header-left" onclick="closeMoments()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            <div id="momentsHeader" class="moments-header" style="color: #000;">
+                <div class="moments-header-left" onclick="closeMoments()" style="cursor: pointer;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><path d="M15 18l-6-6 6-6"/></svg>
                 </div>
                 <div class="moments-header-title">朋友圈</div>
-                <div class="moments-header-right" onclick="openMomentsEdit()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="moments-header-right" onclick="openMomentsEdit()" style="cursor: pointer;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
                     </svg>
                 </div>

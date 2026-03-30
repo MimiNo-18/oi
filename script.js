@@ -40,6 +40,14 @@ let currentElement = null;
             if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
             if (sigEl) sigEl.textContent = me.signature || '个性签名...';
             
+            // 重置头部样式，确保颜色为黑色且背景透明
+            const header = document.getElementById('momentsHeader');
+            if (header) {
+                header.classList.remove('scrolled');
+                header.style.backgroundColor = 'transparent';
+                header.style.color = '#000';
+            }
+            
             renderMoments();
             updateTime();
             saveUIState();
@@ -61,7 +69,7 @@ let currentElement = null;
             } else {
                 header.classList.remove('scrolled');
                 header.style.backgroundColor = 'transparent';
-                header.style.color = '#fff';
+                header.style.color = '#000';
             }
             // 滑动时关闭弹窗
             hideMomentPopups();

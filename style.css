@@ -69,7 +69,8 @@
         body.has-phone-border #manualMemoryContainer,
         body.has-phone-border #worldBookContainer,
         body.has-phone-border #worldBookEditPage,
-        body.has-phone-border #bookItemEditPage {
+        body.has-phone-border #bookItemEditPage,
+        body.has-phone-border #wechatAccountSwitchContainer {
             width: 375px !important;
             height: 812px !important;
             border: none !important;
@@ -81,7 +82,7 @@
                 0 0 0 16px #111,
                 0 0 20px rgba(255,255,255,0.1) inset,
                 0 20px 50px rgba(0,0,0,0.6) !important;
-            overflow: hidden !important;
+            overflow-y: auto !important; /* 修改为允许向下滑动，修复设置页面无法滚动问题 */
             position: fixed !important;
             top: 50% !important;
             left: 50% !important;
@@ -132,7 +133,8 @@
         body.has-phone-border #worldBookEditPage,
         body.has-phone-border #bookItemEditPage,
         body.has-phone-border #servicePageContainer,
-        body.has-phone-border #momentsContainer { z-index: 10300 !important; }
+        body.has-phone-border #momentsContainer,
+        body.has-phone-border #wechatAccountSwitchContainer { z-index: 10300 !important; }
 
         /* 首页容器在边框模式下需允许内容滚动且隐藏滚动条 */
         body.has-phone-border .phone-container {
@@ -318,7 +320,8 @@
         #worldBookEditPage,
         #bookItemEditPage,
         #batterySettingsContainer,
-        #apiConfigContainer {
+        #apiConfigContainer,
+        #wechatAccountSwitchContainer {
             padding-top: 49px !important;
         }
 
@@ -794,14 +797,14 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #f7f7f7;
+            background: #ffffff; /* 纯白色背景 */
         }
 
         /* 微信通讯录特有样式 */
         .wechat-contacts-header-btn {
             margin: 10px 16px;
             padding: 16px;
-            background: #f7f7f7;
+            background: #ffffff; /* 纯白色背景 */
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -820,7 +823,7 @@
 
         .wechat-section-header {
             padding: 8px 16px;
-            background: #f7f7f7;
+            background: #ffffff; /* 纯白色背景 */
             color: #888;
             font-size: 13px;
             font-weight: 500;
@@ -4794,4 +4797,129 @@
     font-size: 12px;
     color: #333;
     text-align: center;
+}
+
+/* 微信切换账号页面样式 */
+#wechatAccountSwitchContainer {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    background: #fff;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 215;
+}
+
+.account-switch-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #fff;
+}
+
+.account-switch-box-centered {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.account-switch-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.account-switch-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 10px;
+    background: #eee;
+    margin-right: 15px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.account-switch-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: 2px;
+}
+
+.account-switch-nickname {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 5px;
+}
+
+.account-switch-id {
+    font-size: 14px;
+    color: #888;
+}
+
+.account-switch-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    background: #000;
+    border-radius: 50%;
+}
+
+.status-text {
+    font-size: 13px;
+    color: #000;
+}
+
+.account-switch-card.add-account {
+    border: 1.5px dashed #e0e0e0;
+    background: transparent;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 20px;
+}
+
+.add-account-icon-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 32px;
+    font-weight: 300;
+}
+
+.add-account-label {
+    font-size: 17px;
+    color: #000;
+    font-weight: 500;
+    margin-left: 12px;
+}
+
+#wechatContactsPage {
+    background: #fff !important;
 }

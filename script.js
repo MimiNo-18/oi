@@ -2870,6 +2870,29 @@ let currentElement = null;
         }
 
         // 微信账号与安全相关函数
+        function openWechatAccountSwitch() {
+            const container = document.getElementById('wechatAccountSwitchContainer');
+            if (!container) return;
+
+            // 填充当前账号信息
+            const avatarImg = document.getElementById('switchCurrentAvatar');
+            const nicknameEl = document.getElementById('switchCurrentNickname');
+            const idEl = document.getElementById('switchCurrentID');
+
+            if (avatarImg) avatarImg.src = wechatUserInfo.avatar || '';
+            if (nicknameEl) nicknameEl.textContent = wechatUserInfo.nickname || '未设置网名';
+            if (idEl) idEl.textContent = '微信号：' + (wechatUserInfo.wechatId || '未设置');
+
+            container.style.display = 'flex';
+            updateTime();
+            saveUIState();
+        }
+
+        function closeWechatAccountSwitch() {
+            const container = document.getElementById('wechatAccountSwitchContainer');
+            if (container) container.style.display = 'none';
+            saveUIState();
+        }
 
         function searchWechatSettings() {
             const keyword = document.getElementById('wechatSettingsSearchInput').value.trim().toLowerCase();

@@ -1092,7 +1092,7 @@
             </div>
                 <div class="me-divider"></div>
                 <div class="wechat-settings-footer">
-                    <div class="settings-action-btn" onclick="alert('切换账号')">切换账号</div>
+                    <div class="settings-action-btn" onclick="openWechatAccountSwitch()">切换账号</div>
                     <div class="settings-action-btn" onclick="alert('退出登录')" style="margin-top: 10px; color: #fa5151;">退出登录</div>
                 </div>
             </div>
@@ -2309,6 +2309,41 @@
             <div class="modal-buttons">
                 <button class="modal-btn cancel" onclick="closeWorldBookBindingModal()">取消</button>
                 <button class="modal-btn confirm" onclick="confirmWorldBookBinding()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信切换账号页面 -->
+    <div id="wechatAccountSwitchContainer" style="display: none;">
+        <div class="wechat-nav-bar" style="background: #fff; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeWechatAccountSwitch()">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="#333" />
+                </svg>
+            </div>
+            <div class="wechat-nav-title" style="font-size: 17px; font-weight: normal; color: #000;">点击头像切换账号</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="account-switch-content">
+            <div class="account-switch-box-centered">
+                <!-- 当前账号 -->
+                <div class="account-switch-card">
+                    <img src="" id="switchCurrentAvatar" class="account-switch-avatar">
+                    <div class="account-switch-info">
+                        <div class="account-switch-nickname" id="switchCurrentNickname">未设置网名</div>
+                        <div class="account-switch-id" id="switchCurrentID">微信号：未设置</div>
+                    </div>
+                    <div class="account-switch-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">当前使用</span>
+                    </div>
+                </div>
+
+                <!-- 添加账号 -->
+                <div class="account-switch-card add-account" onclick="alert('添加账号功能开发中')">
+                    <div class="add-account-icon-box">+</div>
+                    <div class="add-account-label">添加账号</div>
+                </div>
             </div>
         </div>
     </div>

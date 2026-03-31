@@ -794,7 +794,7 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #fff;
+            background: #f7f7f7;
         }
 
         /* 微信通讯录特有样式 */
@@ -903,6 +903,7 @@
         }
 
         .wechat-search-bar {
+            display: none; /* 默认隐藏，删除发现页面上方的白色横条 */
             background: #ffffff;
             padding: 8px 16px 12px;
             position: sticky;
@@ -911,6 +912,7 @@
         }
 
         .wechat-tag-bar {
+            display: none; /* 默认隐藏 */
             background: #ffffff;
             padding: 8px 16px 12px;
             display: flex;
@@ -4210,14 +4212,14 @@
 
         .moments-header {
             position: absolute;
-            top: 0;
+            top: 44px;
             left: 0;
             width: 100%;
             height: 44px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 4px 20px 0; /* 调整间距为 4px (3-5px 范围内) */
             z-index: 2000;
             transition: background-color 0.3s, color 0.3s;
             color: #000;
@@ -4230,7 +4232,7 @@
 
         .moments-header-left, .moments-header-right {
             width: 24px;
-            height: 40px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;

@@ -1041,19 +1041,19 @@
             <div class="wechat-nav-title">设置</div>
             <div class="wechat-nav-right"></div>
         </div>
-        <div class="wechat-search-bar" style="background: #f7f7f7; padding-bottom: 8px;">
-            <div class="wechat-search-input-wrapper" style="background: #fff; border: none;">
-                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()">
-            </div>
-        </div>
         <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7;">
+            <div class="wechat-search-bar" style="display: flex; background: #f7f7f7; padding: 0 16px 8px; margin-top: -8px;">
+                <div class="wechat-search-input-wrapper" style="background: #fff; border: none;">
+                    <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()">
+                </div>
+            </div>
             <!-- 个人资料 -->
-            <div class="me-rounded-box" style="margin-top: 10px;">
-                <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()">
+            <div class="me-rounded-box">
+                <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()" style="border-bottom: none;">
                     <div class="me-menu-label">个人资料</div>
                     <span class="me-arrow">〉</span>
                 </div>
@@ -1075,7 +1075,7 @@
                     <div class="me-menu-label">朋友权限</div>
                     <span class="me-arrow">〉</span>
                 </div>
-                <div class="me-menu-item setting-item" data-search="存储空间" onclick="openWechatStorage()">
+                <div class="me-menu-item setting-item" data-search="存储空间" onclick="openWechatStorage()" style="border-bottom: none;">
                     <div class="me-menu-label">存储空间</div>
                     <span class="me-arrow">〉</span>
                 </div>
@@ -1085,15 +1085,22 @@
 
             <!-- 更多 -->
             <div class="me-rounded-box">
-                <div class="me-menu-item setting-item" data-search="更多" onclick="openCategoryManagement()">
+                <div class="me-menu-item setting-item" data-search="更多" onclick="openCategoryManagement()" style="border-bottom: none;">
                     <div class="me-menu-label">更多</div>
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
             <div class="me-divider"></div>
-            <div class="wechat-settings-footer">
-                <div class="settings-action-btn" onclick="openWechatAccountSwitch()">切换账号</div>
-                <div class="settings-action-btn" onclick="alert('退出登录')" style="margin-top: 10px; color: #fa5151;">退出登录</div>
+            <div class="me-rounded-box">
+                <div class="me-menu-item" onclick="openWechatAccountSwitch()" style="border-bottom: none;">
+                    <div class="me-menu-label" style="text-align: center; width: 100%;">切换账号</div>
+                </div>
+            </div>
+            <div class="me-divider"></div>
+            <div class="me-rounded-box" style="margin-bottom: 20px;">
+                <div class="me-menu-item" onclick="alert('退出登录')" style="border-bottom: none;">
+                    <div class="me-menu-label" style="text-align: center; width: 100%; color: #fa5151;">退出登录</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1471,7 +1478,8 @@
             <div class="wechat-nav-right"></div>
         </div>
         <div class="wechat-content-area" style="background: #f7f7f7;">
-            <div class="info-group">
+            <div class="me-divider"></div>
+            <div class="me-rounded-box">
                 <div class="info-item" onclick="changeWechatAvatar()">
                     <div class="info-label">头像</div>
                     <div class="info-content">
@@ -1512,7 +1520,10 @@
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="info-item" onclick="editWechatInfo('region', '地区')">
+            </div>
+            <div class="me-divider"></div>
+            <div class="me-rounded-box">
+                <div class="info-item" onclick="editWechatInfo('region', '地区')" style="border-bottom: none;">
                     <div class="info-label">地区</div>
                     <div class="info-content">
                         <span class="info-text" id="editWechatRegion">未设置</span>
@@ -1520,15 +1531,19 @@
                     </div>
                 </div>
             </div>
-            <div class="info-group">
-                <div class="info-item" onclick="editWechatInfo('patPat', '拍一拍')">
+            <div class="me-divider"></div>
+            <div class="me-rounded-box">
+                <div class="info-item" onclick="editWechatInfo('patPat', '拍一拍')" style="border-bottom: none;">
                     <div class="info-label">拍一拍</div>
                     <div class="info-content">
                         <span class="info-text" id="editWechatPatPat">未设置</span>
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="info-item" onclick="editWechatInfo('signature', '个性签名')">
+            </div>
+            <div class="me-divider"></div>
+            <div class="me-rounded-box">
+                <div class="info-item" onclick="editWechatInfo('signature', '个性签名')" style="border-bottom: none;">
                     <div class="info-label">个性签名</div>
                     <div class="info-content">
                         <span class="info-text" id="editWechatSignature">未设置</span>
@@ -1536,6 +1551,7 @@
                     </div>
                 </div>
             </div>
+            <div class="me-divider"></div>
         </div>
     </div>
 

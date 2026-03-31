@@ -915,10 +915,9 @@
         }
 
         .wechat-tag-bar {
-            display: none; /* 默认隐藏 */
+            display: none; 
             background: #ffffff;
             padding: 8px 16px 12px;
-            display: flex;
             gap: 10px;
             overflow-x: auto;
             position: sticky;

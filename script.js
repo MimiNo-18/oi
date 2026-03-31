@@ -2107,15 +2107,27 @@ let currentElement = null;
                 searchBar.style.display = 'block';
                 tagBar.style.display = 'flex';
                 navTitle.textContent = 'Wechat';
+                if (navBar) {
+                    navBar.style.backgroundColor = '#fff';
+                    navBar.style.borderBottom = '1px solid #f5f5f5';
+                }
                 renderChatList();
             } else if (tab === 'contacts') {
                 contactsPage.style.display = 'block';
                 searchBar.style.display = 'block';
                 navTitle.textContent = '通讯录';
+                if (navBar) {
+                    navBar.style.backgroundColor = '#fff';
+                    navBar.style.borderBottom = '1px solid #f5f5f5';
+                }
                 renderWechatContacts();
             } else if (tab === 'discover') {
                 if (discoverPage) discoverPage.style.display = 'block';
                 navTitle.textContent = '发现';
+                if (navBar) {
+                    navBar.style.backgroundColor = '#f7f7f7';
+                    navBar.style.borderBottom = 'none';
+                }
             } else if (tab === 'me') {
                 mePage.style.display = 'block';
                 if (navBar) navBar.style.display = 'none';

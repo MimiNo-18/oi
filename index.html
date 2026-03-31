@@ -394,7 +394,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="wechatSearchInput" class="wechat-search-input" placeholder="search" oninput="searchWechat()">
+                <input type="text" id="wechatSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechat()">
             </div>
         </div>
 
@@ -431,8 +431,8 @@
             </div>
 
             <!-- 微信“发现”页面 -->
-            <div id="wechatDiscoverPage" style="display: none;">
-                <div class="discover-group">
+            <div id="wechatDiscoverPage" style="display: none; background: #f7f7f7;">
+                <div class="discover-group" style="margin-top: 0;">
                     <div class="discover-item" onclick="openMoments()">
                         <div class="discover-icon" style="color: #ff9800;">🖼️️</div>
                         <div class="discover-label">朋友圈</div>
@@ -1041,16 +1041,16 @@
             <div class="wechat-nav-title">设置</div>
             <div class="wechat-nav-right"></div>
         </div>
-        <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7;">
-            <div class="wechat-search-bar" style="display: flex; background: #f7f7f7; padding: 0 16px 8px; margin-top: -8px;">
-                <div class="wechat-search-input-wrapper" style="background: #fff; border: none;">
-                    <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()">
-                </div>
+        <div class="wechat-search-bar" style="display: flex; background: #f7f7f7; padding: 8px 16px 12px;">
+            <div class="wechat-search-input-wrapper" style="background: #fff; border: none; flex: 1; display: flex; align-items: center; padding: 8px 12px; border-radius: 6px;">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: #999; margin-right: 8px;">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()" style="border: none; outline: none; background: transparent; font-size: 14px; width: 100%;">
             </div>
+        </div>
+        <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7; padding-top: 0;">
             <!-- 个人资料 -->
             <div class="me-rounded-box">
                 <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()" style="border-bottom: none;">
@@ -1468,18 +1468,17 @@
 
     <!-- 微信个人资料页面 -->
     <div id="personalInfoContainer">
-        <div class="wechat-nav-bar">
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closePersonalInfo()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
-            <div class="wechat-nav-title">个人资料</div>
+            <div class="wechat-nav-title">个人信息</div>
             <div class="wechat-nav-right"></div>
         </div>
         <div class="wechat-content-area" style="background: #f7f7f7;">
-            <div class="me-divider"></div>
-            <div class="me-rounded-box">
+            <div class="me-rounded-box" style="margin-top: 10px;">
                 <div class="info-item" onclick="changeWechatAvatar()">
                     <div class="info-label">头像</div>
                     <div class="info-content">
@@ -1508,7 +1507,7 @@
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="info-item">
+                <div class="info-item" onclick="alert('二维码名片')">
                     <div class="info-label">二维码名片</div>
                     <div class="info-content">
                         <svg class="me-qrcode" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1520,9 +1519,6 @@
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-            </div>
-            <div class="me-divider"></div>
-            <div class="me-rounded-box">
                 <div class="info-item" onclick="editWechatInfo('region', '地区')" style="border-bottom: none;">
                     <div class="info-label">地区</div>
                     <div class="info-content">
@@ -1533,16 +1529,13 @@
             </div>
             <div class="me-divider"></div>
             <div class="me-rounded-box">
-                <div class="info-item" onclick="editWechatInfo('patPat', '拍一拍')" style="border-bottom: none;">
+                <div class="info-item" onclick="editWechatInfo('patPat', '拍一拍')">
                     <div class="info-label">拍一拍</div>
                     <div class="info-content">
                         <span class="info-text" id="editWechatPatPat">未设置</span>
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-            </div>
-            <div class="me-divider"></div>
-            <div class="me-rounded-box">
                 <div class="info-item" onclick="editWechatInfo('signature', '个性签名')" style="border-bottom: none;">
                     <div class="info-label">个性签名</div>
                     <div class="info-content">
@@ -1551,7 +1544,6 @@
                     </div>
                 </div>
             </div>
-            <div class="me-divider"></div>
         </div>
     </div>
 

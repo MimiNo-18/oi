@@ -64,7 +64,7 @@ let currentElement = null;
             const scrollThreshold = 100;
             if (el.scrollTop > scrollThreshold) {
                 header.classList.add('scrolled');
-                header.style.backgroundColor = '#ededed';
+                header.style.backgroundColor = 'transparent';
                 header.style.color = '#000';
             } else {
                 header.classList.remove('scrolled');

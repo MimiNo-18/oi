@@ -172,7 +172,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="contactsSearchInput" oninput="searchContactsList()" style="color: #000;">
+                <input type="text" class="wechat-search-input" placeholder="Search" id="contactsSearchInput" oninput="searchContactsList()" style="color: #000;">
             </div>
         </div>
 
@@ -394,7 +394,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="wechatSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechat()">
+                <input type="text" id="wechatSearchInput" class="wechat-search-input" placeholder="Search" oninput="searchWechat()">
             </div>
         </div>
 
@@ -717,13 +717,13 @@
             <div class="modal-content">
                 <div class="modal-title">选择联系人</div>
                 <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
-                    <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
-                        <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-                        <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="friendSearchInput" oninput="searchFriendContacts()">
-                    </div>
+                <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
+                    <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" class="wechat-search-input" placeholder="Search" id="friendSearchInput" oninput="searchFriendContacts()">
+                </div>
                 </div>
                 <div id="friendContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
                     <!-- 联系人列表将在这里动态生成 -->
@@ -781,7 +781,7 @@
                         <circle cx="11" cy="11" r="8"/>
                         <path d="m21 21-4.35-4.35"/>
                     </svg>
-                    <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="forwardSearchInput" oninput="searchForwardContacts()">
+                    <input type="text" class="wechat-search-input" placeholder="Search" id="forwardSearchInput" oninput="searchForwardContacts()">
                 </div>
             </div>
             <div id="forwardContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
@@ -832,7 +832,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="stickerSearchInput" class="wechat-search-input" placeholder="搜索" oninput="renderStickerGrid()">
+                <input type="text" id="stickerSearchInput" class="wechat-search-input" placeholder="Search" oninput="renderStickerGrid()">
             </div>
         </div>
         <div class="sticker-content">
@@ -1047,7 +1047,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="搜索" oninput="searchWechatSettings()" style="border: none; outline: none; background: transparent; font-size: 14px; width: 100%;">
+                <input type="text" id="wechatSettingsSearchInput" class="wechat-search-input" placeholder="Search" oninput="searchWechatSettings()" style="border: none; outline: none; background: transparent; font-size: 14px; width: 100%;">
             </div>
         </div>
         <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7; padding-top: 0;">
@@ -1090,18 +1090,25 @@
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
+
             <div class="me-divider"></div>
+
+            <!-- 切换账号 -->
             <div class="me-rounded-box">
                 <div class="me-menu-item" onclick="openWechatAccountSwitch()" style="border-bottom: none;">
                     <div class="me-menu-label" style="text-align: center; width: 100%;">切换账号</div>
                 </div>
             </div>
+
             <div class="me-divider"></div>
-            <div class="me-rounded-box" style="margin-bottom: 20px;">
+
+            <!-- 退出登录 -->
+            <div class="me-rounded-box">
                 <div class="me-menu-item" onclick="alert('退出登录')" style="border-bottom: none;">
                     <div class="me-menu-label" style="text-align: center; width: 100%; color: #fa5151;">退出登录</div>
                 </div>
             </div>
+            <div class="me-divider"></div>
         </div>
     </div>
 
@@ -1447,7 +1454,7 @@
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="favoritesSearchInput" class="wechat-search-input" placeholder="搜索收藏内容" oninput="searchFavorites()">
+                <input type="text" id="favoritesSearchInput" class="wechat-search-input" placeholder="Search" oninput="searchFavorites()">
             </div>
         </div>
         <div class="favorites-list" id="favoritesList">
@@ -1544,6 +1551,8 @@
                     </div>
                 </div>
             </div>
+            <div class="me-divider"></div>
+            <div class="me-divider"></div>
         </div>
     </div>
 

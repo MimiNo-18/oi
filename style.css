@@ -790,28 +790,28 @@
             display: none;
             width: 100%;
             min-height: 100vh;
-            background: #ffffff; /* 纯白色背景 */
+            background: #ffffff !important; /* 强制纯白色背景 */
             flex-direction: column;
         }
 
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff; /* 纯白色背景 */
+            background: #ffffff !important; /* 强制纯白色背景 */
         }
 
         /* 微信通讯录特有样式 */
         .wechat-contacts-header-btn {
             margin: 10px 16px;
             padding: 16px;
-            background: #ffffff; /* 纯白色背景 */
+            background: #ffffff !important; /* 纯白色背景 */
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             cursor: pointer;
-            border: 1px solid #eee;
+            border: 1px solid #000000 !important; /* 纯黑色边框 */
             color: #000;
             font-size: 16px;
             font-weight: 500;
@@ -974,7 +974,7 @@
 
         .wechat-chat-list {
             padding: 10px 0 80px 0;
-            background: #ffffff;
+            background: #ffffff !important;
             overflow-x: hidden;
         }
 
@@ -3146,7 +3146,7 @@
             display: none;
             width: 100%;
             min-height: 100vh;
-            background: #f7f7f7;
+            background: #ffffff;
             flex-direction: column;
             position: fixed;
             top: 0;
@@ -3252,6 +3252,10 @@
 
         .category-list-wrapper {
             padding: 12px;
+            flex: 1;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+            min-height: 200px; /* 确保有足够高度进行滚动 */
         }
 
         .category-mgmt-item {

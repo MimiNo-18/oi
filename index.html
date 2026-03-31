@@ -1090,11 +1090,10 @@
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
-                <div class="me-divider"></div>
-                <div class="wechat-settings-footer">
-                    <div class="settings-action-btn" onclick="openWechatAccountSwitch()">切换账号</div>
-                    <div class="settings-action-btn" onclick="alert('退出登录')" style="margin-top: 10px; color: #fa5151;">退出登录</div>
-                </div>
+            <div class="me-divider"></div>
+            <div class="wechat-settings-footer">
+                <div class="settings-action-btn" onclick="openWechatAccountSwitch()">切换账号</div>
+                <div class="settings-action-btn" onclick="alert('退出登录')" style="margin-top: 10px; color: #fa5151;">退出登录</div>
             </div>
         </div>
     </div>
@@ -1228,7 +1227,7 @@
             <div class="wechat-nav-title">顶部分组设置</div>
             <div class="wechat-nav-right"></div>
         </div>
-        <div class="wechat-content-area" style="background: #f7f7f7;">
+        <div class="wechat-content-area" style="background: #f7f7f7; display: flex; flex-direction: column; overflow: hidden;">
             <div class="category-preview-box">
                 <div class="category-preview-title">分组栏预览</div>
                 <div class="category-preview-tags" id="categoryPreviewTags">
@@ -1236,7 +1235,7 @@
                 </div>
             </div>
             <div class="add-category-btn" onclick="addNewCategory()">+ 添加新分组</div>
-            <div class="category-list-wrapper" id="categoryManagementList">
+            <div class="category-list-wrapper" id="categoryManagementList" style="flex: 1; overflow-y: auto;">
                 <!-- 动态生成 -->
             </div>
         </div>

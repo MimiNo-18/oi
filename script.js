@@ -2872,7 +2872,18 @@ let currentElement = null;
         // 微信账号与安全相关函数
         function openWechatAccountSwitch() {
             const container = document.getElementById('wechatAccountSwitchContainer');
-            if (!container) return;
+            if (!container) {
+                console.error('Account switch container not found');
+                return;
+            }
+
+            // 隐藏可能覆盖的页面
+            const settingsContainer = document.getElementById('wechatSettingsContainer');
+            if (settingsContainer) settingsContainer.style.display = 'none';
+            
+            // 确保微信容器显示（如果它是父容器的一部分）
+            const wechatContainer = document.getElementById('wechatContainer');
+            if (wechatContainer) wechatContainer.style.display = 'flex';
 
             // 填充当前账号信息
             const avatarImg = document.getElementById('switchCurrentAvatar');
@@ -2883,7 +2894,10 @@ let currentElement = null;
             if (nicknameEl) nicknameEl.textContent = wechatUserInfo.nickname || '未设置网名';
             if (idEl) idEl.textContent = '微信号：' + (wechatUserInfo.wechatId || '未设置');
 
+            // 强制设置为 flex 并提升层级
             container.style.display = 'flex';
+            container.style.zIndex = '10305'; // 确保在所有页面之上
+            
             updateTime();
             saveUIState();
         }
@@ -2891,6 +2905,11 @@ let currentElement = null;
         function closeWechatAccountSwitch() {
             const container = document.getElementById('wechatAccountSwitchContainer');
             if (container) container.style.display = 'none';
+            
+            // 返回设置页面
+            const settingsContainer = document.getElementById('wechatSettingsContainer');
+            if (settingsContainer) settingsContainer.style.display = 'flex';
+            
             saveUIState();
         }
 
@@ -6968,6 +6987,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (document.getElementById('wechatDisplaySettingsContainer').style.display === 'flex') state.activeContainer = 'wechatDisplaySettingsContainer';
             else if (document.getElementById('wechatStorageContainer').style.display === 'flex') state.activeContainer = 'wechatStorageContainer';
             else if (document.getElementById('wechatSettingsContainer').style.display === 'flex') state.activeContainer = 'wechatSettingsContainer';
+            else if (document.getElementById('wechatAccountSwitchContainer').style.display === 'flex') state.activeContainer = 'wechatAccountSwitchContainer';
             else if (document.getElementById('wechatContainer').style.display === 'block') state.activeContainer = 'wechatContainer';
             else if (document.getElementById('contactsContainer').style.display !== 'none') state.activeContainer = 'contactsContainer';
             else if (document.getElementById('addContactContainer').style.display !== 'none') state.activeContainer = 'addContactContainer';
@@ -7072,6 +7092,12 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openWechatSettings();
+            }
+            else if (state.activeContainer === 'wechatAccountSwitchContainer') {
+                openWechat();
+                switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
+                openWechatSettings();
+                openWechatAccountSwitch();
             }
             else if (state.activeContainer === 'wechatContainer') openWechat();
             else if (state.activeContainer === 'contactsContainer') openContacts();

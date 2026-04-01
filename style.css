@@ -375,12 +375,16 @@
         #mineContainer,
         #worldBookEditPage,
         #bookItemEditPage,
-        #momentsContainer,
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
         #wechatAccountSwitchContainer {
             padding-top: 49px !important;
+        }
+
+        /* 朋友圈页面背景图从顶部状态栏开始 */
+        #momentsContainer {
+            padding-top: 0 !important;
         }
 
         .status-left, .status-right {

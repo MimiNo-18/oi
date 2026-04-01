@@ -41,12 +41,12 @@
         <div class="avatar-section">
             <div class="avatar-item">
                 <div class="avatar-bubble" id="txt-avatar-name-1" onclick="editText(this, '名称')">Mimi</div>
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="avatar" id="avatar1" onclick="changeImage('avatar1')" alt="头像1">
+                <img src="" class="avatar" id="avatar1" onclick="changeImage('avatar1')" alt="头像1">
                 <div class="emoji-text" id="txt-avatar-emoji-1" onclick="editText(this, '颜文字')">^U=U^</div>
             </div>
             <div class="avatar-item">
                 <div class="avatar-bubble" id="txt-avatar-name-2" onclick="editText(this, '名称')">Phone</div>
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="avatar" id="avatar2" onclick="changeImage('avatar2')" alt="头像2">
+                <img src="" class="avatar" id="avatar2" onclick="changeImage('avatar2')" alt="头像2">
                 <div class="emoji-text" id="txt-avatar-emoji-2" onclick="editText(this, '颜文字')">ʚ♡ɞ</div>
             </div>
         </div>
@@ -77,10 +77,10 @@
                     <img src="" class="app-icon" id="app2" onclick="changeImage('app2')" alt="应用图标">
                     <div class="app-label">小游戏</div>
                 </div>
-                <div class="app-item">
-                    <img src="" class="app-icon" id="app3" onclick="changeImage('app3')" alt="应用图标">
-                    <div class="app-label">世界书</div>
-                </div>
+            <div class="app-item">
+                <img src="" class="app-icon" id="app3" onclick="openWorldBook()" alt="应用图标">
+                <div class="app-label">世界书</div>
+            </div>
                 <div class="app-item">
                     <img src="" class="app-icon" id="app4" onclick="changeImage('app4')" alt="应用图标">
                     <div class="app-label">网易云音乐</div>
@@ -491,7 +491,7 @@
             <!-- 微信“我”页面 -->
             <div id="wechatMePage" style="display: none; padding-bottom: 80px;">
                 <div class="me-header" onclick="openPersonalInfo()">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="me-avatar" id="wechatMeAvatar" alt="">
+                    <img src="" class="me-avatar" id="wechatMeAvatar" alt="">
                     <div class="me-info">
                         <div class="me-nickname" id="wechatMeNickname">未设置网名</div>
                         <div class="me-wechat-id" id="wechatMeID">微信号：未设置</div>
@@ -1509,7 +1509,7 @@
                 <div class="info-item" onclick="changeWechatAvatar()">
                     <div class="info-label">头像</div>
                     <div class="info-content">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="info-avatar" id="editWechatAvatar" alt="">
+                        <img src="" class="info-avatar" id="editWechatAvatar" alt="">
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
@@ -1931,7 +1931,7 @@
                 <div class="me-menu-item" onclick="changeImage('accountAvatarImg')">
                     <div class="me-menu-label">头像</div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
+                        <img src="" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>

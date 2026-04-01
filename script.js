@@ -2245,9 +2245,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             updateTime();
             updateBattery();
             
-            // 默认显示消息页
-            const messagesTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item');
-            switchWechatTab('messages', messagesTab);
+            // 需求 2: 点击发现立刻进入发现页面而不是通讯录页面。
+            // 默认显示发现页
+            const discoverTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item:nth-child(3)');
+            switchWechatTab('discover', discoverTab);
             
             saveUIState();
         }

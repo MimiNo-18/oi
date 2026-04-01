@@ -1,695 +1,10 @@
-const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E";
-        const DEFAULT_LANDSCAPE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E";
-
-        let currentElement = null;
+let currentElement = null;
         let currentImageId = null;
         let quotedMessage = null;
         let messageToForward = null;
         let isMultiSelectMode = false;
         let selectedMsgIndexes = new Set();
         let currentForwardMode = 'single'; // 'single', 'multi-one-by-one', 'multi-combine'
-
-        // Mimi号逻辑
-        function initMimiId() {
-            let mimiId = localStorage.getItem('mimi_unique_id');
-            if (!mimiId) {
-                // 生成唯一的Mimi号：Mimi_ + 随机字符串
-                mimiId = 'Mimi_' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                localStorage.setItem('mimi_unique_id', mimiId);
-            }
-            // 更新UI上的显示
-            const idDisplay = document.getElementById('info-mimi-id');
-            if (idDisplay) idDisplay.textContent = mimiId;
-            
-            const meIdDisplay = document.getElementById('wechatMeID');
-            if (meIdDisplay) meIdDisplay.textContent = 'Mimi号：' + mimiId;
-        }
-
-        // 朋友圈逻辑
-        let momentsData = JSON.parse(localStorage.getItem('mimi_moments') || '[]');
-        let currentMomentImage = '';
-
-        function openMoments() {
-            const container = document.getElementById('momentsContainer');
-            container.style.display = 'flex';
-            
-            // 初始化个人信息
-            const me = wechatUserInfo;
-            const avatarImg = document.getElementById('momentsAvatar');
-            const nameEl = document.getElementById('momentsUsername');
-            const sigEl = document.getElementById('momentsSignature');
-            
-            if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
-            if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
-            if (sigEl) sigEl.textContent = me.signature || '个性签名...';
-            
-            // 重置头部样式，确保颜色为黑色且背景透明
-            const header = document.getElementById('momentsHeader');
-            if (header) {
-                header.classList.remove('scrolled');
-                header.style.backgroundColor = 'transparent';
-                header.style.color = '#000';
-            }
-            
-            renderMoments();
-            updateTime();
-            saveUIState();
-        }
-
-        function closeMoments() {
-            document.getElementById('momentsContainer').style.display = 'none';
-            saveUIState();
-        }
-
-        function handleMomentsScroll(el) {
-            const header = document.getElementById('momentsHeader');
-            if (!header) return;
-            const scrollThreshold = 100;
-            if (el.scrollTop > scrollThreshold) {
-                header.classList.add('scrolled');
-                header.style.backgroundColor = 'transparent';
-                header.style.color = '#000';
-            } else {
-                header.classList.remove('scrolled');
-                header.style.backgroundColor = 'transparent';
-                header.style.color = '#000';
-            }
-            // 滑动时关闭弹窗
-            hideMomentPopups();
-        }
-
-        let momentImages = []; // 存储朋友圈图片（真实图片或内容图片）
-
-        function openMomentsEdit() {
-            document.getElementById('momentsEditPage').style.display = 'flex';
-            document.getElementById('momentTextInput').value = '';
-            momentImages = [];
-            renderEditImages();
-            updatePostBtnState();
-        }
-
-        function closeMomentsEdit() {
-            document.getElementById('momentsEditPage').style.display = 'none';
-        }
-
-        function updatePostBtnState() {
-            const text = document.getElementById('momentTextInput').value.trim();
-            const btn = document.getElementById('momentsPostBtn');
-            if (text || momentImages.length > 0) {
-                btn.classList.add('active');
-                btn.style.backgroundColor = '#000';
-            } else {
-                btn.classList.remove('active');
-                btn.style.backgroundColor = '#e1e1e1';
-            }
-        }
-
-        // 监听朋友圈输入
-        document.addEventListener('DOMContentLoaded', () => {
-            const area = document.getElementById('momentTextInput');
-            if (area) {
-                area.addEventListener('input', updatePostBtnState);
-            }
-            
-            // 点击卡片以外关闭图片展示
-            const detailModal = document.getElementById('imageDetailModal');
-            if (detailModal) {
-                detailModal.addEventListener('click', (e) => {
-                    if (e.target === detailModal) {
-                        closeImageDetail();
-                    }
-                });
-            }
-        });
-
-        function selectMomentImage() {
-            document.getElementById('imageContentModal').classList.add('active');
-            document.getElementById('imageContentInput').value = '';
-            document.getElementById('imageContentInput').focus();
-        }
-
-        function closeImageContentModal() {
-            document.getElementById('imageContentModal').classList.remove('active');
-        }
-
-        function confirmImageContent() {
-            const content = document.getElementById('imageContentInput').value.trim();
-            if (content) {
-                momentImages.push({
-                    type: 'text',
-                    content: content
-                });
-                renderEditImages();
-                updatePostBtnState();
-            }
-            closeImageContentModal();
-        }
-
-        function renderEditImages() {
-            const container = document.getElementById('momentEditImagesContainer');
-            if (!container) return;
-            
-            // 获取上传按钮（如果不存在则创建一个）
-            let uploader = container.querySelector('.moment-image-uploader');
-            if (!uploader) {
-                uploader = document.createElement('div');
-                uploader.className = 'moment-image-uploader';
-                uploader.onclick = selectMomentImage;
-                uploader.innerHTML = '<div class="uploader-plus">+</div>';
-            }
-            
-            container.innerHTML = '';
-            
-            momentImages.forEach((img, idx) => {
-                const item = document.createElement('div');
-                item.className = 'moment-preview-image';
-                if (img.type === 'text') {
-                    item.innerHTML = `<span>${img.content}</span>`;
-                } else {
-                    item.style.backgroundImage = `url(${img.content})`;
-                    item.style.backgroundSize = 'cover';
-                }
-                item.onclick = () => {
-                    if (confirm('是否删除这张图片？')) {
-                        momentImages.splice(idx, 1);
-                        renderEditImages();
-                        updatePostBtnState();
-                    }
-                };
-                container.appendChild(item);
-            });
-            
-            container.appendChild(uploader);
-        }
-
-        function showMomentImageDetail(content) {
-            const modal = document.getElementById('imageDetailModal');
-            const textEl = document.getElementById('imageDetailText');
-            if (modal && textEl) {
-                textEl.textContent = content;
-                modal.classList.add('active');
-            }
-        }
-
-        function closeImageDetail() {
-            document.getElementById('imageDetailModal').classList.remove('active');
-        }
-
-        function handleMomentImageSelect(event) {
-            // 此函数目前被 selectMomentImage 的弹窗逻辑替代，但保留作为兼容
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentMomentImage = e.target.result;
-                    momentImageContent = '';
-                    const preview = document.getElementById('momentImagePreview');
-                    const placeholder = document.getElementById('momentImagePlaceholder');
-                    if (preview) {
-                        preview.src = currentMomentImage;
-                        preview.style.display = 'block';
-                    }
-                    if (placeholder) placeholder.style.display = 'none';
-                    document.querySelector('.uploader-plus').style.display = 'none';
-                    updatePostBtnState();
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function postMoment() {
-            const text = document.getElementById('momentTextInput').value.trim();
-            if (!text && momentImages.length === 0) return;
-
-            const me = wechatUserInfo;
-            const newMoment = {
-                id: Date.now(),
-                nickname: me.nickname || '我',
-                avatar: me.avatar || wechatUserInfo.avatar || '',
-                content: text,
-                images: JSON.parse(JSON.stringify(momentImages)),
-                time: Date.now(),
-                likes: [],
-                comments: [],
-                isMine: true
-            };
-
-            momentsData.unshift(newMoment);
-            localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-            
-            momentImages = [];
-            closeMomentsEdit();
-            renderMoments();
-        }
-
-        let currentMomentId = null;
-        function renderMoments() {
-            const list = document.getElementById('momentsList');
-            if (!list) return;
-            list.innerHTML = '';
-
-            momentsData.forEach((item, index) => {
-                const momentEl = document.createElement('div');
-                momentEl.className = 'moment-item';
-                momentEl.setAttribute('data-moment-id', item.id);
-                
-                // 添加长按事件
-                let momentLongPressTimer;
-                momentEl.addEventListener('touchstart', (e) => {
-                    momentLongPressTimer = setTimeout(() => {
-                        showMomentContextMenu(item, e.touches[0]);
-                    }, 600);
-                }, { passive: true });
-                momentEl.addEventListener('touchend', () => clearTimeout(momentLongPressTimer));
-                momentEl.addEventListener('touchmove', () => clearTimeout(momentLongPressTimer));
-                momentEl.addEventListener('mousedown', (e) => {
-                    momentLongPressTimer = setTimeout(() => {
-                        showMomentContextMenu(item, e);
-                    }, 600);
-                });
-                momentEl.addEventListener('mouseup', () => clearTimeout(momentLongPressTimer));
-                momentEl.addEventListener('mouseleave', () => clearTimeout(momentLongPressTimer));
-
-                let imagesHtml = '';
-                if (item.images && item.images.length > 0) {
-                    imagesHtml = `<div class="moment-images" style="grid-template-columns: repeat(${item.images.length === 1 ? 1 : (item.images.length === 2 || item.images.length === 4 ? 2 : 3)}, 1fr);">`;
-                    item.images.forEach(img => {
-                        if (img.type === 'text') {
-                            imagesHtml += `<div class="moment-img" onclick="showMomentImageDetail('${img.content}')" style="display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; padding:5px; text-align:center;">${img.content}</div>`;
-                        } else {
-                            imagesHtml += `<img src="${img.content}" class="moment-img" onclick="previewImage('${img.content}')">`;
-                        }
-                    });
-                    imagesHtml += `</div>`;
-                }
-
-                let likesHtml = '';
-                if (item.likes && item.likes.length > 0) {
-                    likesHtml = `
-                        <div class="moment-likes-box">
-                            <span class="heart-hollow">♡</span>
-                            ${item.likes.join(', ')}
-                        </div>
-                    `;
-                }
-
-                let dividerHtml = (item.likes && item.likes.length > 0 && item.comments && item.comments.length > 0) 
-                    ? '<div class="moment-feedback-divider"></div>' 
-                    : '';
-
-                let commentsHtml = '';
-                if (item.comments && item.comments.length > 0) {
-                    commentsHtml = `<div class="moment-comments-list">
-                        ${item.comments.map((c, cIdx) => {
-                            // 严格按照格式：网名 回复 备注：回复内容
-                            let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
-                            return `<div class="moment-comment-item" onclick="handleCommentClick(${item.id}, ${cIdx}, event)">
-                                <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
-                            </div>`;
-                        }).join('')}
-                    </div>`;
-                }
-
-                momentEl.innerHTML = `
-                    <img src="${item.avatar || DEFAULT_AVATAR}" class="moment-avatar">
-                    <div class="moment-content-box">
-                        <div class="moment-nickname">${item.nickname}</div>
-                        <div class="moment-text">${item.content}</div>
-                        ${imagesHtml}
-                        <div class="moment-footer">
-                            <div class="moment-time">${formatMomentTime(item.time)}</div>
-                            <div class="moment-actions-btn" onclick="toggleMomentActions(${item.id}, event)">
-                                <div class="dot-icon"></div>
-                                <div class="dot-icon"></div>
-                            </div>
-                        </div>
-                        <div class="moment-feedback-section" style="${(!likesHtml && !commentsHtml) ? 'display:none' : ''}">
-                            ${likesHtml}
-                            ${dividerHtml}
-                            ${commentsHtml}
-                        </div>
-                    </div>
-                `;
-                list.appendChild(momentEl);
-            });
-        }
-
-        function formatMomentTime(ms) {
-            const now = Date.now();
-            const diff = now - ms;
-            if (diff < 60000) return '刚刚';
-            if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
-            if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
-            return Math.floor(diff/86400000) + '天前';
-        }
-
-        function showMomentMenu(id, touch) {
-            if (navigator.vibrate) navigator.vibrate(50);
-            if (confirm('是否删除这条朋友圈？')) {
-                momentsData = momentsData.filter(m => m.id !== id);
-                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                renderMoments();
-            }
-        }
-
-        let currentCommentIndex = null;
-        function handleCommentClick(momentId, commentIdx, event) {
-            event.stopPropagation();
-            const moment = momentsData.find(m => m.id === momentId);
-            if (!moment) return;
-            const comment = moment.comments[commentIdx];
-            if (!comment) return;
-
-            const myNickname = wechatUserInfo.nickname || '我';
-            if (comment.nickname === myNickname) {
-                // 自己的评论
-                currentMomentId = momentId;
-                currentCommentIndex = commentIdx;
-                document.getElementById('commentActionModal').classList.add('active');
-            } else {
-                // 联系人的评论 -> 回复
-                showMomentCommentInput(momentId, event, comment.nickname);
-            }
-        }
-
-        function deleteComment() {
-            if (currentMomentId && currentCommentIndex !== null) {
-                const moment = momentsData.find(m => m.id === currentMomentId);
-                if (moment) {
-                    moment.comments.splice(currentCommentIndex, 1);
-                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                    renderMoments();
-                }
-            }
-            document.getElementById('commentActionModal').classList.remove('active');
-        }
-
-        function copyComment() {
-            if (currentMomentId && currentCommentIndex !== null) {
-                const moment = momentsData.find(m => m.id === currentMomentId);
-                if (moment) {
-                    const comment = moment.comments[currentCommentIndex];
-                    navigator.clipboard.writeText(comment.content).then(() => {
-                        alert('已复制');
-                    });
-                }
-            }
-            document.getElementById('commentActionModal').classList.remove('active');
-        }
-
-        function toggleMomentActions(id, event) {
-            event.stopPropagation();
-            const popup = document.getElementById('momentActionPopup');
-            const btn = event.currentTarget;
-            
-            // 检查是否已经在当前这条动态且显示中
-            const isShownOnSame = currentMomentId === id && popup.style.display === 'flex' && popup.parentElement === btn.closest('.moment-footer');
-
-            if (isShownOnSame) {
-                popup.style.display = 'none';
-                currentMomentId = null;
-                return;
-            }
-
-            currentMomentId = id;
-            
-            // 将弹窗插入到当前按钮所在的 footer 中
-            const footer = btn.closest('.moment-footer');
-            footer.appendChild(popup);
-            
-            popup.style.display = 'flex';
-            
-            // 设置点赞按钮文本
-            const moment = momentsData.find(m => m.id === id);
-            const myName = wechatUserInfo.nickname || '我';
-            const likeBtn = document.getElementById('momentLikeBtn');
-            if (moment && likeBtn) {
-                likeBtn.textContent = (moment.likes && moment.likes.includes(myName)) ? '取消' : '点赞';
-                likeBtn.onclick = (e) => {
-                    handleMomentLike(id, e);
-                };
-            }
-            
-            const commentBtn = document.getElementById('momentCommentBtn');
-            if (commentBtn) {
-                commentBtn.onclick = (e) => {
-                    showMomentCommentInput(id, e);
-                };
-            }
-        }
-
-        function showMomentContextMenu(item, pos) {
-            const menu = document.getElementById('momentContextMenu');
-            currentMomentId = item.id;
-            
-            menu.style.display = 'flex';
-            
-            const top = pos.clientY - 20;
-            const left = Math.max(10, Math.min(window.innerWidth - 250, pos.clientX - 120));
-            
-            menu.style.top = top + 'px';
-            menu.style.left = left + 'px';
-
-            const editBtn = document.getElementById('momentMenuEdit');
-            const deleteBtn = document.getElementById('momentMenuDelete');
-            const repostBtn = document.getElementById('momentMenuRepost');
-
-            // 根据是否是自己的朋友圈显示不同按钮
-            if (item.isMine) {
-                editBtn.style.display = 'block';
-                deleteBtn.style.display = 'block';
-                repostBtn.style.display = 'none';
-                
-                editBtn.style.width = '50%';
-                deleteBtn.style.width = '50%';
-            } else {
-                editBtn.style.display = 'block';
-                deleteBtn.style.display = 'block';
-                repostBtn.style.display = 'block';
-                
-                editBtn.style.width = '33.3%';
-                deleteBtn.style.width = '33.3%';
-                repostBtn.style.width = '33.3%';
-            }
-
-            editBtn.onclick = () => handleMomentLongAction('edit', item);
-            deleteBtn.onclick = () => handleMomentLongAction('delete', item);
-            repostBtn.onclick = () => handleMomentLongAction('repost', item);
-
-            if (navigator.vibrate) navigator.vibrate(50);
-        }
-
-        function handleMomentLongAction(action, item) {
-            document.getElementById('momentContextMenu').style.display = 'none';
-            
-            if (action === 'delete') {
-                if (confirm('是否删除这条朋友圈？')) {
-                    momentsData = momentsData.filter(m => m.id !== item.id);
-                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                    renderMoments();
-                }
-            } else if (action === 'edit') {
-                const modal = document.getElementById('momentEditModal');
-                const input = document.getElementById('momentEditTextInput');
-                input.value = item.content;
-                modal.classList.add('active');
-            } else if (action === 'repost') {
-                if (confirm('确定要重发这条朋友圈吗？')) {
-                    // 删除旧的
-                    momentsData = momentsData.filter(m => m.id !== item.id);
-                    // 创建新的（更新时间）
-                    const newMoment = {
-                        ...item,
-                        id: Date.now(),
-                        time: Date.now(),
-                        likes: [],
-                        comments: []
-                    };
-                    momentsData.unshift(newMoment);
-                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                    renderMoments();
-                }
-            }
-        }
-
-        function confirmMomentEdit() {
-            const newValue = document.getElementById('momentEditTextInput').value.trim();
-            if (currentMomentId) {
-                const moment = momentsData.find(m => m.id === currentMomentId);
-                if (moment) {
-                    moment.content = newValue;
-                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                    renderMoments();
-                }
-            }
-            document.getElementById('momentEditModal').classList.remove('active');
-        }
-
-        function hideMomentPopups() {
-            const popup = document.getElementById('momentActionPopup');
-            if (popup) popup.style.display = 'none';
-            const contextMenu = document.getElementById('momentContextMenu');
-            if (contextMenu) contextMenu.style.display = 'none';
-            const inputBar = document.getElementById('momentCommentInputBar');
-            if (inputBar && !inputBar.contains(document.activeElement)) {
-                // inputBar.classList.remove('active'); // 暂时不自动隐藏输入框，除非发送或取消
-            }
-        }
-
-        function handleMomentLike(id, event) {
-            event.stopPropagation();
-            const moment = momentsData.find(m => m.id === id);
-            if (moment) {
-                const myName = wechatUserInfo.nickname || '我';
-                const idx = moment.likes.indexOf(myName);
-                if (idx > -1) {
-                    moment.likes.splice(idx, 1);
-                } else {
-                    moment.likes.push(myName);
-                }
-                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                
-                // 优化：仅更新当前动态的 UI，实现立刻反应
-                const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
-                if (momentEl) {
-                    const feedbackSection = momentEl.querySelector('.moment-feedback-section');
-                    
-                    let likesHtml = '';
-                    if (moment.likes && moment.likes.length > 0) {
-                        likesHtml = `
-                            <div class="moment-likes-box">
-                                <span class="heart-hollow">♡</span>
-                                ${moment.likes.join(', ')}
-                            </div>
-                        `;
-                    }
-
-                    let dividerHtml = (moment.likes && moment.likes.length > 0 && moment.comments && moment.comments.length > 0) 
-                        ? '<div class="moment-feedback-divider"></div>' 
-                        : '';
-
-                    let commentsHtml = '';
-                    if (moment.comments && moment.comments.length > 0) {
-                        commentsHtml = `<div class="moment-comments-list">
-                            ${moment.comments.map((c, cIdx) => {
-                                let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
-                                return `<div class="moment-comment-item" onclick="handleCommentClick(${moment.id}, ${cIdx}, event)">
-                                    <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
-                                </div>`;
-                            }).join('')}
-                        </div>`;
-                    }
-
-                    if (!likesHtml && !commentsHtml) {
-                        feedbackSection.style.display = 'none';
-                    } else {
-                        feedbackSection.style.display = 'flex';
-                        feedbackSection.innerHTML = `${likesHtml}${dividerHtml}${commentsHtml}`;
-                    }
-                } else {
-                    renderMoments();
-                }
-            }
-            document.getElementById('momentActionPopup').style.display = 'none';
-        }
-
-        let currentReplyTo = null;
-        function showMomentCommentInput(id, event, replyTo = null) {
-            event.stopPropagation();
-            currentMomentId = id;
-            currentReplyTo = replyTo;
-            const inputBar = document.getElementById('momentCommentInputBar');
-            inputBar.style.display = 'flex';
-            const input = document.getElementById('momentCommentInput');
-            input.value = '';
-            input.placeholder = replyTo ? `回复 ${replyTo}` : '评论';
-            input.focus();
-            updateMomentCommentSendBtn();
-            document.getElementById('momentActionPopup').style.display = 'none';
-        }
-
-        function updateMomentCommentSendBtn() {
-            const val = document.getElementById('momentCommentInput').value.trim();
-            const btn = document.getElementById('momentCommentSendBtn');
-            if (val) {
-                btn.classList.add('active');
-                btn.style.backgroundColor = '#000';
-            } else {
-                btn.classList.remove('active');
-                btn.style.backgroundColor = '#e1e1e1';
-            }
-        }
-
-        function sendMomentComment() {
-            const content = document.getElementById('momentCommentInput').value.trim();
-            if (!content || !currentMomentId) return;
-
-            const moment = momentsData.find(m => m.id === currentMomentId);
-            const id = currentMomentId;
-            if (moment) {
-                const myNickname = wechatUserInfo.nickname || '我';
-                const newComment = {
-                    nickname: myNickname,
-                    content: content,
-                    time: Date.now()
-                };
-                if (currentReplyTo) {
-                    newComment.replyTo = currentReplyTo;
-                }
-                moment.comments.push(newComment);
-                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                
-                // 优化：立刻局部更新 UI
-                const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
-                if (momentEl) {
-                    const feedbackSection = momentEl.querySelector('.moment-feedback-section');
-                    
-                    let likesHtml = '';
-                    if (moment.likes && moment.likes.length > 0) {
-                        likesHtml = `
-                            <div class="moment-likes-box">
-                                <span class="heart-hollow">♡</span>
-                                ${moment.likes.join(', ')}
-                            </div>
-                        `;
-                    }
-
-                    let dividerHtml = (moment.likes && moment.likes.length > 0 && moment.comments && moment.comments.length > 0) 
-                        ? '<div class="moment-feedback-divider"></div>' 
-                        : '';
-
-                    let commentsHtml = '';
-                    if (moment.comments && moment.comments.length > 0) {
-                        commentsHtml = `<div class="moment-comments-list">
-                            ${moment.comments.map((c, cIdx) => {
-                                let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
-                                return `<div class="moment-comment-item" onclick="handleCommentClick(${moment.id}, ${cIdx}, event)">
-                                    <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
-                                </div>`;
-                            }).join('')}
-                        </div>`;
-                    }
-
-                    feedbackSection.style.display = 'flex';
-                    feedbackSection.innerHTML = `${likesHtml}${dividerHtml}${commentsHtml}`;
-                } else {
-                    renderMoments();
-                }
-            }
-
-            const inputBar = document.getElementById('momentCommentInputBar');
-            inputBar.style.display = 'none';
-            document.getElementById('momentCommentInput').value = '';
-            document.getElementById('momentCommentInput').blur();
-            currentReplyTo = null;
-            updateMomentCommentSendBtn();
-        }
-
-        function changeMomentsBg() {
-            currentImageId = 'momentsBg';
-            document.getElementById('urlInputContainer').style.display = 'none';
-            document.getElementById('imageModal').classList.add('active');
-        }
 
         function enterMultiSelectMode(initialIndex) {
             isMultiSelectMode = true;
@@ -895,7 +210,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             filteredFriends.forEach(friend => {
                 html += `
                     <div class="wechat-contact-item" onclick="forwardToContact(${friend.id})">
-                        <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
+                        <img src="${friend.avatar || ''}" class="wechat-contact-avatar" alt="">
                         <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                     </div>
                 `;
@@ -1009,30 +324,22 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         
         // 图标配置
         const iconConfig = [
-            { id: 'avatar1', name: '头像1', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
-            { id: 'avatar2', name: '头像2', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
-            { id: 'illustration', name: '插画', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E" },
-            { id: 'app1', name: '微信', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2307c160'%3E%3Cpath d='M12 3C7.58 3 4 6.13 4 10c0 2.21 1.15 4.18 2.94 5.37L6 18l3.12-1.56c.9.36 1.88.56 2.88.56 4.42 0 8-3.13 8-7s-3.58-7-8-7z'/%3E%3C/svg%3E" },
-            { id: 'app2', name: '小游戏', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9800'%3E%3Cpath d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
-            { id: 'app3', name: '世界书', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E" },
-            { id: 'app4', name: '网易云音乐', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e91e63'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E" },
-            { id: 'dock1', name: '电话', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234caf50'%3E%3Cpath d='M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z'/%3E%3C/svg%3E" },
-            { id: 'dock2', name: '联系人', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196f3'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" },
-            { id: 'dock3', name: '主题', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239c27b0'%3E%3Cpath d='M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
-            { id: 'dock4', name: '设置', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23607d8b'%3E%3Cpath d='M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/%3E%3C/svg%3E" },
-            { id: 'accountAvatarImg', name: '账号头像', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" }
+            { id: 'avatar1', name: '头像1' },
+            { id: 'avatar2', name: '头像2' },
+            { id: 'illustration', name: '插画' },
+            { id: 'app1', name: '微信' },
+            { id: 'app2', name: '小游戏' },
+            { id: 'app3', name: '世界书' },
+            { id: 'app4', name: '网易云音乐' },
+            { id: 'dock1', name: '电话' },
+            { id: 'dock2', name: '联系人' },
+            { id: 'dock3', name: '主题' },
+            { id: 'dock4', name: '设置' },
+            { id: 'accountAvatarImg', name: '账号头像' }
         ];
         
         // 加载保存的图标和普通图片
         async function loadSavedIcons() {
-            // 先应用默认图标，防止显示为空
-            iconConfig.forEach(icon => {
-                const el = document.getElementById(icon.id);
-                if (el && icon.default) {
-                    el.src = icon.default;
-                }
-            });
-
             try {
                 const images = await dbGetAll("icons");
                 images.forEach((img) => {
@@ -1063,8 +370,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const timeStr = `${hours}:${minutes}`;
             
-            const globalTime = document.getElementById('globalTime');
-            if (globalTime) globalTime.textContent = timeStr;
+            const ids = ['time', 'wechatTime', 'contactsTime', 'addContactTime', 'mineTime', 'themeTime', 'settingsTime', 'accountTime', 'apiTime', 'chatStatusTime'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = timeStr;
+            });
 
             // 同步所有使用 wechat-time-sync 类的元素
             document.querySelectorAll('.wechat-time-sync').forEach(el => {
@@ -1121,10 +431,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         }
 
         function toggleStatusBar(enabled) {
-            const statusBar = document.getElementById('globalStatusBar');
-            if (statusBar) {
-                statusBar.style.display = enabled ? 'none' : 'flex';
-            }
+            const statusBars = document.querySelectorAll('.status-bar, .wechat-status-bar, .add-contact-status-bar');
+            statusBars.forEach(bar => {
+                bar.style.display = enabled ? 'none' : 'flex';
+            });
             safeLocalStorageSet('mimi_status_bar_hide_pref', enabled ? 'true' : 'false');
             
             // 同步所有状态栏开关
@@ -2085,7 +1395,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function switchWechatTab(tab, element) {
             const chatList = document.getElementById('chatList');
             const contactsPage = document.getElementById('wechatContactsPage');
-            const discoverPage = document.getElementById('wechatDiscoverPage');
             const mePage = document.getElementById('wechatMePage');
             const tagBar = document.getElementById('wechatTagBar');
             const searchBar = document.getElementById('wechatSearchBar');
@@ -2102,7 +1411,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             // 默认隐藏所有内容区域
             chatList.style.display = 'none';
             contactsPage.style.display = 'none';
-            if (discoverPage) discoverPage.style.display = 'none';
             mePage.style.display = 'none';
             
             // 默认显示搜索栏 (消息和通讯录页需要)
@@ -2118,27 +1426,12 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 searchBar.style.display = 'block';
                 tagBar.style.display = 'flex';
                 navTitle.textContent = 'Wechat';
-                if (navBar) {
-                    navBar.style.backgroundColor = '#fff';
-                    navBar.style.borderBottom = '1px solid #f5f5f5';
-                }
                 renderChatList();
             } else if (tab === 'contacts') {
                 contactsPage.style.display = 'block';
                 searchBar.style.display = 'block';
                 navTitle.textContent = '通讯录';
-                if (navBar) {
-                    navBar.style.backgroundColor = '#fff';
-                    navBar.style.borderBottom = '1px solid #f5f5f5';
-                }
                 renderWechatContacts();
-            } else if (tab === 'discover') {
-                if (discoverPage) discoverPage.style.display = 'block';
-                navTitle.textContent = '发现';
-                if (navBar) {
-                    navBar.style.backgroundColor = '#fff';
-                    navBar.style.borderBottom = 'none';
-                }
             } else if (tab === 'me') {
                 mePage.style.display = 'block';
                 if (navBar) navBar.style.display = 'none';
@@ -2167,7 +1460,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 filteredFriends.forEach(friend => {
                     contactHtml += `
                         <div class="wechat-contact-item" onclick="openChat(${friend.id})">
-                            <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
+                            <img src="${friend.avatar || ''}" class="wechat-contact-avatar" alt="">
                             <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                         </div>
                     `;
@@ -2632,7 +1925,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
         // 微信个人资料相关
         let wechatUserInfo = {
-            avatar: DEFAULT_AVATAR,
+            avatar: '',
             nickname: '未设置网名',
             wechatId: '未设置',
             phone: '未设置',
@@ -2705,19 +1998,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function closePersonalInfo() {
             document.getElementById('personalInfoContainer').style.display = 'none';
             renderWechatMePage();
-            saveUIState();
-        }
-
-        function openServicePage() {
-            document.getElementById('servicePageContainer').style.display = 'flex';
-            document.body.classList.add('service-page-active');
-            updateTime();
-            saveUIState();
-        }
-
-        function closeServicePage() {
-            document.getElementById('servicePageContainer').style.display = 'none';
-            document.body.classList.remove('service-page-active');
             saveUIState();
         }
 
@@ -2827,7 +2107,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function clearWechatCache() {
             if (confirm('确定要清除缓存吗？\n清除缓存将重置 UI 状态，但不会删除聊天记录和资源文件。')) {
                 // 清除 UI 状态缓存
-                sessionStorage.removeItem('mimi_ui_state');
+                localStorage.removeItem('mimi_ui_state');
                 alert('缓存已清理，请重新计算存储空间');
                 calculateStorage();
             }
@@ -2895,48 +2175,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         }
 
         // 微信账号与安全相关函数
-        function openWechatAccountSwitch() {
-            const container = document.getElementById('wechatAccountSwitchContainer');
-            if (!container) {
-                console.error('Account switch container not found');
-                return;
-            }
-
-            // 隐藏可能覆盖的页面
-            const settingsContainer = document.getElementById('wechatSettingsContainer');
-            if (settingsContainer) settingsContainer.style.display = 'none';
-            
-            // 确保微信容器显示（如果它是父容器的一部分）
-            const wechatContainer = document.getElementById('wechatContainer');
-            if (wechatContainer) wechatContainer.style.display = 'flex';
-
-            // 填充当前账号信息
-            const avatarImg = document.getElementById('switchCurrentAvatar');
-            const nicknameEl = document.getElementById('switchCurrentNickname');
-            const idEl = document.getElementById('switchCurrentID');
-
-            if (avatarImg) avatarImg.src = wechatUserInfo.avatar || '';
-            if (nicknameEl) nicknameEl.textContent = wechatUserInfo.nickname || '未设置网名';
-            if (idEl) idEl.textContent = '微信号：' + (wechatUserInfo.wechatId || '未设置');
-
-            // 强制设置为 flex 并提升层级
-            container.style.display = 'flex';
-            container.style.zIndex = '10305'; // 确保在所有页面之上
-            
-            updateTime();
-            saveUIState();
-        }
-
-        function closeWechatAccountSwitch() {
-            const container = document.getElementById('wechatAccountSwitchContainer');
-            if (container) container.style.display = 'none';
-            
-            // 返回设置页面
-            const settingsContainer = document.getElementById('wechatSettingsContainer');
-            if (settingsContainer) settingsContainer.style.display = 'flex';
-            
-            saveUIState();
-        }
 
         function searchWechatSettings() {
             const keyword = document.getElementById('wechatSettingsSearchInput').value.trim().toLowerCase();
@@ -3108,7 +2346,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                                   onclick="toggleContactSelection(${contact.id}, event)"></div>`;
                 }
                 
-                html += `<img src="${contact.avatar || DEFAULT_AVATAR}" class="contact-avatar" alt="头像">`;
+                html += `<img src="${contact.avatar || ''}" class="contact-avatar" alt="头像">`;
                 html += '<div class="contact-info">';
                 html += `<div class="contact-name">${contact.name}</div>`;
                 html += `<div class="contact-phone">${contact.phone}</div>`;
@@ -3196,7 +2434,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             filteredContacts.forEach(contact => {
                 const isSelected = selectedFriendContactId === contact.id;
                 html += `<div class="contact-item" style="cursor: pointer; background: ${isSelected ? '#F0F0F0' : '#fff'};" onclick="selectFriendContact(${contact.id})">`;
-                html += `<img src="${contact.avatar || DEFAULT_AVATAR}" class="contact-avatar" alt="头像">`;
+                html += `<img src="${contact.avatar || ''}" class="contact-avatar" alt="头像">`;
                 html += '<div class="contact-info">';
                 html += `<div class="contact-name">${contact.name}</div>`;
                 html += `<div class="contact-phone">${contact.phone || '未设置'}</div>`;
@@ -3678,14 +2916,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             
             // 加载设置
             const settings = getChatSettings(currentChatFriendId);
-
-            // 更新绑定世界书数量显示
-            const boundCountEl = document.getElementById('chatInfoBoundCount');
-            if (boundCountEl) {
-                const boundIds = settings.boundWorldBookIds || [];
-                boundCountEl.textContent = boundIds.length > 0 ? `已绑定 ${boundIds.length} 本` : '未绑定';
-            }
-
             document.getElementById('chatInfoMemCount').value = settings.memCount || 10;
             const autoSum = settings.autoSum || false;
             document.getElementById('chatInfoAutoSum').checked = autoSum;
@@ -4299,7 +3529,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 item.addEventListener('touchmove', () => clearTimeout(timer));
                 
                 item.onclick = () => sendStickerMessage(sticker);
-                item.innerHTML = `<img src="${sticker.src}" alt="${sticker.name}">`;
+                item.innerHTML = `
+                    <div class="chat-sticker-img-wrapper">
+                        <img src="${sticker.src}" class="chat-sticker-img">
+                    </div>
+                `;
                 grid.appendChild(item);
             });
         }
@@ -4455,8 +3689,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const container = document.getElementById('chatMessages');
             const history = chatHistories[currentChatFriendId] || [];
             const friend = chatList.find(f => f.id === currentChatFriendId);
-            const userAvatar = wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || DEFAULT_AVATAR;
-            const friendAvatar = friend ? (friend.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
+            const userAvatar = wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || '';
+            const friendAvatar = friend ? friend.avatar : '';
 
             container.innerHTML = '';
             let lastShowTime = 0;
@@ -4795,30 +4029,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             if (settings.senseTime) {
                 const now = new Date();
                 const timeStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}点${now.getMinutes()}分${now.getSeconds()}秒`;
-            systemPrompt += `\n- 当前真实时间：${timeStr}`;
-        }
-
-        // 注入世界书信息
-        const boundWorldBookIds = settings.boundWorldBookIds || [];
-        if (worldBooks && worldBooks.length > 0 && boundWorldBookIds.length > 0) {
-            let worldBookPrompt = "";
-            worldBooks.forEach(book => {
-                if (boundWorldBookIds.includes(book.id)) {
-                    const activeItems = book.items.filter(item => item.enabled);
-                    if (activeItems.length > 0) {
-                        worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
-                        activeItems.forEach(item => {
-                            worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
-                        });
-                    }
-                }
-            });
-            if (worldBookPrompt) {
-                systemPrompt += `\n\n以下是关于你们所处世界的背景知识（请牢记并根据需要提及）：${worldBookPrompt}`;
+                systemPrompt += `\n- 当前真实时间：${timeStr}`;
             }
-        }
 
-        systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
+            systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
 1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。**严禁做出任何违反你人设的行为。**
 2. **回复相关性**：仔细阅读用户发送的每一句话，确保你的回复不答非所问，逻辑连贯。
 3. **引用功能**：如果你想引用某条历史消息进行针对性回复，请在你的回复开头使用格式 \`(引用: 消息内容) 你的回复\`。例如：\`(引用: 晚上一起吃饭吗) 好啊，去哪吃？\`。你可以引用用户说的话，也可以引用你自己说的话。注意：你无法引用合并聊天记录里面的具体聊天内容，但可以引用合并聊天记录本身（如其标题）。
@@ -5026,7 +4240,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 }
                 
                 item.innerHTML = `
-                    <img src="${h.avatar || DEFAULT_AVATAR}" class="merged-msg-avatar">
+                    <img src="${h.avatar || ''}" class="merged-msg-avatar">
                     <div class="merged-msg-info">
                         <div class="merged-msg-header">
                             <div class="merged-msg-name">${h.name}</div>
@@ -5359,7 +4573,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     await dbClear('icons');
                     iconConfig.forEach(icon => {
                         const el = document.getElementById(icon.id);
-                        if (el) el.src = icon.default || '';
+                        if (el) el.src = '';
                     });
                     if (document.getElementById('themeContainer').style.display === 'flex') {
                         renderIconList();
@@ -6193,40 +5407,12 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
         function openCategoryManagement() {
             document.getElementById('categoryManagementContainer').style.display = 'flex';
-            document.body.classList.add('category-management-active');
-            showCategoryMenu();
             renderCategoryManagementList();
             saveUIState();
         }
 
-        function showCategoryMenu() {
-            document.getElementById('categoryNavTitle').textContent = '更多';
-            document.getElementById('categoryMenuArea').style.display = 'block';
-            document.getElementById('actualCategoryContent').style.display = 'none';
-            document.getElementById('relationshipBindingContent').style.display = 'none';
-            document.getElementById('categoryBackBtn').onclick = closeCategoryManagement;
-        }
-
-        function showActualCategoryManagement() {
-            document.getElementById('categoryNavTitle').textContent = '顶部分组设置';
-            document.getElementById('categoryMenuArea').style.display = 'none';
-            document.getElementById('actualCategoryContent').style.display = 'flex';
-            document.getElementById('relationshipBindingContent').style.display = 'none';
-            document.getElementById('categoryBackBtn').onclick = showCategoryMenu;
-            renderCategoryManagementList();
-        }
-
-        function showRelationshipBinding() {
-            document.getElementById('categoryNavTitle').textContent = '关系绑定';
-            document.getElementById('categoryMenuArea').style.display = 'none';
-            document.getElementById('actualCategoryContent').style.display = 'none';
-            document.getElementById('relationshipBindingContent').style.display = 'block';
-            document.getElementById('categoryBackBtn').onclick = showCategoryMenu;
-        }
-
         function closeCategoryManagement() {
             document.getElementById('categoryManagementContainer').style.display = 'none';
-            document.body.classList.remove('category-management-active');
             renderTopTagBar();
             renderChatList();
             saveUIState();
@@ -7016,16 +6202,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             const state = {
                 activeContainer: '',
                 themePage: '',
-                activeChatId: currentChatFriendId,
-                activeBookId: currentEditingBookId,
-                activeItemId: currentEditingItemId
+                activeChatId: currentChatFriendId
             };
             
-            if (document.getElementById('worldBookContainer').style.display === 'flex') state.activeContainer = 'worldBookContainer';
-            else if (document.getElementById('worldBookEditPage').style.display === 'flex') state.activeContainer = 'worldBookEditPage';
-            else if (document.getElementById('bookItemEditPage').style.display === 'flex') state.activeContainer = 'bookItemEditPage';
-            else if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
-            else if (document.getElementById('servicePageContainer').style.display === 'flex') state.activeContainer = 'servicePageContainer';
+            if (document.getElementById('realNameContainer') && document.getElementById('realNameContainer').style.display === 'flex') state.activeContainer = 'realNameContainer';
             else if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
@@ -7036,7 +6216,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (document.getElementById('wechatDisplaySettingsContainer').style.display === 'flex') state.activeContainer = 'wechatDisplaySettingsContainer';
             else if (document.getElementById('wechatStorageContainer').style.display === 'flex') state.activeContainer = 'wechatStorageContainer';
             else if (document.getElementById('wechatSettingsContainer').style.display === 'flex') state.activeContainer = 'wechatSettingsContainer';
-            else if (document.getElementById('wechatAccountSwitchContainer').style.display === 'flex') state.activeContainer = 'wechatAccountSwitchContainer';
             else if (document.getElementById('wechatContainer').style.display === 'block') state.activeContainer = 'wechatContainer';
             else if (document.getElementById('contactsContainer').style.display !== 'none') state.activeContainer = 'contactsContainer';
             else if (document.getElementById('addContactContainer').style.display !== 'none') state.activeContainer = 'addContactContainer';
@@ -7054,28 +6233,19 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             }
             else state.activeContainer = 'phone-container';
             
-            sessionStorage.setItem('mimi_ui_state', JSON.stringify(state));
+            localStorage.setItem('mimi_ui_state', JSON.stringify(state));
         }
 
         // 加载UI状态
         function loadUIState() {
-            const saved = sessionStorage.getItem('mimi_ui_state');
+            // 需求：用户每次进入网页都是首页页面。
+            localStorage.removeItem('mimi_ui_state');
+            return;
+            const saved = localStorage.getItem('mimi_ui_state');
             if (!saved) return;
             const state = JSON.parse(saved);
-
-            if (state.activeContainer === 'worldBookContainer') openWorldBook();
-            else if (state.activeContainer === 'worldBookEditPage') {
-                openWorldBook();
-                if (state.activeBookId) openWorldBookEdit(state.activeBookId);
-            }
-            else if (state.activeContainer === 'bookItemEditPage') {
-                openWorldBook();
-                if (state.activeBookId) {
-                    openWorldBookEdit(state.activeBookId);
-                    if (state.activeItemId) openBookItemEdit(state.activeItemId);
-                }
-            }
-            else if (state.activeContainer === 'stickerManagementContainer') {
+            
+            if (state.activeContainer === 'stickerManagementContainer') {
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openStickerLibrary();
@@ -7120,11 +6290,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openPersonalInfo();
             }
-            else if (state.activeContainer === 'servicePageContainer') {
-                openWechat();
-                switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
-                openServicePage();
-            }
             else if (state.activeContainer === 'wechatDisplaySettingsContainer') {
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
@@ -7141,12 +6306,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openWechatSettings();
-            }
-            else if (state.activeContainer === 'wechatAccountSwitchContainer') {
-                openWechat();
-                switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
-                openWechatSettings();
-                openWechatAccountSwitch();
             }
             else if (state.activeContainer === 'wechatContainer') openWechat();
             else if (state.activeContainer === 'contactsContainer') openContacts();
@@ -7202,370 +6361,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             }
         });
 
-        // 世界书逻辑
-        let worldBooks = JSON.parse(localStorage.getItem('mimi_world_books') || '[]');
-        let currentEditingBookId = null;
-        let currentEditingItemId = null;
-
-        function saveWorldBooks() {
-            localStorage.setItem('mimi_world_books', JSON.stringify(worldBooks));
-        }
-
-        function openWorldBook() {
-            document.getElementById('worldBookContainer').style.display = 'flex';
-            document.querySelector('.phone-container').style.display = 'none';
-            renderWorldBookList();
-            updateTime();
-            saveUIState();
-        }
-
-        function closeWorldBook() {
-            document.getElementById('worldBookContainer').style.display = 'none';
-            document.querySelector('.phone-container').style.display = 'flex';
-            saveUIState();
-        }
-
-        function showAddWorldBookModal() {
-            document.getElementById('addWorldBookModal').classList.add('active');
-            document.getElementById('newWorldBookName').value = '';
-            document.getElementById('newWorldBookName').focus();
-        }
-
-        function closeAddWorldBookModal() {
-            document.getElementById('addWorldBookModal').classList.remove('active');
-        }
-
-        function confirmAddWorldBook() {
-            const name = document.getElementById('newWorldBookName').value.trim();
-            if (!name) return;
-
-            const newBook = {
-                id: Date.now(),
-                name: name,
-                description: '',
-                items: []
-            };
-
-            worldBooks.push(newBook);
-            saveWorldBooks();
-            closeAddWorldBookModal();
-            openWorldBookEdit(newBook.id);
-        }
-
-        function renderWorldBookList() {
-            const list = document.getElementById('worldBookList');
-            const empty = document.getElementById('worldBookEmptyState');
-            
-            if (worldBooks.length === 0) {
-                list.style.display = 'none';
-                empty.style.display = 'flex';
-                return;
-            }
-
-            list.style.display = 'flex';
-            empty.style.display = 'none';
-            list.innerHTML = '';
-
-            worldBooks.forEach(book => {
-                const card = document.createElement('div');
-                card.className = 'world-book-card';
-                
-                // 添加长按删除逻辑
-                let longPressTimer;
-                let isLongPress = false;
-                const startPress = (e) => {
-                    isLongPress = false;
-                    longPressTimer = setTimeout(() => {
-                        isLongPress = true;
-                        if (navigator.vibrate) navigator.vibrate(50);
-                        if (confirm(`确定要删除世界书 "${book.name}" 吗？`)) {
-                            worldBooks = worldBooks.filter(b => b.id !== book.id);
-                            saveWorldBooks();
-                            renderWorldBookList();
-                        }
-                    }, 800);
-                };
-                const cancelPress = () => {
-                    clearTimeout(longPressTimer);
-                };
-
-                card.addEventListener('touchstart', startPress, { passive: true });
-                card.addEventListener('touchend', cancelPress);
-                card.addEventListener('touchmove', cancelPress);
-                card.addEventListener('mousedown', startPress);
-                card.addEventListener('mouseup', cancelPress);
-                card.addEventListener('mouseleave', cancelPress);
-
-                card.onclick = (e) => {
-                    if (isLongPress) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return;
-                    }
-                    openWorldBookEdit(book.id);
-                };
-
-                card.innerHTML = `
-                    <div class="world-book-name">${book.name}</div>
-                    <div class="world-book-desc">${book.description || '暂无简介'}</div>
-                `;
-                list.appendChild(card);
-            });
-        }
-
-        function openWorldBookEdit(id) {
-            currentEditingBookId = id;
-            const book = worldBooks.find(b => b.id === id);
-            if (!book) return;
-
-            document.getElementById('editBookTitle').textContent = book.name;
-            document.getElementById('editBookDesc').value = book.description;
-            renderBookItemsList();
-
-            document.getElementById('worldBookContainer').style.display = 'none';
-            document.getElementById('worldBookEditPage').style.display = 'flex';
-            updateTime();
-        }
-
-        function closeWorldBookEdit() {
-            document.getElementById('worldBookEditPage').style.display = 'none';
-            openWorldBook();
-        }
-
-        function editWorldBookName() {
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            const newName = prompt('修改世界书名称', book.name);
-            if (newName && newName.trim()) {
-                book.name = newName.trim();
-                document.getElementById('editBookTitle').textContent = book.name;
-                saveWorldBooks();
-                renderWorldBookList();
-            }
-        }
-
-        function updateBookDesc() {
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            book.description = document.getElementById('editBookDesc').value;
-            saveWorldBooks();
-        }
-
-        function showAddBookItemModal() {
-            document.getElementById('addBookItemModal').classList.add('active');
-            document.getElementById('newBookItemName').value = '';
-            document.getElementById('newBookItemName').focus();
-        }
-
-        function closeAddBookItemModal() {
-            document.getElementById('addBookItemModal').classList.remove('active');
-        }
-
-        function confirmAddBookItem() {
-            const name = document.getElementById('newBookItemName').value.trim();
-            if (!name) return;
-
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            const newItem = {
-                id: Date.now(),
-                name: name,
-                remark: '',
-                content: '',
-                enabled: true
-            };
-
-            book.items.push(newItem);
-            saveWorldBooks();
-            closeAddBookItemModal();
-            openBookItemEdit(newItem.id);
-        }
-
-        function renderBookItemsList() {
-            const list = document.getElementById('bookItemsList');
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            list.innerHTML = '';
-            book.items.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'book-item-row';
-                
-                // 添加长按删除逻辑
-                let longPressTimer;
-                let isLongPress = false;
-                const startPress = (e) => {
-                    isLongPress = false;
-                    longPressTimer = setTimeout(() => {
-                        isLongPress = true;
-                        if (navigator.vibrate) navigator.vibrate(50);
-                        if (confirm(`确定要删除条目 "${item.name}" 吗？`)) {
-                            book.items = book.items.filter(i => i.id !== item.id);
-                            saveWorldBooks();
-                            renderBookItemsList();
-                        }
-                    }, 800);
-                };
-                const cancelPress = () => {
-                    clearTimeout(longPressTimer);
-                };
-
-                row.addEventListener('touchstart', startPress, { passive: true });
-                row.addEventListener('touchend', cancelPress);
-                row.addEventListener('touchmove', cancelPress);
-                row.addEventListener('mousedown', startPress);
-                row.addEventListener('mouseup', cancelPress);
-                row.addEventListener('mouseleave', cancelPress);
-
-                row.onclick = (e) => {
-                    if (isLongPress) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return;
-                    }
-                    openBookItemEdit(item.id);
-                };
-                
-                row.innerHTML = `
-                    <div class="book-item-content-left" style="display: flex; flex-direction: column; flex: 1; position: relative;">
-                        <div class="book-item-name">${item.name}</div>
-                        <div class="book-item-remark" style="font-size: 11px; color: #b2b2b2; text-align: right; margin-right: 10px; min-height: 12px; margin-top: 4px;">${item.remark || ''}</div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation()">
-                        <label class="switch">
-                            <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleItemRead(${item.id}, this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                `;
-                list.appendChild(row);
-            });
-        }
-
-        function toggleItemRead(itemId, enabled) {
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            const item = book.items.find(i => i.id === itemId);
-            if (item) {
-                item.enabled = enabled;
-                saveWorldBooks();
-                renderBookItemsList();
-            }
-        }
-
-        function openBookItemEdit(itemId) {
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            const item = book.items.find(i => i.id === itemId);
-            if (!item) return;
-
-            currentEditingItemId = itemId;
-            document.getElementById('editItemTitle').textContent = item.name;
-            document.getElementById('editItemRemark').value = item.remark;
-            document.getElementById('editItemContent').value = item.content;
-
-            document.getElementById('worldBookEditPage').style.display = 'none';
-            document.getElementById('bookItemEditPage').style.display = 'flex';
-            updateTime();
-        }
-
-        function closeBookItemEdit() {
-            document.getElementById('bookItemEditPage').style.display = 'none';
-            document.getElementById('worldBookEditPage').style.display = 'flex';
-            renderBookItemsList();
-        }
-
-        function updateItemDetails() {
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            const item = book.items.find(i => i.id === currentEditingItemId);
-            if (item) {
-                item.remark = document.getElementById('editItemRemark').value;
-                item.content = document.getElementById('editItemContent').value;
-                saveWorldBooks();
-            }
-        }
-
-        // 世界书绑定逻辑
-        let tempBoundWorldBookIds = [];
-
-        function openWorldBookBindingModal() {
-            if (!currentChatFriendId) return;
-            const settings = getChatSettings(currentChatFriendId);
-            tempBoundWorldBookIds = [...(settings.boundWorldBookIds || [])];
-            
-            document.getElementById('worldBookBindingModal').classList.add('active');
-            renderWorldBookBindingList();
-        }
-
-        function closeWorldBookBindingModal() {
-            document.getElementById('worldBookBindingModal').classList.remove('active');
-            tempBoundWorldBookIds = [];
-        }
-
-        function renderWorldBookBindingList() {
-            const container = document.getElementById('worldBookBindingList');
-            container.innerHTML = '';
-
-            if (worldBooks.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding: 20px;">暂无世界书，请先创建</div>';
-                return;
-            }
-
-            worldBooks.forEach(book => {
-                const isChecked = tempBoundWorldBookIds.includes(book.id);
-                const item = document.createElement('div');
-                item.className = 'selection-contact-item';
-                item.style.padding = '12px 10px';
-                item.style.borderBottom = '1px solid #f0f0f0';
-                item.onclick = () => toggleWorldBookBinding(book.id);
-                
-                item.innerHTML = `
-                    <div class="selection-checkbox ${isChecked ? 'checked' : ''}"></div>
-                    <div style="flex: 1; margin-left: 10px;">
-                        <div style="font-size: 15px; color: #333; font-weight: 500;">${book.name}</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 2px;">${book.items.length} 个条目</div>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function toggleWorldBookBinding(id) {
-            const index = tempBoundWorldBookIds.indexOf(id);
-            if (index > -1) {
-                tempBoundWorldBookIds.splice(index, 1);
-            } else {
-                tempBoundWorldBookIds.push(id);
-            }
-            renderWorldBookBindingList();
-        }
-
-        function confirmWorldBookBinding() {
-            if (!currentChatFriendId) return;
-
-            const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
-            if (!allSettings[currentChatFriendId]) allSettings[currentChatFriendId] = {};
-            
-            allSettings[currentChatFriendId].boundWorldBookIds = tempBoundWorldBookIds;
-            localStorage.setItem('wechat_chat_settings', JSON.stringify(allSettings));
-
-            // 更新 UI
-            const boundCountEl = document.getElementById('chatInfoBoundCount');
-            if (boundCountEl) {
-                boundCountEl.textContent = tempBoundWorldBookIds.length > 0 ? `已绑定 ${tempBoundWorldBookIds.length} 本` : '未绑定';
-            }
-
-            closeWorldBookBindingModal();
-            alert('绑定成功');
-        }
-
         // 初始化
         (async function init() {
             updateTime();
@@ -7584,7 +6379,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             loadFavoriteStickers();
             renderTopTagBar();
             startProactiveMsgCheck();
-            initMimiId();
 
             // 微信页面点开没有联系人
             if (chatList.length === 0) {

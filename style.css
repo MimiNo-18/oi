@@ -1461,7 +1461,7 @@
         }
 
         .wechat-nav-item.active svg {
-            color: #07C160;
+            color: #000;
         }
 
         .wechat-nav-label {
@@ -1470,7 +1470,7 @@
         }
 
         .wechat-nav-item.active .wechat-nav-label {
-            color: #07C160;
+            color: #000;
         }
 
         .add-menu {

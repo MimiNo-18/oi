@@ -1,10 +1,12 @@
 const CACHE_NAME = 'mimiphone-v1';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './script.js',
-  './manifest.json'
+    './',
+    './index.html',
+    './style.css',
+    './script.js',
+    './manifest.json',
+    'https://html2canvas.hertzen.com/dist/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js'
 ];
 
 // 安装 Service Worker

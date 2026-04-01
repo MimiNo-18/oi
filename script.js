@@ -1,4 +1,7 @@
-let currentElement = null;
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E";
+        const DEFAULT_LANDSCAPE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E";
+
+        let currentElement = null;
         let currentImageId = null;
         let quotedMessage = null;
         let messageToForward = null;
@@ -36,7 +39,7 @@ let currentElement = null;
             const nameEl = document.getElementById('momentsUsername');
             const sigEl = document.getElementById('momentsSignature');
             
-            if (avatarImg) avatarImg.src = me.avatar || '';
+            if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
             if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
             if (sigEl) sigEl.textContent = me.signature || '个性签名...';
             
@@ -308,7 +311,7 @@ let currentElement = null;
                 }
 
                 momentEl.innerHTML = `
-                    <img src="${item.avatar}" class="moment-avatar">
+                    <img src="${item.avatar || DEFAULT_AVATAR}" class="moment-avatar">
                     <div class="moment-content-box">
                         <div class="moment-nickname">${item.nickname}</div>
                         <div class="moment-text">${item.content}</div>
@@ -892,7 +895,7 @@ let currentElement = null;
             filteredFriends.forEach(friend => {
                 html += `
                     <div class="wechat-contact-item" onclick="forwardToContact(${friend.id})">
-                        <img src="${friend.avatar || ''}" class="wechat-contact-avatar" alt="">
+                        <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
                         <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                     </div>
                 `;
@@ -1006,22 +1009,30 @@ let currentElement = null;
         
         // 图标配置
         const iconConfig = [
-            { id: 'avatar1', name: '头像1', default: '' },
-            { id: 'avatar2', name: '头像2', default: '' },
-            { id: 'illustration', name: '插画', default: '' },
-            { id: 'app1', name: '微信', default: '' },
-            { id: 'app2', name: '小游戏', default: '' },
+            { id: 'avatar1', name: '头像1', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
+            { id: 'avatar2', name: '头像2', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
+            { id: 'illustration', name: '插画', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E" },
+            { id: 'app1', name: '微信', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2307c160'%3E%3Cpath d='M12 3C7.58 3 4 6.13 4 10c0 2.21 1.15 4.18 2.94 5.37L6 18l3.12-1.56c.9.36 1.88.56 2.88.56 4.42 0 8-3.13 8-7s-3.58-7-8-7z'/%3E%3C/svg%3E" },
+            { id: 'app2', name: '小游戏', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9800'%3E%3Cpath d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
             { id: 'app3', name: '世界书', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E" },
-            { id: 'app4', name: '网易云音乐', default: '' },
-            { id: 'dock1', name: '电话', default: '' },
-            { id: 'dock2', name: '联系人', default: '' },
-            { id: 'dock3', name: '主题', default: '' },
-            { id: 'dock4', name: '设置', default: '' },
-            { id: 'accountAvatarImg', name: '账号头像', default: '' }
+            { id: 'app4', name: '网易云音乐', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e91e63'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E" },
+            { id: 'dock1', name: '电话', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234caf50'%3E%3Cpath d='M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z'/%3E%3C/svg%3E" },
+            { id: 'dock2', name: '联系人', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196f3'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" },
+            { id: 'dock3', name: '主题', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239c27b0'%3E%3Cpath d='M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
+            { id: 'dock4', name: '设置', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23607d8b'%3E%3Cpath d='M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/%3E%3C/svg%3E" },
+            { id: 'accountAvatarImg', name: '账号头像', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" }
         ];
         
         // 加载保存的图标和普通图片
         async function loadSavedIcons() {
+            // 先应用默认图标，防止显示为空
+            iconConfig.forEach(icon => {
+                const el = document.getElementById(icon.id);
+                if (el && icon.default) {
+                    el.src = icon.default;
+                }
+            });
+
             try {
                 const images = await dbGetAll("icons");
                 images.forEach((img) => {
@@ -2156,7 +2167,7 @@ let currentElement = null;
                 filteredFriends.forEach(friend => {
                     contactHtml += `
                         <div class="wechat-contact-item" onclick="openChat(${friend.id})">
-                            <img src="${friend.avatar || ''}" class="wechat-contact-avatar" alt="">
+                            <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
                             <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                         </div>
                     `;
@@ -2621,7 +2632,7 @@ let currentElement = null;
 
         // 微信个人资料相关
         let wechatUserInfo = {
-            avatar: '',
+            avatar: DEFAULT_AVATAR,
             nickname: '未设置网名',
             wechatId: '未设置',
             phone: '未设置',
@@ -3097,7 +3108,7 @@ let currentElement = null;
                                   onclick="toggleContactSelection(${contact.id}, event)"></div>`;
                 }
                 
-                html += `<img src="${contact.avatar || ''}" class="contact-avatar" alt="头像">`;
+                html += `<img src="${contact.avatar || DEFAULT_AVATAR}" class="contact-avatar" alt="头像">`;
                 html += '<div class="contact-info">';
                 html += `<div class="contact-name">${contact.name}</div>`;
                 html += `<div class="contact-phone">${contact.phone}</div>`;
@@ -3185,7 +3196,7 @@ let currentElement = null;
             filteredContacts.forEach(contact => {
                 const isSelected = selectedFriendContactId === contact.id;
                 html += `<div class="contact-item" style="cursor: pointer; background: ${isSelected ? '#F0F0F0' : '#fff'};" onclick="selectFriendContact(${contact.id})">`;
-                html += `<img src="${contact.avatar || ''}" class="contact-avatar" alt="头像">`;
+                html += `<img src="${contact.avatar || DEFAULT_AVATAR}" class="contact-avatar" alt="头像">`;
                 html += '<div class="contact-info">';
                 html += `<div class="contact-name">${contact.name}</div>`;
                 html += `<div class="contact-phone">${contact.phone || '未设置'}</div>`;
@@ -4288,11 +4299,7 @@ let currentElement = null;
                 item.addEventListener('touchmove', () => clearTimeout(timer));
                 
                 item.onclick = () => sendStickerMessage(sticker);
-                item.innerHTML = `
-                    <div class="chat-sticker-img-wrapper">
-                        <img src="${sticker.src}" class="chat-sticker-img">
-                    </div>
-                `;
+                item.innerHTML = `<img src="${sticker.src}" alt="${sticker.name}">`;
                 grid.appendChild(item);
             });
         }
@@ -4448,8 +4455,8 @@ let currentElement = null;
             const container = document.getElementById('chatMessages');
             const history = chatHistories[currentChatFriendId] || [];
             const friend = chatList.find(f => f.id === currentChatFriendId);
-            const userAvatar = wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || '';
-            const friendAvatar = friend ? friend.avatar : '';
+            const userAvatar = wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || DEFAULT_AVATAR;
+            const friendAvatar = friend ? (friend.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
 
             container.innerHTML = '';
             let lastShowTime = 0;
@@ -5019,7 +5026,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 }
                 
                 item.innerHTML = `
-                    <img src="${h.avatar || ''}" class="merged-msg-avatar">
+                    <img src="${h.avatar || DEFAULT_AVATAR}" class="merged-msg-avatar">
                     <div class="merged-msg-info">
                         <div class="merged-msg-header">
                             <div class="merged-msg-name">${h.name}</div>

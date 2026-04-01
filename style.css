@@ -55,6 +55,7 @@
         body.has-phone-border #mineContainer,
         body.has-phone-border #momentsContainer,
         body.has-phone-border #personalInfoContainer,
+        body.has-phone-border #servicePageContainer,
         body.has-phone-border #wechatSettingsContainer,
         body.has-phone-border #wechatDisplaySettingsContainer,
         body.has-phone-border #wechatStorageContainer,
@@ -823,8 +824,8 @@
 
         .wechat-section-header {
             padding: 8px 16px;
-            background: #ffffff; /* 纯白色背景 */
-            color: #888;
+            background: #f7f7f7; /* 灰色长条 */
+            color: #000; /* 文字黑色 */
             font-size: 13px;
             font-weight: 500;
         }
@@ -1800,7 +1801,7 @@
 
         /* 微信“发现”页面样式 */
         #wechatDiscoverPage {
-            background: #f7f7f7;
+            background: #f7f7f7 !important; /* 背景改为灰色以覆盖状态栏区域 */
             padding-bottom: 80px;
             min-height: 100%;
         }
@@ -1859,7 +1860,7 @@
             display: none;
             width: 100%;
             min-height: 100vh;
-            background: #f7f7f7;
+            background: #f7f7f7 !important;
             flex-direction: column;
             position: fixed;
             top: 0;
@@ -2548,14 +2549,14 @@
             display: none;
             width: 100%;
             height: 100vh;
-            background: #f8f8f8;
+            background: #f7f7f7 !important; /* 改为纯灰色 */
             flex-direction: column;
             overflow-y: auto;
             scroll-behavior: smooth;
         }
 
         .settings-header {
-            background: #f8f8f8;
+            background: #f7f7f7 !important; /* 改为纯灰色 */
             padding: 15px 20px;
             display: flex;
             align-items: center;
@@ -4673,7 +4674,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 16px;
-    background: #f7f7f7;
+    background: #f7f7f7 !important; /* 背景改为灰色以覆盖状态栏区域 */
 }
 
 .service-nav-left, .service-nav-right {
@@ -4807,7 +4808,7 @@
     display: none;
     width: 100%;
     min-height: 100vh;
-    background: #fff;
+    background: #f7f7f7 !important;
     flex-direction: column;
     position: fixed;
     top: 0;
@@ -4925,4 +4926,54 @@
 
 #wechatContactsPage {
     background: #fff !important;
+}
+
+/* 微信设置页面新布局样式 */
+.wechat-settings-group {
+    margin: 0 12px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.wechat-settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 16px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.wechat-settings-item:active {
+    background: #f2f2f2;
+}
+
+.wechat-settings-divider {
+    height: 1px;
+    background: #f7f7f7; /* 纯灰色横线 */
+    margin: 0 16px;
+}
+
+.wechat-settings-spacer {
+    height: 12px;
+    background: #f7f7f7; /* 灰色长条 */
+}
+
+/* 个人资料页面适配 */
+#personalInfoContainer {
+    background: #f7f7f7 !important;
+}
+
+#personalInfoContainer .wechat-nav-bar {
+    background: #f7f7f7 !important;
+}
+
+/* 服务页面适配 */
+#servicePageContainer {
+    background: #f7f7f7 !important;
+}
+
+#servicePageContainer .service-nav-bar {
+    background: #f7f7f7 !important;
 }

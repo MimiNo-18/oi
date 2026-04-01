@@ -432,7 +432,8 @@
 
             <!-- 微信“发现”页面 -->
             <div id="wechatDiscoverPage" style="display: none; background: #f7f7f7;">
-                <div class="discover-group" style="margin-top: 0;">
+                <div style="height: 1px; background: #f0f0f0; margin: 0;"></div>
+                <div class="discover-group">
                     <div class="discover-item" onclick="openMoments()">
                         <div class="discover-icon" style="color: #ff9800;">🖼️️</div>
                         <div class="discover-label">朋友圈</div>
@@ -1052,63 +1053,66 @@
         </div>
         <div class="wechat-content-area" id="wechatSettingsContent" style="background: #f7f7f7; padding-top: 0;">
             <!-- 个人资料 -->
-            <div class="me-rounded-box">
-                <div class="me-menu-item setting-item" data-search="个人资料" onclick="openPersonalInfo()" style="border-bottom: none;">
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item setting-item" data-search="个人资料" onclick="openPersonalInfo()">
                     <div class="me-menu-label">个人资料</div>
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
 
-            <div class="me-divider"></div>
+            <div class="wechat-settings-spacer"></div>
 
             <!-- 功能列表 -->
-            <div class="me-rounded-box">
-                <div class="me-menu-item setting-item" data-search="新消息通知" onclick="alert('新消息通知功能开发中')">
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item setting-item" data-search="新消息通知" onclick="alert('新消息通知功能开发中')">
                     <div class="me-menu-label">新消息通知</div>
                     <span class="me-arrow">〉</span>
                 </div>
-                <div class="me-menu-item setting-item" data-search="显示" onclick="openWechatDisplaySettings()">
+                <div class="wechat-settings-divider"></div>
+                <div class="wechat-settings-item setting-item" data-search="显示" onclick="openWechatDisplaySettings()">
                     <div class="me-menu-label">显示</div>
                     <span class="me-arrow">〉</span>
                 </div>
-                <div class="me-menu-item setting-item" data-search="朋友权限" onclick="alert('朋友权限功能开发中')">
+                <div class="wechat-settings-divider"></div>
+                <div class="wechat-settings-item setting-item" data-search="朋友权限" onclick="alert('朋友权限功能开发中')">
                     <div class="me-menu-label">朋友权限</div>
                     <span class="me-arrow">〉</span>
                 </div>
-                <div class="me-menu-item setting-item" data-search="存储空间" onclick="openWechatStorage()" style="border-bottom: none;">
+                <div class="wechat-settings-divider"></div>
+                <div class="wechat-settings-item setting-item" data-search="存储空间" onclick="openWechatStorage()">
                     <div class="me-menu-label">存储空间</div>
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
 
-            <div class="me-divider"></div>
+            <div class="wechat-settings-spacer"></div>
 
             <!-- 更多 -->
-            <div class="me-rounded-box">
-                <div class="me-menu-item setting-item" data-search="更多" onclick="openCategoryManagement()" style="border-bottom: none;">
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item setting-item" data-search="更多" onclick="openCategoryManagement()">
                     <div class="me-menu-label">更多</div>
                     <span class="me-arrow">〉</span>
                 </div>
             </div>
 
-            <div class="me-divider"></div>
+            <div class="wechat-settings-spacer"></div>
 
             <!-- 切换账号 -->
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="openWechatAccountSwitch()" style="border-bottom: none;">
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item" onclick="openWechatAccountSwitch()">
                     <div class="me-menu-label" style="text-align: center; width: 100%;">切换账号</div>
                 </div>
             </div>
 
-            <div class="me-divider"></div>
+            <div class="wechat-settings-spacer"></div>
 
             <!-- 退出登录 -->
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="alert('退出登录')" style="border-bottom: none;">
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item" onclick="alert('退出登录')">
                     <div class="me-menu-label" style="text-align: center; width: 100%; color: #fa5151;">退出登录</div>
                 </div>
             </div>
-            <div class="me-divider"></div>
+            <div class="wechat-settings-spacer"></div>
         </div>
     </div>
 
@@ -1543,7 +1547,7 @@
                         <span class="me-arrow">〉</span>
                     </div>
                 </div>
-                <div class="info-item" onclick="editWechatInfo('signature', '个性签名')" style="border-bottom: none;">
+                <div class="info-item" onclick="editWechatInfo('signature', '个性签名')" style="border-bottom: 1px solid #f0f0f0 !important;">
                     <div class="info-label">个性签名</div>
                     <div class="info-content">
                         <span class="info-text" id="editWechatSignature">未设置</span>

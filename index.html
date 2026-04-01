@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="phone-border-frame"></div>
     <div class="notch"></div>
     <!-- 统一全局状态栏 -->
     <div class="status-bar" id="globalStatusBar">
@@ -1234,18 +1235,38 @@
     </div>
 
 
-    <!-- 微信顶部分组管理页面 -->
+    <!-- 微信顶部分组管理页面 (更名为“更多”) -->
     <div id="categoryManagementContainer">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeCategoryManagement()">
+            <div class="wechat-nav-left" id="categoryBackBtn" onclick="closeCategoryManagement()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
-            <div class="wechat-nav-title">顶部分组设置</div>
+            <div class="wechat-nav-title" id="categoryNavTitle">更多</div>
             <div class="wechat-nav-right"></div>
         </div>
-        <div class="wechat-content-area" style="background: #f7f7f7; display: flex; flex-direction: column; overflow: hidden;">
+        
+        <!-- 更多主菜单 -->
+        <div class="wechat-content-area" id="categoryMenuArea" style="background: #f7f7f7;">
+            <div style="height: 12px;"></div>
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item" onclick="showActualCategoryManagement()">
+                    <div class="me-menu-label">顶部分组设置</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+            </div>
+            <div style="height: 12px;"></div>
+            <div class="wechat-settings-group">
+                <div class="wechat-settings-item" onclick="showRelationshipBinding()">
+                    <div class="me-menu-label">关系绑定</div>
+                    <span class="me-arrow">〉</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 顶部分组设置内容 -->
+        <div class="wechat-content-area" id="actualCategoryContent" style="background: #f7f7f7; display: none; flex-direction: column; overflow: hidden;">
             <div class="category-preview-box">
                 <div class="category-preview-title">分组栏预览</div>
                 <div class="category-preview-tags" id="categoryPreviewTags">
@@ -1256,6 +1277,11 @@
             <div class="category-list-wrapper" id="categoryManagementList" style="flex: 1; overflow-y: auto;">
                 <!-- 动态生成 -->
             </div>
+        </div>
+
+        <!-- 关系绑定内容 -->
+        <div class="wechat-content-area" id="relationshipBindingContent" style="background: #f7f7f7; display: none;">
+             <div class="empty-state" style="padding-top: 100px;">关系绑定功能开发中</div>
         </div>
     </div>
 

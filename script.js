@@ -2125,7 +2125,7 @@ let currentElement = null;
                 if (discoverPage) discoverPage.style.display = 'block';
                 navTitle.textContent = '发现';
                 if (navBar) {
-                    navBar.style.backgroundColor = '#f7f7f7';
+                    navBar.style.backgroundColor = '#fff';
                     navBar.style.borderBottom = 'none';
                 }
             } else if (tab === 'me') {
@@ -2699,12 +2699,14 @@ let currentElement = null;
 
         function openServicePage() {
             document.getElementById('servicePageContainer').style.display = 'flex';
+            document.body.classList.add('service-page-active');
             updateTime();
             saveUIState();
         }
 
         function closeServicePage() {
             document.getElementById('servicePageContainer').style.display = 'none';
+            document.body.classList.remove('service-page-active');
             saveUIState();
         }
 
@@ -6184,12 +6186,40 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
         function openCategoryManagement() {
             document.getElementById('categoryManagementContainer').style.display = 'flex';
+            document.body.classList.add('category-management-active');
+            showCategoryMenu();
             renderCategoryManagementList();
             saveUIState();
         }
 
+        function showCategoryMenu() {
+            document.getElementById('categoryNavTitle').textContent = '更多';
+            document.getElementById('categoryMenuArea').style.display = 'block';
+            document.getElementById('actualCategoryContent').style.display = 'none';
+            document.getElementById('relationshipBindingContent').style.display = 'none';
+            document.getElementById('categoryBackBtn').onclick = closeCategoryManagement;
+        }
+
+        function showActualCategoryManagement() {
+            document.getElementById('categoryNavTitle').textContent = '顶部分组设置';
+            document.getElementById('categoryMenuArea').style.display = 'none';
+            document.getElementById('actualCategoryContent').style.display = 'flex';
+            document.getElementById('relationshipBindingContent').style.display = 'none';
+            document.getElementById('categoryBackBtn').onclick = showCategoryMenu;
+            renderCategoryManagementList();
+        }
+
+        function showRelationshipBinding() {
+            document.getElementById('categoryNavTitle').textContent = '关系绑定';
+            document.getElementById('categoryMenuArea').style.display = 'none';
+            document.getElementById('actualCategoryContent').style.display = 'none';
+            document.getElementById('relationshipBindingContent').style.display = 'block';
+            document.getElementById('categoryBackBtn').onclick = showCategoryMenu;
+        }
+
         function closeCategoryManagement() {
             document.getElementById('categoryManagementContainer').style.display = 'none';
+            document.body.classList.remove('category-management-active');
             renderTopTagBar();
             renderChatList();
             saveUIState();
@@ -7232,7 +7262,42 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             worldBooks.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'world-book-card';
-                card.onclick = () => openWorldBookEdit(book.id);
+                
+                // 添加长按删除逻辑
+                let longPressTimer;
+                let isLongPress = false;
+                const startPress = (e) => {
+                    isLongPress = false;
+                    longPressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        if (confirm(`确定要删除世界书 "${book.name}" 吗？`)) {
+                            worldBooks = worldBooks.filter(b => b.id !== book.id);
+                            saveWorldBooks();
+                            renderWorldBookList();
+                        }
+                    }, 800);
+                };
+                const cancelPress = () => {
+                    clearTimeout(longPressTimer);
+                };
+
+                card.addEventListener('touchstart', startPress, { passive: true });
+                card.addEventListener('touchend', cancelPress);
+                card.addEventListener('touchmove', cancelPress);
+                card.addEventListener('mousedown', startPress);
+                card.addEventListener('mouseup', cancelPress);
+                card.addEventListener('mouseleave', cancelPress);
+
+                card.onclick = (e) => {
+                    if (isLongPress) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                    openWorldBookEdit(book.id);
+                };
+
                 card.innerHTML = `
                     <div class="world-book-name">${book.name}</div>
                     <div class="world-book-desc">${book.description || '暂无简介'}</div>
@@ -7321,7 +7386,41 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             book.items.forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'book-item-row';
-                row.onclick = () => openBookItemEdit(item.id);
+                
+                // 添加长按删除逻辑
+                let longPressTimer;
+                let isLongPress = false;
+                const startPress = (e) => {
+                    isLongPress = false;
+                    longPressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        if (confirm(`确定要删除条目 "${item.name}" 吗？`)) {
+                            book.items = book.items.filter(i => i.id !== item.id);
+                            saveWorldBooks();
+                            renderBookItemsList();
+                        }
+                    }, 800);
+                };
+                const cancelPress = () => {
+                    clearTimeout(longPressTimer);
+                };
+
+                row.addEventListener('touchstart', startPress, { passive: true });
+                row.addEventListener('touchend', cancelPress);
+                row.addEventListener('touchmove', cancelPress);
+                row.addEventListener('mousedown', startPress);
+                row.addEventListener('mouseup', cancelPress);
+                row.addEventListener('mouseleave', cancelPress);
+
+                row.onclick = (e) => {
+                    if (isLongPress) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                    openBookItemEdit(item.id);
+                };
                 
                 row.innerHTML = `
                     <div class="book-item-content-left" style="display: flex; flex-direction: column; flex: 1; position: relative;">

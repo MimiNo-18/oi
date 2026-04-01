@@ -40,7 +40,32 @@
             overflow: hidden;
         }
 
-        /* 所有页面容器在边框开启时统一在边框内且白色背景 */
+        /* 物理边框层 - 放置在最顶层包裹所有内容 */
+        .phone-border-frame {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 399px; /* 375 + 12*2 */
+            height: 836px; /* 812 + 12*2 */
+            transform: translate(-50%, -50%) scale(0.8);
+            border: 12px solid #1a1a1a;
+            border-radius: 60px;
+            pointer-events: none;
+            z-index: 99999; /* 确保在最顶层 */
+            box-sizing: border-box;
+            box-shadow: 
+                0 0 0 2px #333,
+                0 0 0 4px #111,
+                0 20px 50px rgba(0,0,0,0.6),
+                0 0 0 100vmax #ffffff; /* 遮挡边框外内容，确保视觉包裹 */
+        }
+
+        body.has-phone-border .phone-border-frame {
+            display: block;
+        }
+
+        /* 所有页面容器在边框开启时统一在边框内 */
         body.has-phone-border .phone-container,
         body.has-phone-border #contactsContainer,
         body.has-phone-border #chatPageContainer,
@@ -53,9 +78,7 @@
         body.has-phone-border #apiConfigContainer,
         body.has-phone-border #themeContainer,
         body.has-phone-border #mineContainer,
-        body.has-phone-border #momentsContainer,
         body.has-phone-border #personalInfoContainer,
-        body.has-phone-border #servicePageContainer,
         body.has-phone-border #wechatSettingsContainer,
         body.has-phone-border #wechatDisplaySettingsContainer,
         body.has-phone-border #wechatStorageContainer,
@@ -71,19 +94,19 @@
         body.has-phone-border #worldBookContainer,
         body.has-phone-border #worldBookEditPage,
         body.has-phone-border #bookItemEditPage,
-        body.has-phone-border #wechatAccountSwitchContainer {
+        body.has-phone-border #momentsContainer,
+        body.has-phone-border #momentsEditPage,
+        body.has-phone-border #wechatAccountSwitchContainer,
+        body.has-phone-border #servicePageContainer,
+        body.has-phone-border .forward-type-modal,
+        body.has-phone-border .modal {
             width: 375px !important;
             height: 812px !important;
             border: none !important;
-            border-radius: 60px !important;
-            background-color: #fff !important;
-            box-shadow: 
-                0 0 0 12px #1a1a1a,
-                0 0 0 14px #333,
-                0 0 0 16px #111,
-                0 0 20px rgba(255,255,255,0.1) inset,
-                0 20px 50px rgba(0,0,0,0.6) !important;
-            overflow-y: auto !important; /* 修改为允许向下滑动，修复设置页面无法滚动问题 */
+            border-radius: 48px !important; /* 调整圆角以适配边框内侧 */
+            box-shadow: none !important; 
+            overflow: hidden !important; /* 确保内容被边框圆角切除，不溢出 */
+            overflow-y: auto !important;
             position: fixed !important;
             top: 50% !important;
             left: 50% !important;
@@ -96,6 +119,14 @@
             max-height: unset !important;
             bottom: auto !important;
             right: auto !important;
+        }
+
+        /* 边框模式下特定页面的背景色强制保持 */
+        body.has-phone-border #contactsContainer,
+        body.has-phone-border #wechatContainer,
+        body.has-phone-border #chatPageContainer,
+        body.has-phone-border .phone-container {
+            background-color: #fff !important;
         }
 
         /* 首页层级 */
@@ -135,7 +166,26 @@
         body.has-phone-border #bookItemEditPage,
         body.has-phone-border #servicePageContainer,
         body.has-phone-border #momentsContainer,
+        body.has-phone-border #momentsEditPage,
         body.has-phone-border #wechatAccountSwitchContainer { z-index: 10300 !important; }
+
+        /* 服务页面特殊处理：保持灰色背景并确保在边框内 */
+        body.has-phone-border #servicePageContainer {
+            width: 375px !important;
+            height: 812px !important;
+            border: none !important;
+            border-radius: 48px !important;
+            background-color: #f7f7f7 !important; /* 统一改为灰色 */
+            box-shadow: none !important;
+            overflow: hidden !important; /* 防止内容溢出圆角 */
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(0.8) !important;
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0 !important;
+        }
 
         /* 首页容器在边框模式下需允许内容滚动且隐藏滚动条 */
         body.has-phone-border .phone-container {
@@ -222,24 +272,26 @@
             z-index: 20003 !important;
         }
 
-        /* 确保弹窗在边框模式下显示在最上层且保持原样 */
+        /* 确保转发弹窗等在边框内 */
+        body.has-phone-border .forward-type-modal {
+            align-items: center !important;
+            background: rgba(0,0,0,0.2) !important;
+            z-index: 30001 !important;
+        }
+        body.has-phone-border .forward-type-content {
+            width: 90% !important;
+            margin-bottom: 20px !important;
+            border-radius: 12px !important;
+        }
+
+        /* 确保弹窗在边框模式下也在边框内且不超出 */
         body.has-phone-border .modal {
             z-index: 30000 !important;
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            transform: none !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
+            background: rgba(0,0,0,0.5) !important;
         }
 
         body.has-phone-border .modal.active {
-            display: flex;
+            display: flex !important;
         }
 
         body.has-phone-border .add-menu {
@@ -290,6 +342,9 @@
             top: 50% !important;
             transform: translate(-50%, -324.8px) scale(0.8) !important;
             transform-origin: top center;
+            border-top-left-radius: 60px;
+            border-top-right-radius: 60px;
+            overflow: hidden;
         }
 
         /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
@@ -320,6 +375,8 @@
         #mineContainer,
         #worldBookEditPage,
         #bookItemEditPage,
+        #momentsContainer,
+        #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
         #wechatAccountSwitchContainer {
@@ -798,7 +855,7 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff !important; /* 强制纯白色背景 */
+            background: #ffffff; /* 改为白色 */
         }
 
         /* 微信通讯录特有样式 */
@@ -824,10 +881,11 @@
 
         .wechat-section-header {
             padding: 8px 16px;
-            background: #f7f7f7; /* 灰色长条 */
-            color: #000; /* 文字黑色 */
+            background: #f7f7f7; /* 改为灰色长条背景 */
+            color: #888; /* 文字改为深灰色 */
             font-size: 13px;
             font-weight: 500;
+            margin: 10px 0 5px;
         }
 
         .wechat-contact-item {
@@ -907,7 +965,7 @@
         }
 
         .wechat-search-bar {
-            display: none; /* 默认隐藏，删除发现页面上方的白色横条 */
+            display: block; /* 默认显示，通过脚本控制主页面的隐藏 */
             background: #ffffff;
             padding: 8px 16px 12px;
             position: sticky;
@@ -1047,7 +1105,7 @@
 
         .chat-gap {
             height: 8px;
-            background: #f2f2f2;
+            background: #ffffff; /* 改为纯白色 */
             margin: 8px 0;
             position: relative;
         }
@@ -1801,7 +1859,7 @@
 
         /* 微信“发现”页面样式 */
         #wechatDiscoverPage {
-            background: #f7f7f7 !important; /* 背景改为灰色以覆盖状态栏区域 */
+            background: #f7f7f7 !important; /* 背景改为灰色 */
             padding-bottom: 80px;
             min-height: 100%;
         }
@@ -4708,6 +4766,13 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow-y: auto; /* 允许内容区域滚动 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.service-content::-webkit-scrollbar {
+    display: none;
 }
 
 .service-top-card {
@@ -4718,7 +4783,8 @@
     display: flex;
     padding: 40px 0;
     position: relative;
-    height: 40vh;
+    height: 200px; /* 固定高度，防止溢出 */
+    flex-shrink: 0;
     align-items: center;
 }
 
@@ -4969,6 +5035,17 @@
     background: #f7f7f7 !important;
 }
 
+        /* 分类管理页面适配 */
+        body.has-phone-border #categoryManagementContainer,
+        #categoryManagementContainer {
+            background: #f7f7f7 !important;
+            overflow: hidden !important; /* 确保内容不溢出圆角 */
+        }
+
+        #categoryManagementContainer .wechat-nav-bar {
+            background: #f7f7f7 !important;
+        }
+
 /* 服务页面适配 */
 #servicePageContainer {
     background: #f7f7f7 !important;
@@ -4976,4 +5053,18 @@
 
 #servicePageContainer .service-nav-bar {
     background: #f7f7f7 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+/* 服务页面或分类管理页面激活时状态栏背景变灰 */
+body.service-page-active .status-bar,
+body.category-management-active .status-bar {
+    background: #f7f7f7 !important;
+    pointer-events: auto;
+}
+
+/* 确保分类管理列表在高度受限时可滚动 */
+body.has-phone-border #categoryManagementContainer .wechat-content-area {
+    height: calc(812px - 44px - 49px) !important; /* 减去状态栏占位和导航栏高度 */
 }

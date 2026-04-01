@@ -32,6 +32,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function openMoments() {
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
+            document.body.classList.add('moments-active');
             
             // 初始化个人信息
             const me = wechatUserInfo;
@@ -58,6 +59,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
         function closeMoments() {
             document.getElementById('momentsContainer').style.display = 'none';
+            document.body.classList.remove('moments-active');
             saveUIState();
         }
 
@@ -2245,10 +2247,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             updateTime();
             updateBattery();
             
-            // 需求 2: 点击发现立刻进入发现页面而不是通讯录页面。
-            // 默认显示发现页
-            const discoverTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item:nth-child(3)');
-            switchWechatTab('discover', discoverTab);
+            // 默认显示消息页
+            const messagesTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item');
+            switchWechatTab('messages', messagesTab);
             
             saveUIState();
         }
@@ -7291,11 +7292,9 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     longPressTimer = setTimeout(() => {
                         isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        if (confirm(`确定要删除世界书 "${book.name}" 吗？`)) {
-                            worldBooks = worldBooks.filter(b => b.id !== book.id);
-                            saveWorldBooks();
-                            renderWorldBookList();
-                        }
+                        worldBooks = worldBooks.filter(b => b.id !== book.id);
+                        saveWorldBooks();
+                        renderWorldBookList();
                     }, 800);
                 };
                 const cancelPress = () => {
@@ -7415,11 +7414,9 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     longPressTimer = setTimeout(() => {
                         isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        if (confirm(`确定要删除条目 "${item.name}" 吗？`)) {
-                            book.items = book.items.filter(i => i.id !== item.id);
-                            saveWorldBooks();
-                            renderBookItemsList();
-                        }
+                        book.items = book.items.filter(i => i.id !== item.id);
+                        saveWorldBooks();
+                        renderBookItemsList();
                     }, 800);
                 };
                 const cancelPress = () => {

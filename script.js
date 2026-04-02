@@ -241,12 +241,14 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             if (!text && momentImages.length === 0) return;
 
             const me = wechatUserInfo;
+            let postedId = null;
             
             if (editingMomentId) {
                 const moment = momentsData.find(m => m.id === editingMomentId);
                 if (moment) {
                     moment.content = text;
                     moment.images = JSON.parse(JSON.stringify(momentImages));
+                    postedId = editingMomentId;
                 }
             } else {
                 const newMoment = {
@@ -261,10 +263,16 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     isMine: true
                 };
                 momentsData.unshift(newMoment);
+                postedId = newMoment.id;
             }
 
             localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
             
+            if (!editingMomentId && postedId) {
+                // 发布后触发自动评论
+                setTimeout(() => triggerAutoMomentsFeedback(postedId), 3000);
+            }
+
             momentImages = [];
             editingMomentId = null;
             closeMomentsEdit();
@@ -394,8 +402,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 currentCommentIndex = commentIdx;
                 document.getElementById('commentActionModal').classList.add('active');
             } else {
-                // 联系人的评论 -> 回复 -> 立刻调用API
-                handleMomentContactReply(momentId, event);
+                // 联系人的评论 -> 回复
+                showMomentCommentInput(momentId, event, comment.nickname);
             }
         }
 
@@ -542,6 +550,72 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 console.error("Moment Contact Reply Error:", e);
                 alert("回复失败，请检查网络或配置");
             }
+        }
+
+        function triggerAutoMomentsFeedback(momentId) {
+            if (chatList.length === 0) return;
+            const count = Math.floor(Math.random() * 3) + 1;
+            const shuffled = [...chatList].sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, count);
+            selected.forEach((friend, index) => {
+                setTimeout(() => callAIForMoment(momentId, friend, 'auto_comment'), index * 5000 + 2000);
+            });
+        }
+
+        async function callAIForMoment(momentId, friend, type, context = {}) {
+            const moment = momentsData.find(m => m.id === momentId);
+            if (!moment) return;
+            const configId = localStorage.getItem('current_api_config_id') || 'default';
+            const configs = await dbGetAll('api_configs');
+            const config = configs.find(c => c.id === configId);
+            if (!config || !config.url || !config.key) return;
+            const contact = contacts.find(c => c.id === friend.contactId);
+            const nickname = getFriendDisplayName(friend);
+
+            let systemPrompt = `你现在的身份是微信好友：${nickname}。
+人设信息：${contact ? contact.design : '一个普通的微信好友'}。
+当前场景：朋友圈互动。
+朋友圈内容：${moment.content}
+${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.images.filter(img => img.type === 'text').map(img => img.content).join(', ') : ''}`;
+
+            if (type === 'auto_comment') {
+                systemPrompt += `\n任务：决定是否评论这条朋友圈。
+请根据你的人设和内容，如果你觉得应该评论，请返回评论内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
+如果你觉得不应该评论，或者你的人设此时不方便评论，请直接返回 "SKIP"。`;
+            } else if (type === 'reply_to_user') {
+                const history = chatHistories[friend.id] || [];
+                const chatContext = history.slice(-5).map(m => `${m.type === 'sent' ? '用户' : '你'}: ${m.content}`).join('\n');
+                systemPrompt += `\n你们最近的私聊记录：\n${chatContext || '暂无交流'}`;
+                systemPrompt += `\n用户在朋友圈回复了你的评论："${context.userComment}"。
+任务：根据你们的聊天情况、朋友圈语境和人设决定是否在朋友圈回复用户。
+如果回复，请返回回复内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
+如果不回复，请直接返回 "SKIP"。`;
+            }
+
+            try {
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) apiUrl += '/chat/completions';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [{ role: "system", content: systemPrompt }],
+                        temperature: 0.8
+                    })
+                });
+                const data = await response.json();
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const reply = data.choices[0].message.content.trim();
+                    if (reply.toUpperCase() !== 'SKIP' && reply !== '') {
+                        const newComment = { nickname: nickname, content: reply, time: Date.now() };
+                        if (type === 'reply_to_user') newComment.replyTo = wechatUserInfo.nickname || '我';
+                        moment.comments.push(newComment);
+                        localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                        renderMoments();
+                    }
+                }
+            } catch (e) { console.error("AI Moment Interaction Error:", e); }
         }
 
         function showMomentContextMenu(item, pos) {
@@ -742,6 +816,14 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 moment.comments.push(newComment);
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
                 
+                // 如果是回复联系人，触发其回评
+                if (currentReplyTo && currentReplyTo !== myNickname) {
+                    const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
+                    if (friend) {
+                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 3000);
+                    }
+                }
+
                 // 优化：立刻局部更新 UI
                 const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
                 if (momentEl) {

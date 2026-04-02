@@ -4326,20 +4326,17 @@
     opacity: 1;
 }
 
-.moments-profile {
-    position: relative;
-    width: 100%;
-    height: 300px;
-    background: #d0d0d0; /* 纯灰色 */
-    margin-bottom: 60px;
-}
+        .moments-profile {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #8e8e93; /* 纯灰色 */
+            margin-bottom: 60px;
+        }
 
-.moments-bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    background: #d0d0d0;
-}
+        .moments-bg-img {
+            display: none; /* 移除背景图显示 */
+        }
 
 .moments-user-info {
     position: absolute;

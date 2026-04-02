@@ -37,6 +37,20 @@
     </div>
 
     <div class="phone-container">
+        <!-- 头像区 -->
+        <div class="avatar-section">
+            <div class="avatar-item">
+                <div class="avatar-bubble" id="txt-avatar-name-1" onclick="editText(this, '名称')">Mimi</div>
+                <img src="" class="avatar" id="avatar1" onclick="changeImage('avatar1')" alt="头像1">
+                <div class="emoji-text" id="txt-avatar-emoji-1" onclick="editText(this, '颜文字')">^U=U^</div>
+            </div>
+            <div class="avatar-item">
+                <div class="avatar-bubble" id="txt-avatar-name-2" onclick="editText(this, '名称')">Phone</div>
+                <img src="" class="avatar" id="avatar2" onclick="changeImage('avatar2')" alt="头像2">
+                <div class="emoji-text" id="txt-avatar-emoji-2" onclick="editText(this, '颜文字')">ʚ♡ɞ</div>
+            </div>
+        </div>
+
         <!-- 中间文字区 -->
         <div class="title-section">
             <div class="small-title" id="txt-small-title" onclick="editText(this, '小标题')">°. ⊹ ✟ MimiPhone .† ☆ ⊹</div>
@@ -52,8 +66,26 @@
         <!-- Widget标题 -->
         <div class="widget-title" id="txt-widget-title" onclick="editText(this, 'Widget标题')">请输入文字</div>
 
-        <!-- 插画区 -->
+        <!-- 应用图标网格和插画区 -->
         <div class="content-grid">
+            <div class="app-grid">
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app1" onclick="openWechat()" alt="应用图标" style="cursor: pointer;">
+                    <div class="app-label">微信</div>
+                </div>
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app2" onclick="changeImage('app2')" alt="应用图标">
+                    <div class="app-label">小游戏</div>
+                </div>
+            <div class="app-item">
+                <img src="" class="app-icon" id="app3" onclick="openWorldBook()" alt="应用图标">
+                <div class="app-label">世界书</div>
+            </div>
+                <div class="app-item">
+                    <img src="" class="app-icon" id="app4" onclick="changeImage('app4')" alt="应用图标">
+                    <div class="app-label">网易云音乐</div>
+                </div>
+            </div>
             <div class="illustration-section">
                 <img src="" class="illustration" id="illustration" onclick="changeImage('illustration')" alt="插画">
                 <div class="illustration-text" id="txt-illustration-text" onclick="editText(this, '插画文字')">°. ⊹ ✟ Love you .† ☆ ⊹</div>
@@ -62,16 +94,20 @@
 
         <!-- Dock栏 -->
         <div class="dock">
-            <div class="dock-item" onclick="alert('电话功能开发中')">
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock1" onclick="changeImage('dock1')" alt="Dock图标">
                 <div class="dock-label">电话</div>
             </div>
-            <div class="dock-item" onclick="openContacts()">
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock2" onclick="openContacts()" alt="Dock图标" style="cursor: pointer;">
                 <div class="dock-label">联系人</div>
             </div>
-            <div class="dock-item" onclick="openThemePage()">
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock3" onclick="openThemePage()" alt="Dock图标" style="cursor: pointer;">
                 <div class="dock-label">主题</div>
             </div>
-            <div class="dock-item" onclick="openSettings()">
+            <div class="dock-item">
+                <img src="" class="dock-icon" id="dock4" onclick="openSettings()" alt="Dock图标" style="cursor: pointer;">
                 <div class="dock-label">设置</div>
             </div>
         </div>
@@ -455,6 +491,7 @@
             <!-- 微信“我”页面 -->
             <div id="wechatMePage" style="display: none; padding-bottom: 80px;">
                 <div class="me-header" onclick="openPersonalInfo()">
+                    <img src="" class="me-avatar" id="wechatMeAvatar" alt="">
                     <div class="me-info">
                         <div class="me-nickname" id="wechatMeNickname">未设置网名</div>
                         <div class="me-wechat-id" id="wechatMeID">微信号：未设置</div>
@@ -551,13 +588,13 @@
         <!-- 朋友圈容器 -->
         <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
             <!-- 朋友圈操作弹窗 (点赞/评论) -->
-    <div id="momentActionPopup" class="moment-action-popup">
-        <div id="momentLikeBtn" class="moment-action-item">点赞</div>
-        <div class="moment-action-divider">|</div>
-        <div id="momentCommentBtn" class="moment-action-item">评论</div>
-        <div class="moment-action-divider">|</div>
-        <div id="momentReplyBtn" class="moment-action-item">联系人回复</div>
-    </div>
+            <div id="momentActionPopup" class="moment-action-popup">
+                <div id="momentLikeBtn" class="moment-action-item">点赞</div>
+                <div class="moment-action-divider">|</div>
+                <div id="momentCommentBtn" class="moment-action-item">评论</div>
+                <div class="moment-action-divider">|</div>
+                <div id="momentContactReplyBtn" class="moment-action-item">联系人回复</div>
+            </div>
 
             <!-- 朋友圈长按菜单 -->
             <div id="momentContextMenu" class="msg-context-menu" style="width: 240px;">
@@ -585,6 +622,7 @@
                     <img id="momentsBg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E" class="moments-bg-img" onclick="changeMomentsBg()" style="background-color: #d0d0d0;">
                     <div class="moments-user-info">
                         <div id="momentsUsername" class="moments-user-name">未设置网名</div>
+                        <img id="momentsAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="moments-user-avatar" style="background-color: #d0d0d0;">
                     </div>
                     <div id="momentsSignature" class="moments-signature">个性签名...</div>
                 </div>
@@ -1253,6 +1291,7 @@
         </div>
     </div>
 
+    <!-- 聊天信息页面 -->
     <div id="chatInfoContainer">
         <div class="chat-info-header">
             <div class="chat-info-back" onclick="closeChatInfo()">
@@ -1264,6 +1303,10 @@
             <div style="width: 40px;"></div>
         </div>
         <div class="chat-info-content">
+            <!-- 头像 -->
+            <div class="chat-info-avatar-box">
+                <img id="chatInfoAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="chat-info-avatar" onclick="changeChatInfoAvatar()">
+            </div>
 
             <!-- 备注 & 绑定世界书 -->
             <div class="chat-info-group">
@@ -1452,6 +1495,7 @@
         <div class="msg-context-item" style="width: 50%;" onclick="handleFavAction('多选')">多选</div>
     </div>
 
+    <!-- 微信个人资料页面 -->
     <div id="personalInfoContainer">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closePersonalInfo()">
@@ -1464,6 +1508,13 @@
         </div>
         <div class="wechat-content-area" style="background: #f7f7f7;">
             <div class="me-rounded-box" style="margin-top: 10px;">
+                <div class="info-item" onclick="changeWechatAvatar()">
+                    <div class="info-label">头像</div>
+                    <div class="info-content">
+                        <img src="" class="info-avatar" id="editWechatAvatar" alt="">
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
                 <div class="info-item" onclick="editWechatInfo('nickname', '名字')">
                     <div class="info-label">名字</div>
                     <div class="info-content">
@@ -1527,6 +1578,7 @@
         </div>
     </div>
 
+    <!-- 添加联系人页面 -->
     <div id="addContactContainer">
         <!-- 导航栏 -->
         <div class="add-contact-nav">
@@ -1540,6 +1592,13 @@
         </div>
 
         <div class="add-contact-content">
+            <!-- 头像上传区域 -->
+            <div class="avatar-upload-section">
+                <div class="avatar-upload-circle" onclick="uploadContactAvatar()">
+                    <img id="newContactAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" alt="">
+                    <span class="avatar-upload-text">点击上传</span>
+                </div>
+            </div>
 
             <!-- 表单输入区域 -->
             <div class="add-contact-form">
@@ -1821,6 +1880,7 @@
         </div>
     </div>
 
+    <!-- 账号容器 -->
     <div id="accountContainer">
         <div class="settings-header">
             <div class="settings-back" onclick="closeAccount()">
@@ -1831,6 +1891,7 @@
             <div class="settings-title">Mimi账号</div>
         </div>
         <div class="account-avatar-section">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="account-avatar" id="accountAvatarImg" onclick="changeImage('accountAvatarImg')" alt="账号头像">
             <div class="account-info-text" id="txt-account-nickname" onclick="editText(this, '昵称')">请输入昵称</div>
             <div class="account-info-text" id="txt-account-phone" onclick="editText(this, '手机号')">请输入手机号</div>
         </div>
@@ -1868,6 +1929,15 @@
         </div>
         
         <div class="settings-group" style="padding-top: 10px;">
+            <div class="me-rounded-box">
+                <div class="me-menu-item" onclick="changeImage('accountAvatarImg')">
+                    <div class="me-menu-label">头像</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
+                        <span class="me-arrow">〉</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="me-divider"></div>
 
@@ -2297,6 +2367,7 @@
             <div class="account-switch-box-centered">
                 <!-- 当前账号 -->
                 <div class="account-switch-card">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" id="switchCurrentAvatar" class="account-switch-avatar">
                     <div class="account-switch-info">
                         <div class="account-switch-nickname" id="switchCurrentNickname">未设置网名</div>
                         <div class="account-switch-id" id="switchCurrentID">微信号：未设置</div>

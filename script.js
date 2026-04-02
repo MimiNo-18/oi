@@ -28,6 +28,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         // 朋友圈逻辑
         let momentsData = JSON.parse(localStorage.getItem('mimi_moments') || '[]');
         let currentMomentImage = '';
+        let currentEditingMomentId = null;
 
         function openMoments() {
             const container = document.getElementById('momentsContainer');
@@ -36,11 +37,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             
             // 初始化个人信息
             const me = wechatUserInfo;
-            const avatarImg = document.getElementById('momentsAvatar');
             const nameEl = document.getElementById('momentsUsername');
             const sigEl = document.getElementById('momentsSignature');
             
-            if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
             if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
             if (sigEl) sigEl.textContent = me.signature || '个性签名...';
             
@@ -86,6 +85,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             document.getElementById('momentsEditPage').style.display = 'flex';
             document.getElementById('momentTextInput').value = '';
             momentImages = [];
+            currentEditingMomentId = null;
             renderEditImages();
             updatePostBtnState();
         }
@@ -223,20 +223,29 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const text = document.getElementById('momentTextInput').value.trim();
             if (!text && momentImages.length === 0) return;
 
-            const me = wechatUserInfo;
-            const newMoment = {
-                id: Date.now(),
-                nickname: me.nickname || '我',
-                avatar: me.avatar || wechatUserInfo.avatar || '',
-                content: text,
-                images: JSON.parse(JSON.stringify(momentImages)),
-                time: Date.now(),
-                likes: [],
-                comments: [],
-                isMine: true
-            };
+            if (currentEditingMomentId) {
+                const moment = momentsData.find(m => m.id === currentEditingMomentId);
+                if (moment) {
+                    moment.content = text;
+                    moment.images = JSON.parse(JSON.stringify(momentImages));
+                }
+                currentEditingMomentId = null;
+            } else {
+                const me = wechatUserInfo;
+                const newMoment = {
+                    id: Date.now(),
+                    nickname: me.nickname || '我',
+                    avatar: me.avatar || wechatUserInfo.avatar || '',
+                    content: text,
+                    images: JSON.parse(JSON.stringify(momentImages)),
+                    time: Date.now(),
+                    likes: [],
+                    comments: [],
+                    isMine: true
+                };
+                momentsData.unshift(newMoment);
+            }
 
-            momentsData.unshift(newMoment);
             localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
             
             momentImages = [];
@@ -313,7 +322,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 }
 
                 momentEl.innerHTML = `
-                    <img src="${item.avatar || DEFAULT_AVATAR}" class="moment-avatar">
                     <div class="moment-content-box">
                         <div class="moment-nickname">${item.nickname}</div>
                         <div class="moment-text">${item.content}</div>
@@ -438,6 +446,94 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     showMomentCommentInput(id, e);
                 };
             }
+            
+            const replyBtn = document.getElementById('momentReplyBtn');
+            if (replyBtn) {
+                replyBtn.onclick = (e) => {
+                    handleMomentContactReply(id, e);
+                };
+            }
+        }
+
+        async function handleMomentContactReply(id, event) {
+            event.stopPropagation();
+            const moment = momentsData.find(m => m.id === id);
+            if (!moment) return;
+
+            document.getElementById('momentActionPopup').style.display = 'none';
+            
+            // 调用 API 回复
+            const chatStatus = document.getElementById('chatStatus');
+            if (chatStatus) {
+                chatStatus.textContent = '联系人正在回复朋友圈...';
+                chatStatus.classList.add('typing-status');
+            }
+
+            // 获取 API 配置
+            const configId = localStorage.getItem('current_api_config_id') || 'default';
+            const configs = await dbGetAll('api_configs');
+            const config = configs.find(c => c.id === configId);
+
+            if (!config || !config.url || !config.key) {
+                setTimeout(() => {
+                    if (chatStatus) {
+                        chatStatus.textContent = '';
+                        chatStatus.classList.remove('typing-status');
+                    }
+                    const reply = {
+                        nickname: '联系人',
+                        content: '（请配置 API 以启用自动回复）',
+                        time: Date.now()
+                    };
+                    moment.comments.push(reply);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }, 1000);
+                return;
+            }
+
+            try {
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) {
+                    apiUrl += '/chat/completions';
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.key}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: "你现在是一个微信好友。用户刚刚发了一条朋友圈，内容是：'" + moment.content + "'。请你以好友的身份对此朋友圈发表一条简短、自然的评论。只返回评论内容，不要有任何其他文字。" },
+                            { role: "user", content: "请评论这条朋友圈。" }
+                        ],
+                        temperature: 0.8
+                    })
+                });
+
+                const data = await response.json();
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const replyContent = data.choices[0].message.content.trim();
+                    const reply = {
+                        nickname: '好友', // 实际可根据通讯录随机选一个
+                        content: replyContent,
+                        time: Date.now()
+                    };
+                    moment.comments.push(reply);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    renderMoments();
+                }
+            } catch (e) {
+                console.error("Moment API Reply Error:", e);
+            } finally {
+                if (chatStatus) {
+                    chatStatus.textContent = '';
+                    chatStatus.classList.remove('typing-status');
+                }
+            }
         }
 
         function showMomentContextMenu(item, pos) {
@@ -491,10 +587,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     renderMoments();
                 }
             } else if (action === 'edit') {
-                const modal = document.getElementById('momentEditModal');
-                const input = document.getElementById('momentEditTextInput');
-                input.value = item.content;
-                modal.classList.add('active');
+                // 3.长按朋友圈之后点击编辑进入朋友圈编辑页面。
+                openMomentsEdit();
+                document.getElementById('momentTextInput').value = item.content;
+                momentImages = JSON.parse(JSON.stringify(item.images || []));
+                renderEditImages();
+                updatePostBtnState();
+                currentEditingMomentId = item.id;
             } else if (action === 'repost') {
                 if (confirm('确定要重发这条朋友圈吗？')) {
                     // 删除旧的
@@ -1009,54 +1108,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
         }
         
-        // 图标配置
-        const iconConfig = [
-            { id: 'avatar1', name: '头像1', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
-            { id: 'avatar2', name: '头像2', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" },
-            { id: 'illustration', name: '插画', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E" },
-            { id: 'app1', name: '微信', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2307c160'%3E%3Cpath d='M12 3C7.58 3 4 6.13 4 10c0 2.21 1.15 4.18 2.94 5.37L6 18l3.12-1.56c.9.36 1.88.56 2.88.56 4.42 0 8-3.13 8-7s-3.58-7-8-7z'/%3E%3C/svg%3E" },
-            { id: 'app2', name: '小游戏', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9800'%3E%3Cpath d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
-            { id: 'app3', name: '世界书', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E" },
-            { id: 'app4', name: '网易云音乐', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e91e63'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E" },
-            { id: 'dock1', name: '电话', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234caf50'%3E%3Cpath d='M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z'/%3E%3C/svg%3E" },
-            { id: 'dock2', name: '联系人', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196f3'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" },
-            { id: 'dock3', name: '主题', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239c27b0'%3E%3Cpath d='M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" },
-            { id: 'dock4', name: '设置', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23607d8b'%3E%3Cpath d='M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/%3E%3C/svg%3E" },
-            { id: 'accountAvatarImg', name: '账号头像', default: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" }
-        ];
-        
-        // 加载保存的图标和普通图片
-        async function loadSavedIcons() {
-            // 先应用默认图标，防止显示为空
-            iconConfig.forEach(icon => {
-                const el = document.getElementById(icon.id);
-                if (el && icon.default) {
-                    el.src = icon.default;
-                }
-            });
-
-            try {
-                const images = await dbGetAll("icons");
-                images.forEach((img) => {
-                    const el = document.getElementById(img.id);
-                    if (el && img.src) {
-                        el.src = img.src;
-                    }
-                });
-            } catch (e) {
-                console.error("Failed to load images:", e);
-            }
-        }
-
-        // 保存图片
-        async function saveImage(id, src) {
-            try {
-                await dbPut("icons", { id: id, src: src });
-            } catch (e) {
-                console.error("Failed to save image:", e);
-                alert("保存图片失败");
-            }
-        }
 
         // 更新时间
         function updateTime() {
@@ -1394,7 +1445,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
         }
 
-        // 更改图片
+        // 更改图片 (仅保留插画和朋友圈背景修改功能)
         function changeImage(imageId) {
             currentImageId = imageId;
             document.getElementById('urlInputContainer').style.display = 'none';
@@ -1411,16 +1462,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const src = e.target.result;
-                    document.getElementById(currentImageId).src = src;
-                    
-                    // 保存图片设置
-                    saveImage(currentImageId, src);
-                    
-                    // 如果在图标设置页面，刷新列表预览
-                    if (document.getElementById('iconPage').style.display === 'flex') {
-                        renderIconList();
-                    }
-                    
+                    const el = document.getElementById(currentImageId);
+                    if (el) el.src = src;
                     closeModal();
                 };
                 reader.readAsDataURL(file);
@@ -1435,16 +1478,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function confirmUrl() {
             const url = document.getElementById('urlInput').value;
             if (url.trim()) {
-                document.getElementById(currentImageId).src = url;
-                
-                // 保存图片设置
-                saveImage(currentImageId, url);
-                
-                // 如果在图标设置页面，刷新列表预览
-                if (document.getElementById('iconPage').style.display === 'flex') {
-                    renderIconList();
-                }
-                
+                const el = document.getElementById(currentImageId);
+                if (el) el.src = url;
                 closeModal();
             }
         }
@@ -1526,18 +1561,15 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             // 同步账号信息显示
             const nickname = document.getElementById('txt-account-nickname').textContent;
             const phone = document.getElementById('txt-account-phone').textContent;
-            const avatarSrc = document.getElementById('accountAvatarImg').src;
             
             const infoNickname = document.getElementById('info-nickname');
             const infoPhone = document.getElementById('info-phone');
-            const infoAvatar = document.getElementById('accountInfoAvatarPreview');
             const infoMimi = document.getElementById('info-mimi-id');
             const infoCountry = document.getElementById('info-country');
             const infoLocation = document.getElementById('info-location');
 
             if (infoNickname) infoNickname.textContent = nickname === '请输入昵称' ? '未设置' : nickname;
             if (infoPhone) infoPhone.textContent = phone === '请输入手机号' ? '未设置' : phone;
-            if (infoAvatar) infoAvatar.src = avatarSrc;
             
             // 使用持久化 Mimi ID
             if (infoMimi) {
@@ -2172,7 +2204,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 filteredFriends.forEach(friend => {
                     contactHtml += `
                         <div class="wechat-contact-item" onclick="openChat(${friend.id})">
-                            <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
                             <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                         </div>
                     `;
@@ -2350,7 +2381,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             updateBattery();
             
             // 填充表单数据
-            document.getElementById('newContactAvatar').src = contact.avatar || '';
             document.getElementById('newContactName').value = contact.name || '';
             document.getElementById('newContactNickname').value = contact.nickname || '';
             document.getElementById('newContactNetName').value = contact.netName || '';
@@ -2464,7 +2494,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const wechat = document.getElementById('newContactWechat').value.trim();
             const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
-            const avatar = document.getElementById('newContactAvatar').src;
 
             if (!name) {
                 alert('请输入真名');
@@ -2482,7 +2511,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     if (contact) {
                         contact.name = name;
                         contact.phone = wechat || nickname || netName || '未设置';
-                        contact.avatar = avatar || '';
                         contact.nickname = nickname;
                         contact.netName = netName;
                         contact.wechat = wechat;
@@ -2495,7 +2523,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         id: Date.now(),
                         name: name,
                         phone: wechat || nickname || netName || '未设置',
-                        avatar: avatar || '',
                         nickname: nickname,
                         netName: netName,
                         wechat: wechat,
@@ -2687,12 +2714,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function renderWechatMePage() {
             document.getElementById('wechatMeNickname').textContent = wechatUserInfo.nickname;
             document.getElementById('wechatMeID').textContent = '微信号：' + wechatUserInfo.wechatId;
-            document.getElementById('wechatMeAvatar').src = wechatUserInfo.avatar;
         }
 
         function openPersonalInfo() {
             document.getElementById('personalInfoContainer').style.display = 'flex';
-            document.getElementById('editWechatAvatar').src = wechatUserInfo.avatar;
             document.getElementById('editWechatNickname').textContent = wechatUserInfo.nickname;
             document.getElementById('editWechatWechatId').textContent = wechatUserInfo.wechatId;
             document.getElementById('editWechatPhone').textContent = wechatUserInfo.phone;
@@ -2843,12 +2868,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 // 标记为已卸载
                 localStorage.setItem('wechat_app_uninstalled', 'true');
                 
-                // 立即隐藏主屏幕上的图标
-                const wechatApp = document.getElementById('app1');
-                if (wechatApp && wechatApp.parentElement) {
-                    wechatApp.parentElement.style.display = 'none';
-                }
-
                 // 清除所有相关的本地存储
                 localStorage.removeItem('wechat_user_info');
                 localStorage.removeItem('wechat_chat_list');
@@ -2981,42 +3000,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             });
         }
 
-        function changeWechatAvatar() {
-            currentImageId = 'editWechatAvatar';
-            const originalConfirmUrl = window.confirmUrl;
-            
-            // 临时重写确认函数以处理微信头像
-            window.confirmUrl = function() {
-                const url = document.getElementById('urlInput').value.trim();
-                if (url) {
-                    wechatUserInfo.avatar = url;
-                    document.getElementById('editWechatAvatar').src = url;
-                    saveWechatUserInfo();
-                    closeModal();
-                }
-                window.confirmUrl = originalConfirmUrl; // 恢复
-            };
-
-            const originalHandleFileSelect = window.handleFileSelect;
-            window.handleFileSelect = function(event) {
-                const file = event.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const src = e.target.result;
-                        wechatUserInfo.avatar = src;
-                        document.getElementById('editWechatAvatar').src = src;
-                        saveWechatUserInfo();
-                        closeModal();
-                    };
-                    reader.readAsDataURL(file);
-                }
-                window.handleFileSelect = originalHandleFileSelect; // 恢复
-            };
-
-            document.getElementById('urlInputContainer').style.display = 'none';
-            document.getElementById('imageModal').classList.add('active');
-        }
 
         function editWechatInfo(field, label) {
             const originalConfirmText = window.confirmText;
@@ -3806,69 +3789,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             renderChatList();
         }
 
-        function changeChatInfoAvatar() {
-            currentImageId = 'chatInfoAvatar';
-            const originalConfirmUrl = window.confirmUrl;
-            
-            window.confirmUrl = function() {
-                const url = document.getElementById('urlInput').value.trim();
-                if (url && currentChatFriendId) {
-                    const friend = chatList.find(f => f.id === currentChatFriendId);
-                    if (friend) {
-                        friend.avatar = url;
-                        document.getElementById('chatInfoAvatar').src = url;
-                        
-                        // 同步更新联系人头像
-                        const contact = contacts.find(c => c.id === friend.contactId);
-                        if (contact) {
-                            contact.avatar = url;
-                            saveContactsToStorage();
-                            renderContactsList();
-                        }
-                        
-                        saveChatListToStorage();
-                        renderChatList();
-                    }
-                    closeModal();
-                }
-                window.confirmUrl = originalConfirmUrl;
-            };
-
-            const originalHandleFileSelect = window.handleFileSelect;
-            window.handleFileSelect = function(event) {
-                const file = event.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const src = e.target.result;
-                        if (currentChatFriendId) {
-                            const friend = chatList.find(f => f.id === currentChatFriendId);
-                            if (friend) {
-                                friend.avatar = src;
-                                document.getElementById('chatInfoAvatar').src = src;
-                                
-                                // 同步更新联系人头像
-                                const contact = contacts.find(c => c.id === friend.contactId);
-                                if (contact) {
-                                    contact.avatar = src;
-                                    saveContactsToStorage();
-                                    renderContactsList();
-                                }
-                                
-                                saveChatListToStorage();
-                                renderChatList();
-                            }
-                        }
-                        closeModal();
-                    };
-                    reader.readAsDataURL(file);
-                }
-                window.handleFileSelect = originalHandleFileSelect;
-            };
-
-            document.getElementById('urlInputContainer').style.display = 'none';
-            document.getElementById('imageModal').classList.add('active');
-        }
 
         function clearCurrentChatHistory() {
             if (!currentChatFriendId) return;
@@ -4469,8 +4389,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const container = document.getElementById('chatMessages');
             const history = chatHistories[currentChatFriendId] || [];
             const friend = chatList.find(f => f.id === currentChatFriendId);
-            const userAvatar = wechatUserInfo.avatar || document.getElementById('accountAvatarImg').src || DEFAULT_AVATAR;
-            const friendAvatar = friend ? (friend.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
 
             container.innerHTML = '';
             let lastShowTime = 0;
@@ -4519,10 +4437,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     checkbox.classList.add('checked');
                 }
 
-                const avatar = document.createElement('img');
-                avatar.className = 'msg-avatar';
-                avatar.src = msg.type === 'sent' ? userAvatar : friendAvatar;
-                
                 const bubble = document.createElement('div');
                 if (msg.isMergedForward) {
                     bubble.className = 'msg-bubble merged-forward-bubble';
@@ -4610,10 +4524,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 if (msg.type === 'sent') {
                     row.appendChild(checkbox);
                     row.appendChild(bubble);
-                    row.appendChild(avatar);
                 } else {
                     row.appendChild(checkbox);
-                    row.appendChild(avatar);
                     row.appendChild(bubble);
                 }
                 
@@ -5326,14 +5238,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             saveUIState();
         }
 
-        function openIconPage() {
-            document.getElementById('themeMainMenu').style.display = 'none';
-            document.getElementById('iconPage').style.display = 'flex';
-            document.querySelector('#themeContainer .theme-title').textContent = '图标设置';
-            document.querySelector('#themeContainer .theme-back').onclick = showThemeMainMenu;
-            renderIconList();
-            saveUIState();
-        }
 
         function openFontPage() {
             document.getElementById('themeMainMenu').style.display = 'none';
@@ -5343,47 +5247,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             renderFontGrid();
             saveUIState();
         }
-
-        function renderIconList() {
-            const list = document.getElementById('iconList');
-            list.innerHTML = '';
-            
-            iconConfig.forEach(icon => {
-                const currentSrc = document.getElementById(icon.id).src;
-                
-                const item = document.createElement('div');
-                item.className = 'icon-setting-item';
-                item.onclick = () => changeImage(icon.id);
-                
-                item.innerHTML = `
-                    <div class="icon-setting-info">
-                        <img src="${currentSrc}" class="icon-preview" alt="${icon.name}">
-                        <span class="icon-name">${icon.name}</span>
-                    </div>
-                    <span class="icon-arrow">〉</span>
-                `;
-                
-                list.appendChild(item);
-            });
-        }
-
-        async function resetIcons(silent = false) {
-            if (silent || confirm('确定要重置所有图标为默认吗？')) {
-                try {
-                    await dbClear('icons');
-                    iconConfig.forEach(icon => {
-                        const el = document.getElementById(icon.id);
-                        if (el) el.src = icon.default || '';
-                    });
-                    if (document.getElementById('themeContainer').style.display === 'flex') {
-                        renderIconList();
-                    }
-                } catch (e) {
-                    console.error("Failed to reset icons:", e);
-                }
-            }
-        }
-
 
         // 壁纸管理
         let wallpapers = []; // 存储对象 {id, src}
@@ -6093,9 +5956,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 // 创建存储对象
                 if (!db.objectStoreNames.contains('wallpapers')) {
                     db.createObjectStore('wallpapers', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('icons')) {
-                    db.createObjectStore('icons', { keyPath: 'id' });
                 }
                 if (!db.objectStoreNames.contains('fonts')) {
                     db.createObjectStore('fonts', { keyPath: 'name' });
@@ -7614,7 +7474,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 await dbPromise; // 等待 DB 初始化
                 await loadApiConfigs(); // 加载 API 配置
                 await loadWallpapers(); // 加载壁纸设置
-                await loadSavedIcons(); // 加载图标设置
                 await loadFonts(); // 加载字体设置
                 await loadThemes(); // 加载主题列表
                 loadUIState();

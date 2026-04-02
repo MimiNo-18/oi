@@ -33,6 +33,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
             document.body.classList.add('moments-active');
+
+            // 点击空白区域隐藏弹窗和评论框
+            container.onclick = (e) => {
+                if (e.target.id === 'momentsContainer' || e.target.id === 'momentsList') {
+                    hideMomentPopups();
+                }
+            };
             
             // 初始化个人信息
             const me = wechatUserInfo;
@@ -325,7 +332,14 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         ${item.comments.map((c, cIdx) => {
                             // 严格按照格式：网名 回复 备注：回复内容
                             let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
-                            return `<div class="moment-comment-item" onclick="handleCommentClick(${item.id}, ${cIdx}, event)">
+                            return `<div class="moment-comment-item" 
+                                onclick="handleCommentClick(${item.id}, ${cIdx}, event)"
+                                ontouchstart="window.commentLongPressTimer = setTimeout(() => { if(confirm('是否删除评论？')){ const m = momentsData.find(mo => mo.id === ${item.id}); if(m){ m.comments.splice(${cIdx}, 1); localStorage.setItem('mimi_moments', JSON.stringify(momentsData)); renderMoments(); } } }, 700)"
+                                ontouchend="clearTimeout(window.commentLongPressTimer)"
+                                ontouchmove="clearTimeout(window.commentLongPressTimer)"
+                                onmousedown="window.commentLongPressTimer = setTimeout(() => { if(confirm('是否删除评论？')){ const m = momentsData.find(mo => mo.id === ${item.id}); if(m){ m.comments.splice(${cIdx}, 1); localStorage.setItem('mimi_moments', JSON.stringify(momentsData)); renderMoments(); } } }, 700)"
+                                onmouseup="clearTimeout(window.commentLongPressTimer)"
+                                onmouseleave="clearTimeout(window.commentLongPressTimer)">
                                 <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
                             </div>`;
                         }).join('')}
@@ -380,8 +394,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 currentCommentIndex = commentIdx;
                 document.getElementById('commentActionModal').classList.add('active');
             } else {
-                // 联系人的评论 -> 回复
-                showMomentCommentInput(momentId, event, comment.nickname);
+                // 联系人的评论 -> 回复 -> 立刻调用API
+                handleMomentContactReply(momentId, event);
             }
         }
 
@@ -416,7 +430,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const btn = event.currentTarget;
             
             // 检查是否已经在当前这条动态且显示中
-            const isShownOnSame = currentMomentId === id && popup.style.display === 'flex' && popup.parentElement === btn.closest('.moment-footer');
+            const isShownOnSame = currentMomentId === id && popup.style.display === 'flex';
 
             if (isShownOnSame) {
                 popup.style.display = 'none';
@@ -425,11 +439,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
 
             currentMomentId = id;
-            
-            // 将弹窗插入到当前按钮所在的 footer 中
             const footer = btn.closest('.moment-footer');
             footer.appendChild(popup);
-            
             popup.style.display = 'flex';
             
             // 设置点赞按钮文本
@@ -623,8 +634,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const contextMenu = document.getElementById('momentContextMenu');
             if (contextMenu) contextMenu.style.display = 'none';
             const inputBar = document.getElementById('momentCommentInputBar');
-            if (inputBar && !inputBar.contains(document.activeElement)) {
-                // inputBar.classList.remove('active'); // 暂时不自动隐藏输入框，除非发送或取消
+            if (inputBar) {
+                inputBar.style.display = 'none';
             }
         }
 

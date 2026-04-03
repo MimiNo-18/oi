@@ -129,20 +129,18 @@
     <div class="modal" id="imageModal">
         <div class="modal-content">
             <div class="modal-title">更改图片</div>
-            <div class="image-options">
+            <div class="image-options" id="modalMainButtons">
                 <button class="image-option-btn" onclick="selectFromAlbum()">从相册选择</button>
                 <button class="image-option-btn" onclick="showUrlInput()">使用URL链接</button>
+                <button class="modal-btn cancel" type="button" onclick="closeModal()" style="width: 100%; margin-top: 0;">关闭</button>
             </div>
-            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/gif" onchange="handleFileSelect(event)">
             <div id="urlInputContainer" style="display: none; margin-top: 10px;">
                 <input type="text" class="modal-input" id="urlInput" placeholder="请输入图片URL">
                 <div class="modal-buttons">
-                    <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+                    <button class="modal-btn cancel" onclick="hideUrlInput()">取消</button>
                     <button class="modal-btn confirm" type="button" onclick="confirmUrl()">确定</button>
                 </div>
-            </div>
-            <div class="modal-buttons" style="margin-top: 15px;">
-                <button class="modal-btn cancel" type="button" onclick="closeModal()">关闭</button>
             </div>
         </div>
     </div>
@@ -1721,42 +1719,42 @@
         <div class="settings-group">
             <div class="settings-item" onclick="openAccount()">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">🔑</div>
+                    <div class="settings-item-icon" id="set-icon-account">🔑</div>
                     <span class="settings-item-label">账号</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
             <div class="settings-item" onclick="openDisplaySettings()">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">📱</div>
+                    <div class="settings-item-icon" id="set-icon-display">📱</div>
                     <span class="settings-item-label">显示</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
             <div class="settings-item" onclick="openApiConfig()">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">⚙️</div>
+                    <div class="settings-item-icon" id="set-icon-api">⚙️</div>
                     <span class="settings-item-label">API配置</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
             <div class="settings-item" onclick="alert('安全设置功能开发中')">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">🛡️</div>
+                    <div class="settings-item-icon" id="set-icon-security">🛡️</div>
                     <span class="settings-item-label">安全</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
             <div class="settings-item" onclick="alert('关于MimiPhone')">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">ℹ️</div>
+                    <div class="settings-item-icon" id="set-icon-about">ℹ️</div>
                     <span class="settings-item-label">关于</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
             <div class="settings-item" onclick="updateApp()">
                 <div class="settings-item-content">
-                    <div class="settings-item-icon">🔄</div>
+                    <div class="settings-item-icon" id="set-icon-update">🔄</div>
                     <span class="settings-item-label">更新</span>
                 </div>
                 <span class="settings-item-arrow">〉</span>
@@ -2088,7 +2086,7 @@
         <div class="theme-content" id="themeMainMenu">
             <div class="theme-menu-item" onclick="openMinePage()">
                 <div class="theme-menu-content">
-                    <div class="theme-menu-icon">👤</div>
+                    <div class="theme-menu-icon" id="theme-menu-mine">👤</div>
                     <span class="theme-menu-title">我的</span>
                 </div>
                 <span class="theme-menu-arrow">〉</span>
@@ -2096,22 +2094,43 @@
             
             <div class="theme-menu-item" onclick="openWallpaperPage()">
                 <div class="theme-menu-content">
-                    <div class="theme-menu-icon">🖼️</div>
+                    <div class="theme-menu-icon" id="theme-menu-wallpaper">🖼️</div>
                     <span class="theme-menu-title">壁纸</span>
                 </div>
                 <span class="theme-menu-arrow">〉</span>
             </div>
             <div class="theme-menu-item" onclick="openIconPage()">
                 <div class="theme-menu-content">
-                    <div class="theme-menu-icon">🎨</div>
+                    <div class="theme-menu-icon" id="theme-menu-icon">🎨</div>
                     <span class="theme-menu-title">图标</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            <div class="theme-menu-item" onclick="openIcon2Page()">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon" id="theme-menu-icon2">🖼️</div>
+                    <span class="theme-menu-title">图标2</span>
                 </div>
                 <span class="theme-menu-arrow">〉</span>
             </div>
             <div class="theme-menu-item" onclick="openFontPage()">
                 <div class="theme-menu-content">
-                    <div class="theme-menu-icon">🔤</div>
+                    <div class="theme-menu-icon" id="theme-menu-font">🔤</div>
                     <span class="theme-menu-title">字体</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            <div class="theme-menu-item" onclick="alert('美化功能开发中')">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon" id="theme-menu-beautify">✨</div>
+                    <span class="theme-menu-title">美化</span>
+                </div>
+                <span class="theme-menu-arrow">〉</span>
+            </div>
+            <div class="theme-menu-item" onclick="alert('组件功能开发中')">
+                <div class="theme-menu-content">
+                    <div class="theme-menu-icon" id="theme-menu-component">🧩</div>
+                    <span class="theme-menu-title">组件</span>
                 </div>
                 <span class="theme-menu-arrow">〉</span>
             </div>
@@ -2149,6 +2168,14 @@
                 <!-- 图标列表动态生成 -->
             </div>
             <button class="delete-bottom-btn" type="button" onclick="resetIcons()">重置默认图标</button>
+        </div>
+
+        <!-- 图标2设置页面 -->
+        <div class="theme-content" id="icon2Page" style="display: none;">
+            <div class="icon-list" id="icon2List" style="padding-bottom: 80px;">
+                <!-- 按钮图标列表动态生成 -->
+            </div>
+            <button class="delete-bottom-btn" type="button" onclick="resetButtonIcons()">重置默认按钮图标</button>
         </div>
     </div>
 

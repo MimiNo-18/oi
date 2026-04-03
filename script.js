@@ -1207,6 +1207,23 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             { id: 'dock4', name: '设置' },
             { id: 'accountAvatarImg', name: '账号头像' }
         ];
+
+        // 按钮图标配置
+        const btnIconConfig = [
+            { id: 'theme-menu-mine', name: '主题-我的', default: '👤' },
+            { id: 'theme-menu-wallpaper', name: '主题-壁纸', default: '🖼️' },
+            { id: 'theme-menu-icon', name: '主题-图标', default: '🎨' },
+            { id: 'theme-menu-icon2', name: '主题-图标2', default: '🖼️' },
+            { id: 'theme-menu-font', name: '主题-字体', default: '🔤' },
+            { id: 'theme-menu-beautify', name: '主题-美化', default: '✨' },
+            { id: 'theme-menu-component', name: '主题-组件', default: '🧩' },
+            { id: 'set-icon-account', name: '设置-账号', default: '🔑' },
+            { id: 'set-icon-display', name: '设置-显示', default: '📱' },
+            { id: 'set-icon-api', name: '设置-API配置', default: '⚙️' },
+            { id: 'set-icon-security', name: '设置-安全', default: '🛡️' },
+            { id: 'set-icon-about', name: '设置-关于', default: 'ℹ️' },
+            { id: 'set-icon-update', name: '设置-更新', default: '🔄' }
+        ];
         
         // 加载保存的图标和普通图片
         async function loadSavedIcons() {
@@ -1216,6 +1233,20 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     const el = document.getElementById(img.id);
                     if (el && img.src) {
                         el.src = img.src;
+                    }
+                });
+                
+                // 加载按钮图标
+                const btnIcons = await dbGetAll("button_icons");
+                btnIcons.forEach((icon) => {
+                    const el = document.getElementById(icon.id);
+                    if (el && icon.content) {
+                        if (icon.content.startsWith('data:image/') || icon.content.startsWith('http')) {
+                            el.innerHTML = `<img src="${icon.content}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+                            el.style.overflow = 'hidden';
+                        } else {
+                            el.textContent = icon.content;
+                        }
                     }
                 });
             } catch (e) {
@@ -1582,18 +1613,28 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
+            if (file && allowedTypes.includes(file.type)) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const src = e.target.result;
-                    document.getElementById(currentImageId).src = src;
+                    const el = document.getElementById(currentImageId);
+                    if (el.tagName === 'IMG') {
+                        el.src = src;
+                        saveImage(currentImageId, src);
+                    } else {
+                        // 处理按钮图标 (div)
+                        el.innerHTML = `<img src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+                        el.style.overflow = 'hidden';
+                        saveButtonIcon(currentImageId, src);
+                    }
                     
-                    // 保存图片设置
-                    saveImage(currentImageId, src);
-                    
-                    // 如果在图标设置页面，刷新列表预览
+                    // 刷新列表预览
                     if (document.getElementById('iconPage').style.display === 'flex') {
                         renderIconList();
+                    }
+                    if (document.getElementById('icon2Page').style.display === 'flex') {
+                        renderIcon2List();
                     }
                     
                     closeModal();
@@ -1604,20 +1645,36 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
         function showUrlInput() {
             document.getElementById('urlInputContainer').style.display = 'block';
+            document.getElementById('modalMainButtons').style.display = 'none';
             document.getElementById('urlInput').focus();
         }
 
+        function hideUrlInput() {
+            document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('modalMainButtons').style.display = 'flex';
+            document.getElementById('urlInput').value = '';
+        }
+
         function confirmUrl() {
-            const url = document.getElementById('urlInput').value;
-            if (url.trim()) {
-                document.getElementById(currentImageId).src = url;
+            const url = document.getElementById('urlInput').value.trim();
+            if (url) {
+                const el = document.getElementById(currentImageId);
+                if (el.tagName === 'IMG') {
+                    el.src = url;
+                    saveImage(currentImageId, url);
+                } else {
+                    // 处理按钮图标 (div)
+                    el.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+                    el.style.overflow = 'hidden';
+                    saveButtonIcon(currentImageId, url);
+                }
                 
-                // 保存图片设置
-                saveImage(currentImageId, url);
-                
-                // 如果在图标设置页面，刷新列表预览
+                // 刷新列表预览
                 if (document.getElementById('iconPage').style.display === 'flex') {
                     renderIconList();
+                }
+                if (document.getElementById('icon2Page').style.display === 'flex') {
+                    renderIcon2List();
                 }
                 
                 closeModal();
@@ -1628,6 +1685,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('textModal').classList.remove('active');
             document.getElementById('imageModal').classList.remove('active');
             document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('modalMainButtons').style.display = 'flex';
             document.getElementById('urlInput').value = '';
         }
 
@@ -5486,6 +5544,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             document.getElementById('themeMainMenu').style.display = 'flex';
             document.getElementById('wallpaperPage').style.display = 'none';
             document.getElementById('iconPage').style.display = 'none';
+            document.getElementById('icon2Page').style.display = 'none';
             document.getElementById('fontPage').style.display = 'none';
             document.querySelector('#themeContainer .theme-title').textContent = '主题设置';
             document.querySelector('#themeContainer .theme-back').onclick = closeThemePage;
@@ -5507,6 +5566,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             document.querySelector('#themeContainer .theme-title').textContent = '图标设置';
             document.querySelector('#themeContainer .theme-back').onclick = showThemeMainMenu;
             renderIconList();
+            saveUIState();
+        }
+
+        function openIcon2Page() {
+            document.getElementById('themeMainMenu').style.display = 'none';
+            document.getElementById('icon2Page').style.display = 'flex';
+            document.querySelector('#themeContainer .theme-title').textContent = '图标2设置';
+            document.querySelector('#themeContainer .theme-back').onclick = showThemeMainMenu;
+            renderIcon2List();
             saveUIState();
         }
 
@@ -5540,6 +5608,63 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 
                 list.appendChild(item);
             });
+        }
+
+        function renderIcon2List() {
+            const list = document.getElementById('icon2List');
+            list.innerHTML = '';
+            
+            btnIconConfig.forEach(icon => {
+                const el = document.getElementById(icon.id);
+                const currentContent = el.innerHTML;
+                
+                const item = document.createElement('div');
+                item.className = 'icon-setting-item';
+                item.onclick = () => changeButtonIcon(icon.id);
+                
+                item.innerHTML = `
+                    <div class="icon-setting-info">
+                        <div class="theme-menu-icon" style="width: 40px; height: 40px; margin-right: 15px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden;">${currentContent}</div>
+                        <span class="icon-name">${icon.name}</span>
+                    </div>
+                    <span class="icon-arrow">〉</span>
+                `;
+                
+                list.appendChild(item);
+            });
+        }
+
+        function changeButtonIcon(id) {
+            currentImageId = id;
+            document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('modalMainButtons').style.display = 'flex';
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        async function saveButtonIcon(id, content) {
+            try {
+                await dbPut("button_icons", { id: id, content: content });
+            } catch (e) {
+                console.error("Failed to save button icon:", e);
+                alert("保存图标失败");
+            }
+        }
+
+        async function resetButtonIcons(silent = false) {
+            if (silent || confirm('确定要重置所有按钮图标为默认吗？')) {
+                try {
+                    await dbClear('button_icons');
+                    btnIconConfig.forEach(icon => {
+                        const el = document.getElementById(icon.id);
+                        if (el) el.textContent = icon.default;
+                    });
+                    if (document.getElementById('icon2Page').style.display === 'flex') {
+                        renderIcon2List();
+                    }
+                } catch (e) {
+                    console.error("Failed to reset button icons:", e);
+                }
+            }
         }
 
         async function resetIcons(silent = false) {
@@ -6247,7 +6372,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
         // IndexedDB 封装
         const DB_NAME = 'MimiPhoneDB';
-        const DB_VERSION = 2; // 提升版本号以强制触发存储表更新
+        const DB_VERSION = 3; // 提升版本号以强制触发存储表更新
         let db;
 
         const dbPromise = new Promise((resolve, reject) => {
@@ -6271,6 +6396,9 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 }
                 if (!db.objectStoreNames.contains('icons')) {
                     db.createObjectStore('icons', { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains('button_icons')) {
+                    db.createObjectStore('button_icons', { keyPath: 'id' });
                 }
                 if (!db.objectStoreNames.contains('fonts')) {
                     db.createObjectStore('fonts', { keyPath: 'name' });
@@ -7238,6 +7366,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 state.activeContainer = 'themeContainer';
                 if (document.getElementById('wallpaperPage').style.display === 'flex') state.themePage = 'wallpaperPage';
                 else if (document.getElementById('iconPage').style.display === 'flex') state.themePage = 'iconPage';
+                else if (document.getElementById('icon2Page').style.display === 'flex') state.themePage = 'icon2Page';
                 else if (document.getElementById('fontPage').style.display === 'flex') state.themePage = 'fontPage';
                 else state.themePage = 'themeMainMenu';
             }
@@ -7368,6 +7497,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openThemePage();
                 if (state.themePage === 'wallpaperPage') openWallpaperPage();
                 else if (state.themePage === 'iconPage') openIconPage();
+                else if (state.themePage === 'icon2Page') openIcon2Page();
                 else if (state.themePage === 'fontPage') openFontPage();
             }
             else if (state.activeContainer === 'mineContainer') {

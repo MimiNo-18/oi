@@ -4728,6 +4728,28 @@
     flex-direction: column;
 }
 
+.world-book-delete-btn {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fa5151;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 100;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(250, 81, 81, 0.4);
+}
+
+.world-book-card.show-delete .world-book-delete-btn,
+.book-item-row.show-delete .world-book-delete-btn {
+    display: block;
+}
+
 /* 服务页面样式 */
 .service-nav-bar {
     display: flex;

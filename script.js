@@ -7441,6 +7441,13 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             openWorldBookEdit(newBook.id);
         }
 
+        function deleteWorldBook(id, event) {
+            event.stopPropagation();
+            worldBooks = worldBooks.filter(b => b.id !== id);
+            saveWorldBooks();
+            renderWorldBookList();
+        }
+
         function renderWorldBookList() {
             const list = document.getElementById('worldBookList');
             const empty = document.getElementById('worldBookEmptyState');
@@ -7458,18 +7465,18 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             worldBooks.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'world-book-card';
+                card.style.position = 'relative';
                 
-                // 添加长按删除逻辑
+                // 添加长按显示删除按钮逻辑
                 let longPressTimer;
-                let isLongPress = false;
                 const startPress = (e) => {
-                    isLongPress = false;
                     longPressTimer = setTimeout(() => {
-                        isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        worldBooks = worldBooks.filter(b => b.id !== book.id);
-                        saveWorldBooks();
-                        renderWorldBookList();
+                        // 隐藏其他已显示的删除按钮
+                        document.querySelectorAll('.world-book-card.show-delete, .book-item-row.show-delete').forEach(el => {
+                            if (el !== card) el.classList.remove('show-delete');
+                        });
+                        card.classList.add('show-delete');
                     }, 800);
                 };
                 const cancelPress = () => {
@@ -7484,9 +7491,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 card.addEventListener('mouseleave', cancelPress);
 
                 card.onclick = (e) => {
-                    if (isLongPress) {
-                        e.preventDefault();
-                        e.stopPropagation();
+                    if (card.classList.contains('show-delete')) {
+                        if (!e.target.classList.contains('world-book-delete-btn')) {
+                            card.classList.remove('show-delete');
+                        }
                         return;
                     }
                     openWorldBookEdit(book.id);
@@ -7495,6 +7503,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 card.innerHTML = `
                     <div class="world-book-name">${book.name}</div>
                     <div class="world-book-desc">${book.description || '暂无简介'}</div>
+                    <button class="world-book-delete-btn" onclick="deleteWorldBook(${book.id}, event)">是否删除</button>
                 `;
                 list.appendChild(card);
             });
@@ -7571,6 +7580,16 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             openBookItemEdit(newItem.id);
         }
 
+        function deleteBookItem(itemId, event) {
+            event.stopPropagation();
+            const book = worldBooks.find(b => b.id === currentEditingBookId);
+            if (!book) return;
+
+            book.items = book.items.filter(i => i.id !== itemId);
+            saveWorldBooks();
+            renderBookItemsList();
+        }
+
         function renderBookItemsList() {
             const list = document.getElementById('bookItemsList');
             const book = worldBooks.find(b => b.id === currentEditingBookId);
@@ -7581,17 +7600,16 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 const row = document.createElement('div');
                 row.className = 'book-item-row';
                 
-                // 添加长按删除逻辑
+                // 添加长按显示删除按钮逻辑
                 let longPressTimer;
-                let isLongPress = false;
                 const startPress = (e) => {
-                    isLongPress = false;
                     longPressTimer = setTimeout(() => {
-                        isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        book.items = book.items.filter(i => i.id !== item.id);
-                        saveWorldBooks();
-                        renderBookItemsList();
+                        // 隐藏其他已显示的删除按钮
+                        document.querySelectorAll('.world-book-card.show-delete, .book-item-row.show-delete').forEach(el => {
+                            if (el !== row) el.classList.remove('show-delete');
+                        });
+                        row.classList.add('show-delete');
                     }, 800);
                 };
                 const cancelPress = () => {
@@ -7606,9 +7624,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 row.addEventListener('mouseleave', cancelPress);
 
                 row.onclick = (e) => {
-                    if (isLongPress) {
-                        e.preventDefault();
-                        e.stopPropagation();
+                    if (row.classList.contains('show-delete')) {
+                        if (!e.target.classList.contains('world-book-delete-btn')) {
+                            row.classList.remove('show-delete');
+                        }
                         return;
                     }
                     openBookItemEdit(item.id);
@@ -7618,6 +7637,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     <div class="book-item-content-left" style="display: flex; flex-direction: column; flex: 1; position: relative;">
                         <div class="book-item-name">${item.name}</div>
                         <div class="book-item-remark" style="font-size: 11px; color: #b2b2b2; text-align: right; margin-right: 10px; min-height: 12px; margin-top: 4px;">${item.remark || ''}</div>
+                        <button class="world-book-delete-btn" onclick="deleteBookItem(${item.id}, event)">是否删除</button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation()">
                         <label class="switch">

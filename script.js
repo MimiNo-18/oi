@@ -7483,6 +7483,9 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             const list = document.getElementById('worldBookList');
             const empty = document.getElementById('worldBookEmptyState');
             
+            // 彻底清除所有卡片容器
+            list.innerHTML = '';
+
             if (worldBooks.length === 0) {
                 list.style.display = 'none';
                 empty.style.display = 'flex';
@@ -7491,7 +7494,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
             list.style.display = 'grid';
             empty.style.display = 'none';
-            list.innerHTML = '';
 
             worldBooks.forEach(book => {
                 const card = document.createElement('div');
@@ -7819,7 +7821,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 await loadSavedIcons(); // 加载图标设置
                 await loadFonts(); // 加载字体设置
                 await loadThemes(); // 加载主题列表
-                loadUIState();
+                // loadUIState(); // 刷新始终回到主页，不加载上一次的状态
                 checkFullscreenPref();
                 loadDisplayExtras();
             } catch (e) {

@@ -7441,11 +7441,42 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             openWorldBookEdit(newBook.id);
         }
 
-        function deleteWorldBook(id, event) {
-            event.stopPropagation();
-            worldBooks = worldBooks.filter(b => b.id !== id);
-            saveWorldBooks();
-            renderWorldBookList();
+        let bookIdToDelete = null;
+        let itemIdToDelete = null;
+
+        function showDeleteWorldBookModal(id) {
+            bookIdToDelete = id;
+            document.getElementById('deleteWorldBookConfirmModal').classList.add('active');
+            document.getElementById('confirmDeleteWorldBookBtn').onclick = () => {
+                worldBooks = worldBooks.filter(b => b.id !== bookIdToDelete);
+                saveWorldBooks();
+                renderWorldBookList();
+                closeDeleteWorldBookConfirmModal();
+            };
+        }
+
+        function closeDeleteWorldBookConfirmModal() {
+            document.getElementById('deleteWorldBookConfirmModal').classList.remove('active');
+            bookIdToDelete = null;
+        }
+
+        function showDeleteBookItemModal(id) {
+            itemIdToDelete = id;
+            document.getElementById('deleteBookItemConfirmModal').classList.add('active');
+            document.getElementById('confirmDeleteBookItemBtn').onclick = () => {
+                const book = worldBooks.find(b => b.id === currentEditingBookId);
+                if (book) {
+                    book.items = book.items.filter(i => i.id !== itemIdToDelete);
+                    saveWorldBooks();
+                    renderBookItemsList();
+                }
+                closeDeleteBookItemConfirmModal();
+            };
+        }
+
+        function closeDeleteBookItemConfirmModal() {
+            document.getElementById('deleteBookItemConfirmModal').classList.remove('active');
+            itemIdToDelete = null;
         }
 
         function renderWorldBookList() {
@@ -7458,7 +7489,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 return;
             }
 
-            list.style.display = 'flex';
+            list.style.display = 'grid';
             empty.style.display = 'none';
             list.innerHTML = '';
 
@@ -7467,16 +7498,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 card.className = 'world-book-card';
                 card.style.position = 'relative';
                 
-                // 添加长按显示删除按钮逻辑
+                // 长按显示删除确认弹窗
                 let longPressTimer;
+                let isLongPress = false;
                 const startPress = (e) => {
+                    isLongPress = false;
                     longPressTimer = setTimeout(() => {
+                        isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        // 隐藏其他已显示的删除按钮
-                        document.querySelectorAll('.world-book-card.show-delete, .book-item-row.show-delete').forEach(el => {
-                            if (el !== card) el.classList.remove('show-delete');
-                        });
-                        card.classList.add('show-delete');
+                        showDeleteWorldBookModal(book.id);
                     }, 800);
                 };
                 const cancelPress = () => {
@@ -7491,19 +7521,13 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 card.addEventListener('mouseleave', cancelPress);
 
                 card.onclick = (e) => {
-                    if (card.classList.contains('show-delete')) {
-                        if (!e.target.classList.contains('world-book-delete-btn')) {
-                            card.classList.remove('show-delete');
-                        }
-                        return;
-                    }
+                    if (isLongPress) return;
                     openWorldBookEdit(book.id);
                 };
 
                 card.innerHTML = `
                     <div class="world-book-name">${book.name}</div>
                     <div class="world-book-desc">${book.description || '暂无简介'}</div>
-                    <button class="world-book-delete-btn" onclick="deleteWorldBook(${book.id}, event)">是否删除</button>
                 `;
                 list.appendChild(card);
             });
@@ -7580,16 +7604,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             openBookItemEdit(newItem.id);
         }
 
-        function deleteBookItem(itemId, event) {
-            event.stopPropagation();
-            const book = worldBooks.find(b => b.id === currentEditingBookId);
-            if (!book) return;
-
-            book.items = book.items.filter(i => i.id !== itemId);
-            saveWorldBooks();
-            renderBookItemsList();
-        }
-
         function renderBookItemsList() {
             const list = document.getElementById('bookItemsList');
             const book = worldBooks.find(b => b.id === currentEditingBookId);
@@ -7600,16 +7614,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 const row = document.createElement('div');
                 row.className = 'book-item-row';
                 
-                // 添加长按显示删除按钮逻辑
+                // 长按显示删除确认弹窗
                 let longPressTimer;
+                let isLongPress = false;
                 const startPress = (e) => {
+                    isLongPress = false;
                     longPressTimer = setTimeout(() => {
+                        isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
-                        // 隐藏其他已显示的删除按钮
-                        document.querySelectorAll('.world-book-card.show-delete, .book-item-row.show-delete').forEach(el => {
-                            if (el !== row) el.classList.remove('show-delete');
-                        });
-                        row.classList.add('show-delete');
+                        showDeleteBookItemModal(item.id);
                     }, 800);
                 };
                 const cancelPress = () => {
@@ -7624,12 +7637,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 row.addEventListener('mouseleave', cancelPress);
 
                 row.onclick = (e) => {
-                    if (row.classList.contains('show-delete')) {
-                        if (!e.target.classList.contains('world-book-delete-btn')) {
-                            row.classList.remove('show-delete');
-                        }
-                        return;
-                    }
+                    if (isLongPress) return;
                     openBookItemEdit(item.id);
                 };
                 
@@ -7637,7 +7645,6 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     <div class="book-item-content-left" style="display: flex; flex-direction: column; flex: 1; position: relative;">
                         <div class="book-item-name">${item.name}</div>
                         <div class="book-item-remark" style="font-size: 11px; color: #b2b2b2; text-align: right; margin-right: 10px; min-height: 12px; margin-top: 4px;">${item.remark || ''}</div>
-                        <button class="world-book-delete-btn" onclick="deleteBookItem(${item.id}, event)">是否删除</button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation()">
                         <label class="switch">

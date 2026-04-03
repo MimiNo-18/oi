@@ -2352,6 +2352,30 @@
         </div>
     </div>
 
+    <!-- 世界书删除确认弹窗 -->
+    <div class="modal" id="deleteWorldBookConfirmModal">
+        <div class="modal-content">
+            <div class="modal-title">提示</div>
+            <div class="confirm-text">是否删除世界书？</div>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="confirmDeleteWorldBookBtn">删除</button>
+                <button class="modal-btn cancel" onclick="closeDeleteWorldBookConfirmModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 世界书条目删除确认弹窗 -->
+    <div class="modal" id="deleteBookItemConfirmModal">
+        <div class="modal-content">
+            <div class="modal-title">提示</div>
+            <div class="confirm-text">是否删除该条目？</div>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="confirmDeleteBookItemBtn">删除</button>
+                <button class="modal-btn cancel" onclick="closeDeleteBookItemConfirmModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 微信切换账号页面 -->
     <div id="wechatAccountSwitchContainer" style="display: none;">
         <div class="wechat-nav-bar" style="background: #fff; border-bottom: none;">

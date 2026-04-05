@@ -286,8 +286,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
             
             if (!editingMomentId && postedId) {
-                // 发布后触发自动评论
-                setTimeout(() => triggerAutoMomentsFeedback(postedId), 3000);
+                // 发布后触发自动互动（点赞+评论）
+                setTimeout(() => triggerAutoMomentsFeedback(postedId), 2000);
             }
 
             momentImages = [];
@@ -298,6 +298,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
         let currentMomentId = null;
         function renderMoments() {
+            // 修正：重绘前将共享的操作弹窗移回容器，防止被 list.innerHTML = '' 销毁
+            const popup = document.getElementById('momentActionPopup');
+            if (popup && popup.parentElement) {
+                document.getElementById('momentsContainer').appendChild(popup);
+                popup.style.display = 'none';
+            }
+
             const list = document.getElementById('momentsList');
             if (!list) return;
             list.innerHTML = '';
@@ -509,81 +516,25 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const moment = momentsData.find(m => m.id === id);
             if (!moment) return;
 
-            // 获取 API 配置
-            const configId = localStorage.getItem('current_api_config_id') || 'default';
-            const configs = await dbGetAll('api_configs');
-            const config = configs.find(c => c.id === configId);
-
-            if (!config || !config.url || !config.key) {
-                alert('请先在设置中配置有效的 API');
-                return;
-            }
-
             // 选取一个随机联系人作为回复者
             if (chatList.length === 0) {
                 alert('请先添加好友以进行联系人回复');
                 return;
             }
             const randomFriend = chatList[Math.floor(Math.random() * chatList.length)];
-            const contact = contacts.find(c => c.id === randomFriend.contactId);
-            const nickname = getFriendDisplayName(randomFriend);
-
-            try {
-                let apiUrl = config.url.trim().replace(/\/$/, '');
-                if (!apiUrl.endsWith('/chat/completions')) {
-                    apiUrl += '/chat/completions';
-                }
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.key}`
-                    },
-                    body: JSON.stringify({
-                        model: config.model,
-                        messages: [
-                            { 
-                                role: "system", 
-                                content: `你现在的身份是微信好友：${nickname}。
-人设信息：${contact ? contact.design : '一个普通的微信好友'}。
-请根据用户发的朋友圈内容，写一条简短的、口语化的评论回复。
-朋友圈内容：${moment.content}
-${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.images.filter(img => img.type === 'text').map(img => img.content).join(', ') : ''}
-直接返回评论内容，不要有前缀，不要有引号，不要有动作描写，字数控制在20字以内。` 
-                            }
-                        ],
-                        temperature: 0.8
-                    })
-                });
-
-                const data = await response.json();
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const replyContent = data.choices[0].message.content.trim();
-                    
-                    const newComment = {
-                        nickname: nickname,
-                        content: replyContent,
-                        time: Date.now()
-                    };
-                    
-                    moment.comments.push(newComment);
-                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                    renderMoments();
-                }
-            } catch (e) {
-                console.error("Moment Contact Reply Error:", e);
-                alert("回复失败，请检查网络或配置");
-            }
+            await callAIForMoment(id, randomFriend, 'manual_trigger');
         }
 
         function triggerAutoMomentsFeedback(momentId) {
             if (chatList.length === 0) return;
-            const count = Math.floor(Math.random() * 3) + 1;
+            // 随机决定 1-4 个好友进行互动
+            const count = Math.floor(Math.random() * 4) + 1;
             const shuffled = [...chatList].sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, count);
             selected.forEach((friend, index) => {
-                setTimeout(() => callAIForMoment(momentId, friend, 'auto_comment'), index * 5000 + 2000);
+                // 随机延迟，模拟不同人的回复时机
+                const delay = Math.random() * 15000 + 2000;
+                setTimeout(() => callAIForMoment(momentId, friend, 'auto_feedback'), delay);
             });
         }
 
@@ -594,27 +545,35 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const configs = await dbGetAll('api_configs');
             const config = configs.find(c => c.id === configId);
             if (!config || !config.url || !config.key) return;
+            
             const contact = contacts.find(c => c.id === friend.contactId);
             const nickname = getFriendDisplayName(friend);
 
             let systemPrompt = `你现在的身份是微信好友：${nickname}。
-人设信息：${contact ? contact.design : '一个普通的微信好友'}。
-当前场景：朋友圈互动。
-朋友圈内容：${moment.content}
+【身份身份】：你不是AI，你是一个真实的联系人，拥有独立的思想和社交习惯。你现在正在刷朋友圈。
+【人设信息】：${contact ? contact.design : '一个普通的微信好友'}。
+【当前场景】：你在朋友圈看到了用户发布的内容。你需要根据你们的关系亲疏和内容质量，决定是否互动。
+【朋友圈内容】：${moment.content}
 ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.images.filter(img => img.type === 'text').map(img => img.content).join(', ') : ''}`;
 
-            if (type === 'auto_comment') {
-                systemPrompt += `\n任务：决定是否评论这条朋友圈。
-请根据你的人设和内容，如果你觉得应该评论，请返回评论内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
-如果你觉得不应该评论，或者你的人设此时不方便评论，请直接返回 "SKIP"。`;
+            if (type === 'auto_feedback' || type === 'manual_trigger') {
+                systemPrompt += `\n任务：决定是否给这条朋友圈点赞，以及是否进行评论。
+请根据你的人设和内容逻辑，以 JSON 格式返回你的决定：
+{
+  "like": boolean, // 是否点赞
+  "comment": string // 评论内容，如果不评论则留空 ""。评论应在20字以内，口语化，不带引号。
+}
+如果由于人设或忙碌不打算进行任何互动，请依然返回该 JSON，like 设为 false，comment 设为 ""。
+直接返回 JSON，不要有前缀或后缀。`;
             } else if (type === 'reply_to_user') {
                 const history = chatHistories[friend.id] || [];
                 const chatContext = history.slice(-5).map(m => `${m.type === 'sent' ? '用户' : '你'}: ${m.content}`).join('\n');
                 systemPrompt += `\n你们最近的私聊记录：\n${chatContext || '暂无交流'}`;
                 systemPrompt += `\n用户在朋友圈回复了你的评论："${context.userComment}"。
-任务：根据你们的聊天情况、朋友圈语境和人设决定是否在朋友圈回复用户。
-如果回复，请返回回复内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
-如果不回复，请直接返回 "SKIP"。`;
+【任务】：作为真实的联系人，根据你们的私聊默契、朋友圈语境和人设决定是否在朋友圈回复用户。
+注意：朋友圈回复通常比较简短、随意。
+直接返回回复内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
+如果不打算回复，或者此时觉得不便回复，请返回 "SKIP"。`;
             }
 
             try {
@@ -631,13 +590,45 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 });
                 const data = await response.json();
                 if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const reply = data.choices[0].message.content.trim();
-                    if (reply.toUpperCase() !== 'SKIP' && reply !== '') {
-                        const newComment = { nickname: nickname, content: reply, time: Date.now() };
-                        if (type === 'reply_to_user') newComment.replyTo = wechatUserInfo.nickname || '我';
-                        moment.comments.push(newComment);
-                        localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
-                        renderMoments();
+                    const resContent = data.choices[0].message.content.trim();
+                    
+                    if (type === 'reply_to_user') {
+                        if (resContent.toUpperCase() !== 'SKIP' && resContent !== '') {
+                            const newComment = { nickname: nickname, content: resContent, time: Date.now(), replyTo: wechatUserInfo.nickname || '我' };
+                            moment.comments.push(newComment);
+                            localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                            renderMoments();
+                        }
+                    } else {
+                        // 解析 JSON
+                        try {
+                            const jsonStr = resContent.match(/\{.*\}/s) ? resContent.match(/\{.*\}/s)[0] : resContent;
+                            const decision = JSON.parse(jsonStr);
+                            
+                            let changed = false;
+                            if (decision.like) {
+                                if (!moment.likes.includes(nickname)) {
+                                    moment.likes.push(nickname);
+                                    changed = true;
+                                }
+                            }
+                            
+                            if (decision.comment && decision.comment.trim() !== "") {
+                                moment.comments.push({
+                                    nickname: nickname,
+                                    content: decision.comment.trim(),
+                                    time: Date.now()
+                                });
+                                changed = true;
+                            }
+                            
+                            if (changed) {
+                                localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                                renderMoments();
+                            }
+                        } catch (jsonErr) {
+                            console.error("AI Decision Parse Error:", jsonErr, resContent);
+                        }
                     }
                 }
             } catch (e) { console.error("AI Moment Interaction Error:", e); }
@@ -854,13 +845,14 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 if (currentReplyTo && currentReplyTo !== myNickname) {
                     const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
                     if (friend) {
-                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 3000);
+                        // 缩短延迟，增强互动感
+                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000);
                     } else {
                         // 兜底尝试从联系人列表寻找匹配项
                         const contact = contacts.find(c => (c.remark || c.netName || c.name) === currentReplyTo);
                         if (contact) {
                             const tempFriend = { id: 0, contactId: contact.id, name: contact.name };
-                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 3000);
+                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 1000);
                         }
                     }
                 }
@@ -918,16 +910,19 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             // 劫持模态框确认回调以实现朋友圈背景的持久化保存
             const originalConfirmUrl = window.confirmUrl;
             const originalHandleFileSelect = window.handleFileSelect;
+            const originalCloseModal = window.closeModal;
 
             window.confirmUrl = function() {
-                const url = document.getElementById('urlInput').value.trim();
-                if (url) {
-                    const bgImg = document.getElementById('momentsBg');
-                    if (bgImg) bgImg.src = url;
-                    localStorage.setItem('mimi_moments_bg', url);
-                    closeModal();
+                const urlInput = document.getElementById('urlInput');
+                if (urlInput) {
+                    const url = urlInput.value.trim();
+                    if (url) {
+                        const bgImg = document.getElementById('momentsBg');
+                        if (bgImg) bgImg.src = url;
+                        localStorage.setItem('mimi_moments_bg', url);
+                        closeModal();
+                    }
                 }
-                window.confirmUrl = originalConfirmUrl;
             };
 
             window.handleFileSelect = function(event) {
@@ -943,7 +938,14 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     };
                     reader.readAsDataURL(file);
                 }
+            };
+
+            window.closeModal = function() {
+                originalCloseModal();
+                // 恢复原始函数，防止污染全局
+                window.confirmUrl = originalConfirmUrl;
                 window.handleFileSelect = originalHandleFileSelect;
+                window.closeModal = originalCloseModal;
             };
 
             document.getElementById('urlInputContainer').style.display = 'none';

@@ -2063,7 +2063,15 @@
                 <input type="range" class="api-slider" id="tempSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateTempValue(this.value)">
             </div>
 
-            
+            <div class="api-form-item">
+                <label class="api-label">输出模式</label>
+                <select class="api-input" id="outputModeSelect">
+                    <option value="non-stream">非流式输出</option>
+                    <option value="stream">流式输出</option>
+                    <option value="fake-stream">假流输出</option>
+                </select>
+            </div>
+
             <div style="margin-top: 30px; padding: 0 20px;">
                 <button class="theme-action-btn" type="button" onclick="saveCurrentApiConfig()" style="width: 100%; background: #000; color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">保存配置</button>
             </div>

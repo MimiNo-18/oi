@@ -23,6 +23,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             
             const meIdDisplay = document.getElementById('wechatMeID');
             if (meIdDisplay) meIdDisplay.textContent = 'Mimi号：' + mimiId;
+
+            // 朋友圈背景持久化
+            const savedBg = localStorage.getItem('mimi_moments_bg');
+            if (savedBg) {
+                const bgImg = document.getElementById('momentsBg');
+                if (bgImg) bgImg.src = savedBg;
+            }
         }
 
         // 朋友圈逻辑
@@ -2186,6 +2193,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 document.getElementById('apiKeyInput').value = config.key || '';
                 document.getElementById('tempSlider').value = config.temp || '1.0';
                 document.getElementById('tempValue').textContent = config.temp || '1.0';
+                document.getElementById('outputModeSelect').value = config.outputMode || 'non-stream';
                 
                 // 这里可能需要加载该配置的模型列表并选中对应的模型
                 const modelSelect = document.getElementById('modelSelect');
@@ -2338,6 +2346,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const key = document.getElementById('apiKeyInput').value;
             const model = document.getElementById('modelSelect').value;
             const temp = document.getElementById('tempSlider').value;
+            const outputMode = document.getElementById('outputModeSelect').value;
 
             console.log("Attempting to save config:", { name: nameInput, currentId: currentConfigId });
 
@@ -2350,6 +2359,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     configToSave.key = key;
                     configToSave.model = model;
                     configToSave.temp = temp;
+                    configToSave.outputMode = outputMode;
                     await dbPut('api_configs', configToSave);
                     currentConfigId = configToSave.id;
                     console.log("Updated existing config by name");
@@ -2362,13 +2372,14 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         currentConfig.key = key;
                         currentConfig.model = model;
                         currentConfig.temp = temp;
+                        currentConfig.outputMode = outputMode;
                         await dbPut('api_configs', currentConfig);
                         console.log("Renamed/Updated current config");
                     }
                 } else {
                     // 3. 创建全新配置
                     const newId = Date.now().toString();
-                    const newConfig = { id: newId, name: nameInput, url, key, model, temp };
+                    const newConfig = { id: newId, name: nameInput, url, key, model, temp, outputMode };
                     await dbPut('api_configs', newConfig);
                     apiConfigs.push(newConfig);
                     currentConfigId = newId;
@@ -5272,72 +5283,160 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     apiUrl += '/chat/completions';
                 }
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.key}`
-                    },
-                    body: JSON.stringify({
-                        model: config.model,
-                        messages: messages,
-                        temperature: parseFloat(config.temp) || 0.8,
-                        presence_penalty: 0.6,
-                        frequency_penalty: 0.3
-                    })
-                });
+                const outputMode = config.outputMode || 'non-stream';
 
-                const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
-                
-                // 将回复按换行符拆分，一条一条发送
-                const parts = aiResponse.split(/[\n\r]+/).filter(p => p.trim() !== '');
-                
-                for (let i = 0; i < parts.length; i++) {
-                    if (i > 0) {
-                        if (chatStatus) {
-                            chatStatus.textContent = '正在输入...';
-                            chatStatus.classList.add('typing-status');
+                if (outputMode === 'stream') {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${config.key}`
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            messages: messages,
+                            temperature: parseFloat(config.temp) || 0.8,
+                            presence_penalty: 0.6,
+                            frequency_penalty: 0.3,
+                            stream: true
+                        })
+                    });
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let done = false;
+                    let fullContent = "";
+                    let currentMessageObj = null;
+                    let buffer = "";
+
+                    while (!done) {
+                        const { value, done: readerDone } = await reader.read();
+                        done = readerDone;
+                        buffer += decoder.decode(value, { stream: !done });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+                        
+                        for (const line of lines) {
+                            const trimmedLine = line.trim();
+                            if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
+                                try {
+                                    const json = JSON.parse(trimmedLine.substring(6));
+                                    const delta = json.choices[0].delta.content || "";
+                                    if (delta) {
+                                        fullContent += delta;
+                                        if (!currentMessageObj) {
+                                            currentMessageObj = {
+                                                type: 'received',
+                                                content: fullContent,
+                                                time: new Date().getTime()
+                                            };
+                                            if (!chatHistories[friendId]) chatHistories[friendId] = [];
+                                            chatHistories[friendId].push(currentMessageObj);
+                                        } else {
+                                            currentMessageObj.content = fullContent;
+                                        }
+                                        if (isCurrentChat) renderMessages();
+                                    }
+                                } catch (e) {}
+                            }
                         }
-                        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
                     }
                     
-                    if (chatStatus) {
-                        chatStatus.textContent = '';
-                        chatStatus.classList.remove('typing-status');
+                    const friend = chatList.find(f => f.id === friendId);
+                    if (friend) {
+                        friend.message = fullContent || "[收到一条消息]";
+                        friend.time = formatTime(new Date());
+                        saveChatHistories();
+                        saveChatListToStorage();
+                        renderChatList();
                     }
+                } else {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${config.key}`
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            messages: messages,
+                            temperature: parseFloat(config.temp) || 0.8,
+                            presence_penalty: 0.6,
+                            frequency_penalty: 0.3,
+                            stream: false
+                        })
+                    });
 
-                    let content = parts[i];
-                    let stickerObj = null;
-                    let quoteObj = null;
-
-                    // 1. 解析引用 (引用: ...) - 引用必须要有内容
-                    const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
-                    if (quoteMatch) {
-                        const quotedContent = quoteMatch[1].trim();
-                        if (quotedContent) {
-                            quoteObj = { content: quotedContent };
+                    const data = await response.json();
+                    const aiResponse = data.choices[0].message.content;
+                    
+                    const parts = aiResponse.split(/[\n\r]+/).filter(p => p.trim() !== '');
+                    
+                    for (let i = 0; i < parts.length; i++) {
+                        if (i > 0) {
+                            if (chatStatus) {
+                                chatStatus.textContent = '正在输入...';
+                                chatStatus.classList.add('typing-status');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
                         }
-                        content = quoteMatch[2];
-                    }
-
-                    // 2. 匹配并处理表情包 [表情: 名字] 或 表情：名字
-                    // 使用正则匹配，支持中英文冒号，捕获表情包名称
-                    const stickerMatch = content.match(/\[表情[:：]\s*(.*?)\]/) || content.match(/表情[:：]\s*(\S+)/);
-                    if (stickerMatch) {
-                        const sName = stickerMatch[1].trim();
-                        // 无论库里是否有该表情，都从文字内容中移除标签，防止出现“表情：xxx”字样
-                        content = content.replace(stickerMatch[0], '').trim();
                         
-                        const foundSticker = stickerList.find(s => s.name === sName);
-                        if (foundSticker) {
-                            stickerObj = foundSticker;
+                        if (chatStatus) {
+                            chatStatus.textContent = '';
+                            chatStatus.classList.remove('typing-status');
                         }
-                    }
 
-                    // 只有当内容不为空，或者成功匹配到表情包时才发送消息
-                    if (content || stickerObj) {
-                        receiveAIMessage(content, quoteObj, stickerObj, friendId);
+                        let content = parts[i];
+                        
+                        if (outputMode === 'fake-stream') {
+                            const originalContent = content;
+                            let displayedContent = "";
+                            const msgObj = {
+                                type: 'received',
+                                content: "",
+                                time: new Date().getTime()
+                            };
+                            if (!chatHistories[friendId]) chatHistories[friendId] = [];
+                            chatHistories[friendId].push(msgObj);
+                            
+                            for (let char of originalContent) {
+                                displayedContent += char;
+                                msgObj.content = displayedContent;
+                                if (isCurrentChat) renderMessages();
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                            }
+                            
+                            const friend = chatList.find(f => f.id === friendId);
+                            if (friend) {
+                                friend.message = displayedContent;
+                                friend.time = formatTime(new Date());
+                                saveChatHistories();
+                                saveChatListToStorage();
+                                renderChatList();
+                            }
+                        } else {
+                            let stickerObj = null;
+                            let quoteObj = null;
+
+                            const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
+                            if (quoteMatch) {
+                                const quotedContent = quoteMatch[1].trim();
+                                if (quotedContent) quoteObj = { content: quotedContent };
+                                content = quoteMatch[2];
+                            }
+
+                            const stickerMatch = content.match(/\[表情[:：]\s*(.*?)\]/) || content.match(/表情[:：]\s*(\S+)/);
+                            if (stickerMatch) {
+                                const sName = stickerMatch[1].trim();
+                                content = content.replace(stickerMatch[0], '').trim();
+                                const foundSticker = stickerList.find(s => s.name === sName);
+                                if (foundSticker) stickerObj = foundSticker;
+                            }
+
+                            if (content || stickerObj) {
+                                receiveAIMessage(content, quoteObj, stickerObj, friendId);
+                            }
+                        }
                     }
                 }
 

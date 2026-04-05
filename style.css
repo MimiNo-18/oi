@@ -4049,8 +4049,8 @@
 
 /* 聊天中的表情包样式 */
 .msg-sticker-img {
-    max-width: 120px;
-    max-height: 120px;
+    max-width: 50px;
+    max-height: 50px;
     display: block;
     cursor: pointer;
 }

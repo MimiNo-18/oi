@@ -303,6 +303,18 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             renderMoments();
         }
 
+        function isMomentVisible(time, range) {
+            const now = Date.now();
+            const diff = now - time;
+            const DAY = 24 * 60 * 60 * 1000;
+            
+            if (range === '最近三天') return diff <= 3 * DAY;
+            if (range === '最近一个月') return diff <= 30 * DAY;
+            if (range === '最近半年') return diff <= 180 * DAY;
+            if (range === '全部') return true;
+            return true;
+        }
+
         let currentMomentId = null;
         function renderMoments() {
             // 修正：重绘前将共享的操作弹窗移回容器，防止被 list.innerHTML = '' 销毁
@@ -316,7 +328,18 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             if (!list) return;
             list.innerHTML = '';
 
+            const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+
             momentsData.forEach((item, index) => {
+                // AI朋友圈可见度过滤
+                if (!item.isMine && item.friendId) {
+                    const settings = allSettings[item.friendId] || {};
+                    const range = settings.aiMomentRange || '最近三天';
+                    if (!isMomentVisible(item.time, range)) {
+                        return; // 跳过不可见的动态
+                    }
+                }
+
                 const momentEl = document.createElement('div');
                 momentEl.className = 'moment-item';
                 momentEl.setAttribute('data-moment-id', item.id);
@@ -5583,6 +5606,75 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             renderChatList();
         }
 
+        async function generateAiMoment(friendId) {
+            const friend = chatList.find(f => f.id === friendId);
+            if (!friend) return;
+            const contact = contacts.find(c => c.id === friend.contactId);
+            if (!contact) return;
+
+            const configId = localStorage.getItem('current_api_config_id') || 'default';
+            const configs = await dbGetAll('api_configs');
+            const config = configs.find(c => c.id === configId);
+            if (!config || !config.url || !config.key) return;
+
+            let systemPrompt = `你现在的身份是微信好友：${getFriendDisplayName(friend)}。
+【身份信息】：你是一个真实的联系人，现在正准备发一条朋友圈。
+【人设信息】：${contact.design || '一个普通的微信好友'}。
+【任务】：请根据你的人设发一条朋友圈。
+要求：
+1. 文案要符合你的人设语气，自然、口语化。
+2. 字数在50字以内。
+3. 如果需要，可以描述配图内容。配图格式为：[图片: 描述内容]。最多可配1-4张图。
+只返回内容，不要有任何前缀或后缀。`;
+
+            try {
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) apiUrl += '/chat/completions';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [{ role: "system", content: systemPrompt }],
+                        temperature: 0.8
+                    })
+                });
+                const data = await response.json();
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const resContent = data.choices[0].message.content.trim();
+                    
+                    let content = resContent;
+                    let images = [];
+                    const imgRegex = /\[图片[:：]\s*(.*?)\]/g;
+                    let match;
+                    while ((match = imgRegex.exec(resContent)) !== null) {
+                        images.push({ type: 'text', content: match[1].trim() });
+                    }
+                    content = resContent.replace(imgRegex, '').trim();
+
+                    if (!content && images.length === 0) return;
+
+                    const newMoment = {
+                        id: Date.now(),
+                        friendId: friendId,
+                        nickname: getFriendDisplayName(friend),
+                        avatar: friend.avatar || DEFAULT_AVATAR,
+                        content: content,
+                        images: images,
+                        time: Date.now(),
+                        likes: [],
+                        comments: [],
+                        isMine: false
+                    };
+                    momentsData.unshift(newMoment);
+                    localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
+                    if (document.getElementById('momentsContainer').style.display === 'flex') {
+                        renderMoments();
+                    }
+                }
+            } catch (e) { console.error("AI Moment Generation Error:", e); }
+        }
+
         // 主动发消息定时检查
         function startProactiveMsgCheck() {
             setInterval(async () => {
@@ -5591,20 +5683,27 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 
                 for (const friendId in allSettings) {
                     const settings = allSettings[friendId];
+                    const friendIdNum = parseInt(friendId);
+                    
                     if (settings.proactiveMsg) {
                         const history = chatHistories[friendId] || [];
-                        // 如果从未聊过天，可以尝试开启
                         let lastTime = 0;
                         if (history.length > 0) {
                             lastTime = history[history.length - 1].time || 0;
                         }
                         
                         const idleTime = now - lastTime;
-                        // 设想闲置超过1小时且随机概率触发，或者从未聊过天
-                        // 为了演示效果，这里缩短为5分钟，概率增加
                         if ((lastTime === 0 || idleTime > 5 * 60 * 1000) && Math.random() > 0.7) {
                             console.log(`Triggering proactive message for friend: ${friendId}`);
-                            await callAI(null, true, parseInt(friendId));
+                            await callAI(null, true, friendIdNum);
+                        }
+                    }
+
+                    if (settings.proactiveMoment) {
+                        // 随机触发朋友圈，降低频率
+                        if (Math.random() > 0.95) {
+                            console.log(`Triggering proactive moment for friend: ${friendId}`);
+                            await generateAiMoment(friendIdNum);
                         }
                     }
                 }

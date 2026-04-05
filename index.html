@@ -1414,13 +1414,13 @@
                 </div>
             </div>
 
-            <!-- AI朋友圈可见数 -->
+            <!-- AI朋友圈可见范围 -->
             <div class="chat-info-group">
-                <div class="chat-info-item">
-                    <div class="chat-info-label">AI朋友圈可见数</div>
+                <div class="chat-info-item chat-info-clickable" onclick="openAiMomentRangeModal()">
+                    <div class="chat-info-label">AI朋友圈可见范围</div>
                     <div class="chat-info-value">
-                        <input type="number" id="chatInfoAiMomentCount" class="chat-info-underline-input" value="3" onchange="saveChatInfoSettings()">
-                        <span style="color: #333;">条</span>
+                        <span id="chatInfoAiMomentRangeText" style="color: #888; font-size: 14px;">最近三天</span>
+                        <span class="chat-info-arrow">〉</span>
                     </div>
                 </div>
             </div>
@@ -2436,6 +2436,33 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- AI朋友圈可见范围弹窗 -->
+    <div id="aiMomentRangeModal" class="modal">
+        <div class="modal-content range-modal-content">
+            <div class="range-options">
+                <div class="range-option" onclick="selectAiMomentRange('全部')">
+                    <div id="range-all" class="range-radio"></div>
+                    <span>全部</span>
+                </div>
+                <div class="range-option" onclick="selectAiMomentRange('最近半年')">
+                    <div id="range-half-year" class="range-radio"></div>
+                    <span>最近半年</span>
+                </div>
+                <div class="range-option" onclick="selectAiMomentRange('最近一个月')">
+                    <div id="range-one-month" class="range-radio"></div>
+                    <span>最近一个月</span>
+                </div>
+                <div class="range-option" onclick="selectAiMomentRange('最近三天')">
+                    <div id="range-three-days" class="range-radio"></div>
+                    <span>最近三天</span>
+                </div>
+            </div>
+            <div class="range-modal-divider"></div>
+            <div class="range-modal-cancel" onclick="closeAiMomentRangeModal()">取消</div>
+        </div>
+    </div>
     </div>
 
     <script src="script.js"></script>

@@ -3555,7 +3555,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             let filteredList = chatList;
             if (searchKeyword) {
                 filteredList = chatList.filter(friend => {
-                    const nameMatch = friend.name.toLowerCase().includes(searchKeyword);
+                    const nameMatch = getFriendDisplayName(friend).toLowerCase().includes(searchKeyword);
                     const msgMatch = friend.message.toLowerCase().includes(searchKeyword);
                     return nameMatch || msgMatch;
                 });
@@ -3573,13 +3573,10 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
             // 渲染置顶列表
             pinned.forEach((friend, index) => {
-                html += renderChatItem(friend, true);
+                // 如果是最后一个置顶项，且后面还有非置顶项，则添加间距类
+                const isLastPinned = (index === pinned.length - 1 && others.length > 0);
+                html += renderChatItem(friend, true, isLastPinned);
             });
-
-            // 如果有置顶且有普通，添加间隔
-            if (pinned.length > 0 && others.length > 0) {
-                html += '<div class="chat-gap"></div>';
-            }
 
             // 渲染普通列表
             others.forEach(friend => {
@@ -3944,11 +3941,67 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('chatInfoProactiveMoment').checked = settings.proactiveMoment || false;
             document.getElementById('chatInfoOfflineInvite').checked = settings.offlineInvite || false;
             document.getElementById('chatInfoSyncGroup').checked = settings.syncGroup || false;
-            document.getElementById('chatInfoAiMomentCount').value = settings.aiMomentCount || 3;
+            document.getElementById('chatInfoAiMomentRangeText').textContent = settings.aiMomentRange || '最近三天';
             document.getElementById('chatInfoSticky').checked = friend.isPinned || false;
             document.getElementById('chatInfoBlock').checked = settings.isBlocked || false;
 
             saveUIState();
+        }
+
+        // AI朋友圈可见范围弹窗逻辑
+        function openAiMomentRangeModal() {
+            const modal = document.getElementById('aiMomentRangeModal');
+            const currentRange = document.getElementById('chatInfoAiMomentRangeText').textContent;
+            
+            modal.classList.add('active');
+            
+            // 重置单选框样式
+            document.querySelectorAll('.range-radio').forEach(r => r.classList.remove('selected'));
+            
+            // 根据当前值设置选中状态
+            const radioIdMap = {
+                '最近半年': 'range-half-year',
+                '最近一个月': 'range-one-month',
+                '最近三天': 'range-three-days',
+                '全部': 'range-all'
+            };
+            const radioId = radioIdMap[currentRange];
+            if (radioId) {
+                const radio = document.getElementById(radioId);
+                if (radio) radio.classList.add('selected');
+            }
+
+            // 点击弹窗以外区域关闭
+            modal.onclick = (e) => {
+                if (e.target === modal) closeAiMomentRangeModal();
+            };
+        }
+
+        function selectAiMomentRange(range) {
+            // 更新 radio UI
+            document.querySelectorAll('.range-radio').forEach(r => r.classList.remove('selected'));
+            const radioIdMap = {
+                '最近半年': 'range-half-year',
+                '最近一个月': 'range-one-month',
+                '最近三天': 'range-three-days',
+                '全部': 'range-all'
+            };
+            const radioId = radioIdMap[range];
+            if (radioId) {
+                const radio = document.getElementById(radioId);
+                if (radio) radio.classList.add('selected');
+            }
+
+            // 点击后立即更新文字并保存
+            document.getElementById('chatInfoAiMomentRangeText').textContent = range;
+            saveChatInfoSettings();
+            
+            // 稍微延迟关闭让用户看到选中效果
+            setTimeout(closeAiMomentRangeModal, 200);
+        }
+
+        function closeAiMomentRangeModal() {
+            document.getElementById('aiMomentRangeModal').classList.remove('active');
         }
 
         function openManualMemory() {
@@ -4027,7 +4080,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 proactiveMoment: document.getElementById('chatInfoProactiveMoment').checked,
                 offlineInvite: document.getElementById('chatInfoOfflineInvite').checked,
                 syncGroup: document.getElementById('chatInfoSyncGroup').checked,
-                aiMomentCount: document.getElementById('chatInfoAiMomentCount').value,
+                aiMomentRange: document.getElementById('chatInfoAiMomentRangeText').textContent,
                 isBlocked: document.getElementById('chatInfoBlock').checked
             };
 
@@ -6717,9 +6770,22 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             const others = filteredList.filter(f => !f.isPinned);
 
             let html = '';
-            pinned.forEach(friend => html += renderChatItem(friend, true));
-            if (pinned.length > 0 && others.length > 0) html += '<div class="chat-gap"></div>';
-            others.forEach(friend => html += renderChatItem(friend, false));
+            
+            // 渲染置顶列表
+            pinned.forEach((friend, index) => {
+                html += renderChatItem(friend, true);
+            });
+
+            // 如果有置顶项且有普通项，插入物理灰色间隔
+            if (pinned.length > 0 && others.length > 0) {
+                html += '<div class="chat-list-physical-gap"></div>';
+            }
+
+            // 渲染普通列表
+            others.forEach(friend => {
+                html += renderChatItem(friend, false);
+            });
+
             container.innerHTML = html;
             addSwipeListeners();
         };

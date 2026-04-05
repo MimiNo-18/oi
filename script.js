@@ -2193,7 +2193,6 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 document.getElementById('apiKeyInput').value = config.key || '';
                 document.getElementById('tempSlider').value = config.temp || '1.0';
                 document.getElementById('tempValue').textContent = config.temp || '1.0';
-                document.getElementById('outputModeSelect').value = config.outputMode || 'non-stream';
                 
                 // 这里可能需要加载该配置的模型列表并选中对应的模型
                 const modelSelect = document.getElementById('modelSelect');
@@ -2346,7 +2345,6 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const key = document.getElementById('apiKeyInput').value;
             const model = document.getElementById('modelSelect').value;
             const temp = document.getElementById('tempSlider').value;
-            const outputMode = document.getElementById('outputModeSelect').value;
 
             console.log("Attempting to save config:", { name: nameInput, currentId: currentConfigId });
 
@@ -2359,7 +2357,6 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     configToSave.key = key;
                     configToSave.model = model;
                     configToSave.temp = temp;
-                    configToSave.outputMode = outputMode;
                     await dbPut('api_configs', configToSave);
                     currentConfigId = configToSave.id;
                     console.log("Updated existing config by name");
@@ -2372,14 +2369,13 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         currentConfig.key = key;
                         currentConfig.model = model;
                         currentConfig.temp = temp;
-                        currentConfig.outputMode = outputMode;
                         await dbPut('api_configs', currentConfig);
                         console.log("Renamed/Updated current config");
                     }
                 } else {
                     // 3. 创建全新配置
                     const newId = Date.now().toString();
-                    const newConfig = { id: newId, name: nameInput, url, key, model, temp, outputMode };
+                    const newConfig = { id: newId, name: nameInput, url, key, model, temp };
                     await dbPut('api_configs', newConfig);
                     apiConfigs.push(newConfig);
                     currentConfigId = newId;
@@ -4949,14 +4945,24 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 
                 if (msg.quote) {
                     const quoteBox = document.createElement('div');
+                    quoteBox.className = 'msg-quote-box';
                     quoteBox.style.fontSize = '12px';
-                    quoteBox.style.background = msg.type === 'sent' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
-                    quoteBox.style.padding = '4px 8px';
-                    quoteBox.style.borderRadius = '4px';
-                    quoteBox.style.marginBottom = '6px';
-                    quoteBox.style.borderLeft = '2px solid ' + (msg.type === 'sent' ? 'rgba(255,255,255,0.3)' : '#ccc');
-                    quoteBox.style.color = msg.type === 'sent' ? 'rgba(255,255,255,0.7)' : '#888';
+                    quoteBox.style.padding = '6px 10px';
+                    quoteBox.style.borderRadius = '6px';
+                    quoteBox.style.marginBottom = '8px';
                     quoteBox.style.wordBreak = 'break-all';
+                    quoteBox.style.lineHeight = '1.4';
+                    
+                    if (msg.type === 'sent') {
+                        quoteBox.style.background = 'rgba(255, 255, 255, 0.15)';
+                        quoteBox.style.borderLeft = '3px solid rgba(255, 255, 255, 0.4)';
+                        quoteBox.style.color = 'rgba(255, 255, 255, 0.8)';
+                    } else {
+                        quoteBox.style.background = 'rgba(0, 0, 0, 0.05)';
+                        quoteBox.style.borderLeft = '3px solid #ddd';
+                        quoteBox.style.color = '#888';
+                    }
+                    
                     quoteBox.textContent = msg.quote.content;
                     bubble.appendChild(quoteBox);
                 }
@@ -5283,31 +5289,37 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     apiUrl += '/chat/completions';
                 }
 
-                const outputMode = config.outputMode || 'non-stream';
+                // 自动识别输出模式：优先尝试流式输出
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.key}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: messages,
+                        temperature: parseFloat(config.temp) || 0.8,
+                        presence_penalty: 0.6,
+                        frequency_penalty: 0.3,
+                        stream: true // 默认请求流式
+                    })
+                });
 
-                if (outputMode === 'stream') {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${config.key}`
-                        },
-                        body: JSON.stringify({
-                            model: config.model,
-                            messages: messages,
-                            temperature: parseFloat(config.temp) || 0.8,
-                            presence_penalty: 0.6,
-                            frequency_penalty: 0.3,
-                            stream: true
-                        })
-                    });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error ? errorData.error.message : response.statusText);
+                }
 
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/event-stream')) {
+                    // 处理流式输出
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder("utf-8");
                     let done = false;
                     let fullContent = "";
-                    let currentMessageObj = null;
                     let buffer = "";
+                    let currentQuoteObj = null;
 
                     while (!done) {
                         const { value, done: readerDone } = await reader.read();
@@ -5323,120 +5335,58 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                                     const json = JSON.parse(trimmedLine.substring(6));
                                     const delta = json.choices[0].delta.content || "";
                                     if (delta) {
-                                        fullContent += delta;
-                                        if (!currentMessageObj) {
-                                            currentMessageObj = {
-                                                type: 'received',
-                                                content: fullContent,
-                                                time: new Date().getTime()
-                                            };
-                                            if (!chatHistories[friendId]) chatHistories[friendId] = [];
-                                            chatHistories[friendId].push(currentMessageObj);
-                                        } else {
-                                            currentMessageObj.content = fullContent;
+                                        // 检查是否有引用标记
+                                        if (fullContent === "" && delta.startsWith("(引用:")) {
+                                            // 等待引用内容完整（简单处理：直到匹配到闭合括号）
                                         }
-                                        if (isCurrentChat) renderMessages();
+
+                                        fullContent += delta;
+                                        
+                                        // 每次遇到换行符，就认为是一条完整消息的结束
+                                        if (fullContent.includes('\n')) {
+                                            const parts = fullContent.split('\n');
+                                            // 处理已经完整的行
+                                            for (let i = 0; i < parts.length - 1; i++) {
+                                                const lineContent = parts[i].trim();
+                                                if (lineContent) {
+                                                    await processAIMessagePart(lineContent, friendId, isCurrentChat);
+                                                }
+                                            }
+                                            // 留下最后未完成的部分
+                                            fullContent = parts[parts.length - 1];
+                                        }
                                     }
                                 } catch (e) {}
                             }
                         }
                     }
-                    
-                    const friend = chatList.find(f => f.id === friendId);
-                    if (friend) {
-                        friend.message = fullContent || "[收到一条消息]";
-                        friend.time = formatTime(new Date());
-                        saveChatHistories();
-                        saveChatListToStorage();
-                        renderChatList();
+                    // 处理最后剩下的部分
+                    if (fullContent.trim()) {
+                        await processAIMessagePart(fullContent.trim(), friendId, isCurrentChat);
                     }
                 } else {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${config.key}`
-                        },
-                        body: JSON.stringify({
-                            model: config.model,
-                            messages: messages,
-                            temperature: parseFloat(config.temp) || 0.8,
-                            presence_penalty: 0.6,
-                            frequency_penalty: 0.3,
-                            stream: false
-                        })
-                    });
-
+                    // 处理非流式输出（即 fallback 情况）
                     const data = await response.json();
+                    if (!data.choices || !data.choices[0]) throw new Error('API 返回数据格式错误');
                     const aiResponse = data.choices[0].message.content;
                     
                     const parts = aiResponse.split(/[\n\r]+/).filter(p => p.trim() !== '');
                     
                     for (let i = 0; i < parts.length; i++) {
                         if (i > 0) {
-                            if (chatStatus) {
+                            if (chatStatus && isCurrentChat) {
                                 chatStatus.textContent = '正在输入...';
                                 chatStatus.classList.add('typing-status');
                             }
                             await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
                         }
                         
-                        if (chatStatus) {
+                        if (chatStatus && isCurrentChat) {
                             chatStatus.textContent = '';
                             chatStatus.classList.remove('typing-status');
                         }
 
-                        let content = parts[i];
-                        
-                        if (outputMode === 'fake-stream') {
-                            const originalContent = content;
-                            let displayedContent = "";
-                            const msgObj = {
-                                type: 'received',
-                                content: "",
-                                time: new Date().getTime()
-                            };
-                            if (!chatHistories[friendId]) chatHistories[friendId] = [];
-                            chatHistories[friendId].push(msgObj);
-                            
-                            for (let char of originalContent) {
-                                displayedContent += char;
-                                msgObj.content = displayedContent;
-                                if (isCurrentChat) renderMessages();
-                                await new Promise(resolve => setTimeout(resolve, 50));
-                            }
-                            
-                            const friend = chatList.find(f => f.id === friendId);
-                            if (friend) {
-                                friend.message = displayedContent;
-                                friend.time = formatTime(new Date());
-                                saveChatHistories();
-                                saveChatListToStorage();
-                                renderChatList();
-                            }
-                        } else {
-                            let stickerObj = null;
-                            let quoteObj = null;
-
-                            const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/);
-                            if (quoteMatch) {
-                                const quotedContent = quoteMatch[1].trim();
-                                if (quotedContent) quoteObj = { content: quotedContent };
-                                content = quoteMatch[2];
-                            }
-
-                            const stickerMatch = content.match(/\[表情[:：]\s*(.*?)\]/) || content.match(/表情[:：]\s*(\S+)/);
-                            if (stickerMatch) {
-                                const sName = stickerMatch[1].trim();
-                                content = content.replace(stickerMatch[0], '').trim();
-                                const foundSticker = stickerList.find(s => s.name === sName);
-                                if (foundSticker) stickerObj = foundSticker;
-                            }
-
-                            if (content || stickerObj) {
-                                receiveAIMessage(content, quoteObj, stickerObj, friendId);
-                            }
-                        }
+                        await processAIMessagePart(parts[i], friendId, isCurrentChat);
                     }
                 }
 
@@ -5465,7 +5415,65 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     chatStatus.classList.remove('typing-status');
                 }
                 console.error("AI Error:", e);
-                receiveAIMessage("网络连接似乎有点问题...");
+                receiveAIMessage(e.message || "未知错误");
+            }
+        }
+
+        // 处理 AI 消息片段（支持引用、表情过滤、一条条发送）
+        async function processAIMessagePart(content, friendId, isCurrentChat) {
+            if (!content || content.trim() === "") return;
+            
+            let quoteObj = null;
+
+            // 1. 处理引用识别
+            const quoteMatch = content.match(/^\(引用:\s*(.*?)\)\s*(.*)/s);
+            if (quoteMatch) {
+                const quotedContent = quoteMatch[1].trim();
+                if (quotedContent) quoteObj = { content: quotedContent };
+                content = quoteMatch[2].trim();
+            }
+
+            // 2. 处理表情包解析与过滤
+            const stickerRegex = /\[表情[:：]\s*(.*?)\]/g;
+            let match;
+            let lastIndex = 0;
+            let finalParts = [];
+
+            while ((match = stickerRegex.exec(content)) !== null) {
+                const prevText = content.substring(lastIndex, match.index).trim();
+                if (prevText) finalParts.push({ type: 'text', content: prevText });
+                
+                const sName = match[1].trim();
+                const foundSticker = stickerList.find(s => s.name === sName);
+                if (foundSticker) {
+                    finalParts.push({ type: 'sticker', content: foundSticker });
+                }
+                lastIndex = stickerRegex.lastIndex;
+            }
+            
+            const remainingText = content.substring(lastIndex).trim();
+            if (remainingText) finalParts.push({ type: 'text', content: remainingText });
+
+            // 3. 分条发送逻辑
+            if (finalParts.length > 0) {
+                for (let i = 0; i < finalParts.length; i++) {
+                    const part = finalParts[i];
+                    // 只有第一条消息带上引用
+                    const currentQuote = (i === 0) ? quoteObj : null;
+                    
+                    if (part.type === 'text') {
+                        receiveAIMessage(part.content, currentQuote, null, friendId);
+                    } else if (part.type === 'sticker') {
+                        receiveAIMessage(null, currentQuote, part.content, friendId);
+                    }
+                    
+                    if (i < finalParts.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+                    }
+                }
+            } else if (quoteObj) {
+                // 如果解析后没有有效内容但有引用，发送一个兜底消息
+                receiveAIMessage("好的", quoteObj, null, friendId);
             }
         }
 

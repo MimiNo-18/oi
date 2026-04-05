@@ -616,9 +616,9 @@
 
             <div id="momentsScrollArea" style="flex: 1; overflow-y: auto;" onscroll="handleMomentsScroll(this)">
                 <!-- 朋友圈个人背景区 -->
-                <div class="moments-profile">
-                    <img id="momentsBg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eee'%3E%3Crect width='24' height='24'/%3E%3Cpath d='M4 18l4-4 3 3 4-4 5 5v1H4v-1z' fill='%23ccc'/%3E%3C/svg%3E" class="moments-bg-img" onclick="changeMomentsBg()" style="background-color: #d0d0d0;">
-                    <div class="moments-user-info">
+            <div class="moments-profile" onclick="changeMomentsBg()">
+                <img src="" class="moments-bg-img" id="momentsBg">
+                <div class="moments-user-info" onclick="event.stopPropagation()">
                         <div id="momentsUsername" class="moments-user-name">未设置网名</div>
                         <img id="momentsAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="moments-user-avatar" style="background-color: #d0d0d0;">
                     </div>

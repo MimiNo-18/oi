@@ -36,10 +36,27 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
             // 点击空白区域隐藏弹窗和评论框
             container.onclick = (e) => {
-                if (e.target.id === 'momentsContainer' || e.target.id === 'momentsList') {
+                // 需求4：点击评论之后点击空白处关闭输入框
+                // 只要不是点击评论输入框、操作弹窗、或者触发弹窗的按钮，都关闭
+                if (!e.target.closest('#momentCommentInputBar') && 
+                    !e.target.closest('#momentActionPopup') && 
+                    !e.target.closest('.moment-actions-btn')) {
                     hideMomentPopups();
                 }
             };
+
+            // 加载背景图
+            const bgImg = document.getElementById('momentsBg');
+            if (bgImg) {
+                const savedBg = localStorage.getItem('mimi_moments_bg');
+                bgImg.src = savedBg || DEFAULT_LANDSCAPE;
+                // 需求1：更换朋友圈背景图
+                bgImg.onclick = (e) => {
+                    e.stopPropagation();
+                    changeMomentsBg();
+                };
+                bgImg.style.cursor = 'pointer';
+            }
             
             // 初始化个人信息
             const me = wechatUserInfo;
@@ -435,6 +452,14 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function toggleMomentActions(id, event) {
             event.stopPropagation();
             const popup = document.getElementById('momentActionPopup');
+            
+            // 如果评论框正在显示，先将其关闭
+            const inputBar = document.getElementById('momentCommentInputBar');
+            if (inputBar && inputBar.style.display === 'flex') {
+                inputBar.style.display = 'none';
+                document.getElementById('momentCommentInput').blur();
+            }
+
             const btn = event.currentTarget;
             
             // 检查是否已经在当前这条动态且显示中
@@ -707,10 +732,19 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             if (popup) popup.style.display = 'none';
             const contextMenu = document.getElementById('momentContextMenu');
             if (contextMenu) contextMenu.style.display = 'none';
+            
+            // 需求4：关闭评论输入框
             const inputBar = document.getElementById('momentCommentInputBar');
             if (inputBar) {
                 inputBar.style.display = 'none';
+                const input = document.getElementById('momentCommentInput');
+                if (input) {
+                    input.value = '';
+                    input.blur();
+                }
             }
+            currentMomentId = null;
+            currentReplyTo = null;
         }
 
         function handleMomentLike(id, event) {
@@ -816,11 +850,18 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 moment.comments.push(newComment);
                 localStorage.setItem('mimi_moments', JSON.stringify(momentsData));
                 
-                // 如果是回复联系人，触发其回评
+                // 需求3：用户回复了联系人的评论联系人会再次自动调取api回复用户
                 if (currentReplyTo && currentReplyTo !== myNickname) {
                     const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
                     if (friend) {
                         setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 3000);
+                    } else {
+                        // 兜底尝试从联系人列表寻找匹配项
+                        const contact = contacts.find(c => (c.remark || c.netName || c.name) === currentReplyTo);
+                        if (contact) {
+                            const tempFriend = { id: 0, contactId: contact.id, name: contact.name };
+                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 3000);
+                        }
                     }
                 }
 
@@ -871,7 +912,40 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
         }
 
         function changeMomentsBg() {
+            // 需求1：更换朋友圈背景图（相册/URL）
             currentImageId = 'momentsBg';
+            
+            // 劫持模态框确认回调以实现朋友圈背景的持久化保存
+            const originalConfirmUrl = window.confirmUrl;
+            const originalHandleFileSelect = window.handleFileSelect;
+
+            window.confirmUrl = function() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (url) {
+                    const bgImg = document.getElementById('momentsBg');
+                    if (bgImg) bgImg.src = url;
+                    localStorage.setItem('mimi_moments_bg', url);
+                    closeModal();
+                }
+                window.confirmUrl = originalConfirmUrl;
+            };
+
+            window.handleFileSelect = function(event) {
+                const file = event.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const src = e.target.result;
+                        const bgImg = document.getElementById('momentsBg');
+                        if (bgImg) bgImg.src = src;
+                        localStorage.setItem('mimi_moments_bg', src);
+                        closeModal();
+                    };
+                    reader.readAsDataURL(file);
+                }
+                window.handleFileSelect = originalHandleFileSelect;
+            };
+
             document.getElementById('urlInputContainer').style.display = 'none';
             document.getElementById('imageModal').classList.add('active');
         }
@@ -2380,7 +2454,10 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             } else if (tab === 'me') {
                 mePage.style.display = 'block';
                 if (navBar) navBar.style.display = 'none';
-                if (bottomNav) bottomNav.style.backgroundColor = '#f7f7f7';
+                // 需求2：“我”页面的底部导航栏的背景色和其他页面的底部导航栏的背景色一致统一白色
+                if (bottomNav) {
+                    bottomNav.style.backgroundColor = '#fff';
+                }
                 // 更新“我”页面的个人信息 - 独立于系统设置
                 renderWechatMePage();
             }

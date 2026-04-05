@@ -4332,10 +4332,16 @@
             height: 300px;
             background: #8e8e93; /* 纯灰色 */
             margin-bottom: 60px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
         }
 
         .moments-bg-img {
-            display: none; /* 移除背景图显示 */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
 .moments-user-info {

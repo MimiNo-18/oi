@@ -35,8 +35,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         // 朋友圈逻辑
         let momentsData = JSON.parse(localStorage.getItem('mimi_moments') || '[]');
         let currentMomentImage = '';
+        let currentMomentsFriendId = null;
 
-        function openMoments() {
+        function openMoments(friendId = null) {
+            currentMomentsFriendId = friendId;
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
             document.body.classList.add('moments-active');
@@ -55,7 +57,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             // 加载背景图
             const bgImg = document.getElementById('momentsBg');
             if (bgImg) {
-                const savedBg = localStorage.getItem('mimi_moments_bg');
+                const bgKey = currentMomentsFriendId ? `mimi_moments_bg_AI_${currentMomentsFriendId}` : 'mimi_moments_bg';
+                const savedBg = localStorage.getItem(bgKey);
                 bgImg.src = savedBg || DEFAULT_LANDSCAPE;
                 // 需求1：更换朋友圈背景图
                 bgImg.onclick = (e) => {
@@ -66,14 +69,33 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
             
             // 初始化个人信息
-            const me = wechatUserInfo;
             const avatarImg = document.getElementById('momentsAvatar');
             const nameEl = document.getElementById('momentsUsername');
             const sigEl = document.getElementById('momentsSignature');
-            
-            if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
-            if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
-            if (sigEl) sigEl.textContent = me.signature || '个性签名...';
+            const postBtn = document.querySelector('.moments-header-right');
+
+            if (currentMomentsFriendId) {
+                // AI 朋友圈模式
+                const friend = chatList.find(f => f.id === currentMomentsFriendId);
+                const contact = contacts.find(c => c.id === (friend ? friend.contactId : null));
+                
+                if (avatarImg) avatarImg.src = (friend ? friend.avatar : '') || (contact ? contact.avatar : '') || DEFAULT_AVATAR;
+                if (nameEl) {
+                    // 名字显示逻辑：备注 > 网名 > 原始名
+                    const remark = friend ? friend.remark : '';
+                    const netName = contact ? contact.netName : '';
+                    nameEl.textContent = remark || netName || (friend ? friend.name : '未知');
+                }
+                if (sigEl) sigEl.textContent = (contact ? contact.design : '') || '这个人心很懒，什么都没留下';
+                if (postBtn) postBtn.style.visibility = 'hidden'; // AI 朋友圈隐藏发布按钮
+            } else {
+                // 自己的朋友圈模式
+                const me = wechatUserInfo;
+                if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
+                if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
+                if (sigEl) sigEl.textContent = me.signature || '个性签名...';
+                if (postBtn) postBtn.style.visibility = 'visible';
+            }
             
             // 重置头部样式，确保颜色为黑色且背景透明
             const header = document.getElementById('momentsHeader');
@@ -331,6 +353,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
 
             momentsData.forEach((item, index) => {
+                // 如果是查看特定好友的AI朋友圈
+                if (currentMomentsFriendId) {
+                    if (item.isMine || item.friendId !== currentMomentsFriendId) {
+                        return;
+                    }
+                }
+
                 // AI朋友圈可见度过滤
                 if (!item.isMine && item.friendId) {
                     const settings = allSettings[item.friendId] || {};
@@ -949,7 +978,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     if (url) {
                         const bgImg = document.getElementById('momentsBg');
                         if (bgImg) bgImg.src = url;
-                        localStorage.setItem('mimi_moments_bg', url);
+                        const bgKey = currentMomentsFriendId ? `mimi_moments_bg_AI_${currentMomentsFriendId}` : 'mimi_moments_bg';
+                        localStorage.setItem(bgKey, url);
                         closeModal();
                     }
                 }
@@ -963,7 +993,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         const src = e.target.result;
                         const bgImg = document.getElementById('momentsBg');
                         if (bgImg) bgImg.src = src;
-                        localStorage.setItem('mimi_moments_bg', src);
+                        const bgKey = currentMomentsFriendId ? `mimi_moments_bg_AI_${currentMomentsFriendId}` : 'mimi_moments_bg';
+                        localStorage.setItem(bgKey, src);
                         closeModal();
                     };
                     reader.readAsDataURL(file);

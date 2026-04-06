@@ -584,7 +584,7 @@
         </div>
 
         <!-- 朋友圈容器 -->
-        <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
+        <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f7f7f7; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
             <!-- 朋友圈操作弹窗 (点赞/评论) -->
             <div id="momentActionPopup" class="moment-action-popup">
                 <div id="momentLikeBtn" class="moment-action-item">点赞</div>
@@ -2513,7 +2513,7 @@
             <div style="height: 8px; background: #f7f7f7;"></div>
 
             <!-- 朋友圈 -->
-            <div class="profile-section" style="padding: 16px; display: flex; align-items: center; justify-content: space-between;" onclick="alert('进入朋友圈')">
+            <div class="profile-section" style="padding: 16px; display: flex; align-items: center; justify-content: space-between;" onclick="openMoments(currentDetailFriendId)">
                 <div style="font-size: 16px; color: #000;">朋友圈</div>
                 <div style="color: #ccc; font-size: 18px;">〉</div>
             </div>

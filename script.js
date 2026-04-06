@@ -2513,7 +2513,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 let contactHtml = '';
                 filteredFriends.forEach(friend => {
                     contactHtml += `
-                        <div class="wechat-contact-item" onclick="openChat(${friend.id})">
+                        <div class="wechat-contact-item" onclick="openContactDetail(${friend.id})">
                             <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" alt="">
                             <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
                         </div>
@@ -2678,6 +2678,74 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             saveUIState();
         }
 
+        // 打开联系人详情页面 (WeChat Profile)
+        let currentDetailFriendId = null;
+        function openContactDetail(friendId) {
+            const friend = chatList.find(f => f.id === friendId);
+            if (!friend) return;
+            const contact = contacts.find(c => c.id === friend.contactId);
+            if (!contact) return;
+
+            currentDetailFriendId = friendId;
+            document.getElementById('detailAvatar').src = contact.avatar || DEFAULT_AVATAR;
+            
+            const remarkName = friend.remark || contact.name || contact.netName || '无名氏';
+            document.getElementById('detailRemark').textContent = remarkName;
+
+            // 如果没设置备注这一行不显示 (昵称：网名)
+            const nicknameRow = document.getElementById('detailNicknameRow');
+            if (friend.remark) {
+                nicknameRow.style.display = 'block';
+                document.getElementById('detailNickname').textContent = contact.netName || '未设置';
+            } else {
+                nicknameRow.style.display = 'none';
+            }
+
+            document.getElementById('detailWechatId').textContent = contact.wechat || '未设置';
+            document.getElementById('detailRegion').textContent = contact.region || '未设置';
+            document.getElementById('detailGroup').textContent = contact.category || '未设置';
+
+            // 视频号
+            const videoRow = document.getElementById('detailVideoChannelRow');
+            if (contact.videoChannel) {
+                videoRow.style.display = 'flex';
+                document.getElementById('detailVideoChannelName').textContent = contact.videoChannel;
+            } else {
+                videoRow.style.display = 'none';
+            }
+
+            document.getElementById('contactDetailPage').style.display = 'flex';
+            document.getElementById('wechatContainer').style.display = 'none';
+            saveUIState();
+        }
+
+        function closeContactDetail() {
+            document.getElementById('contactDetailPage').style.display = 'none';
+            document.getElementById('wechatContainer').style.display = 'block';
+            currentDetailFriendId = null;
+            saveUIState();
+        }
+
+        function goToChatFromDetail() {
+            if (currentDetailFriendId) {
+                const id = currentDetailFriendId;
+                closeContactDetail();
+                openChat(id);
+            }
+        }
+
+        function openContactDetailMenu() {
+            if (currentDetailFriendId) {
+                const friend = chatList.find(f => f.id === currentDetailFriendId);
+                if (friend) {
+                    // 进入原有的聊天信息设置页或系统编辑页
+                    closeContactDetail();
+                    openChat(friend.id);
+                    openChatInfo();
+                }
+            }
+        }
+
         // 打开编辑联系人页面
         function openEditContactPage(id) {
             const contact = contacts.find(c => c.id === id);
@@ -2697,6 +2765,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('newContactNickname').value = contact.nickname || '';
             document.getElementById('newContactNetName').value = contact.netName || '';
             document.getElementById('newContactWechat').value = contact.wechat || '';
+            document.getElementById('newContactPhone').value = contact.phoneNumber || '';
+            document.getElementById('newContactRegion').value = contact.region || '';
             document.getElementById('newContactCategory').value = contact.category || '朋友';
             document.getElementById('newContactDesign').value = contact.design || '';
             saveUIState();
@@ -2712,6 +2782,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const nickname = document.getElementById('newContactNickname').value.trim();
             const netName = document.getElementById('newContactNetName').value.trim();
             const wechat = document.getElementById('newContactWechat').value.trim();
+            const phoneNumber = document.getElementById('newContactPhone').value.trim();
+            const region = document.getElementById('newContactRegion').value.trim();
             const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
 
@@ -2719,6 +2791,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             contact.nickname = nickname;
             contact.netName = netName;
             contact.wechat = wechat;
+            contact.phoneNumber = phoneNumber;
+            contact.region = region;
             contact.phone = wechat || nickname || netName || '未设置';
             if (category !== '__custom__') contact.category = category;
             contact.design = design;
@@ -2748,7 +2822,9 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('newContactNickname').value = '';
             document.getElementById('newContactNetName').value = '';
             document.getElementById('newContactWechat').value = '';
-            document.getElementById('newContactCategory').value = '普通';
+            document.getElementById('newContactPhone').value = '';
+            document.getElementById('newContactRegion').value = '';
+            document.getElementById('newContactCategory').value = '朋友';
             document.getElementById('newContactDesign').value = '';
         }
 
@@ -2804,6 +2880,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const nickname = document.getElementById('newContactNickname').value.trim();
             const netName = document.getElementById('newContactNetName').value.trim();
             const wechat = document.getElementById('newContactWechat').value.trim();
+            const phoneNumber = document.getElementById('newContactPhone').value.trim();
+            const region = document.getElementById('newContactRegion').value.trim();
             const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
             const avatar = document.getElementById('newContactAvatar').src;
@@ -2828,6 +2906,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         contact.nickname = nickname;
                         contact.netName = netName;
                         contact.wechat = wechat;
+                        contact.phoneNumber = phoneNumber;
+                        contact.region = region;
                         contact.category = category;
                         contact.design = design;
                     }
@@ -2841,6 +2921,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         nickname: nickname,
                         netName: netName,
                         wechat: wechat,
+                        phoneNumber: phoneNumber,
+                        region: region,
                         category: category,
                         design: design
                     };
@@ -7698,6 +7780,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
             else if (document.getElementById('wechatFavoritesContainer').style.display === 'flex') state.activeContainer = 'wechatFavoritesContainer';
+            else if (document.getElementById('contactDetailPage').style.display === 'flex') state.activeContainer = 'contactDetailPage';
             else if (document.getElementById('chatPageContainer').style.display === 'flex') state.activeContainer = 'chatPageContainer';
             else if (document.getElementById('categoryManagementContainer').style.display === 'flex') state.activeContainer = 'categoryManagementContainer';
             else if (document.getElementById('personalInfoContainer').style.display === 'flex') state.activeContainer = 'personalInfoContainer';
@@ -7764,6 +7847,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 openWechat();
                 switchWechatTab('me', document.querySelector('.wechat-nav-item:last-child'));
                 openWechatFavorites();
+            }
+            else if (state.activeContainer === 'contactDetailPage' && state.activeChatId) {
+                openWechat();
+                openContactDetail(state.activeChatId);
             }
             else if (state.activeContainer === 'chatPageContainer') {
                 openWechat();

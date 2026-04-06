@@ -86,7 +86,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     const netName = contact ? contact.netName : '';
                     nameEl.textContent = remark || netName || (friend ? friend.name : '未知');
                 }
-                if (sigEl) sigEl.textContent = (contact ? contact.design : '') || '这个人心很懒，什么都没留下';
+                if (sigEl) sigEl.textContent = (contact ? contact.signature : '') || '';
                 if (postBtn) postBtn.style.visibility = 'hidden'; // AI 朋友圈隐藏发布按钮
             } else {
                 // 自己的朋友圈模式
@@ -119,10 +119,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function handleMomentsScroll(el) {
             const header = document.getElementById('momentsHeader');
             if (!header) return;
-            const scrollThreshold = 100;
+            const scrollThreshold = 50;
             if (el.scrollTop > scrollThreshold) {
                 header.classList.add('scrolled');
-                header.style.backgroundColor = 'transparent';
+                header.style.backgroundColor = '#f2f2f2';
                 header.style.color = '#000';
             } else {
                 header.classList.remove('scrolled');
@@ -131,6 +131,25 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
             // 滑动时关闭弹窗
             hideMomentPopups();
+        }
+
+        async function refreshAiMoments() {
+            if (currentMomentsFriendId) {
+                // 如果是查看特定好友的AI朋友圈，立刻生成该好友的朋友圈内容
+                await generateAiMoment(currentMomentsFriendId);
+            } else {
+                // 如果是自己的朋友圈，随机挑选一个开启了主动发朋友圈的好友生成动态
+                const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+                const availableFriends = chatList.filter(f => allSettings[f.id] && allSettings[f.id].proactiveMoment);
+                if (availableFriends.length > 0) {
+                    const randomFriend = availableFriends[Math.floor(Math.random() * availableFriends.length)];
+                    await generateAiMoment(randomFriend.id);
+                } else if (chatList.length > 0) {
+                    // 兜底：随机挑选任意一个好友生成
+                    const randomFriend = chatList[Math.floor(Math.random() * chatList.length)];
+                    await generateAiMoment(randomFriend.id);
+                }
+            }
         }
 
         let momentImages = []; // 存储朋友圈图片（真实图片或内容图片）
@@ -2798,6 +2817,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('newContactWechat').value = contact.wechat || '';
             document.getElementById('newContactPhone').value = contact.phoneNumber || '';
             document.getElementById('newContactRegion').value = contact.region || '';
+            document.getElementById('newContactSignature').value = contact.signature || '';
             document.getElementById('newContactCategory').value = contact.category || '朋友';
             document.getElementById('newContactDesign').value = contact.design || '';
             saveUIState();
@@ -2815,6 +2835,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const wechat = document.getElementById('newContactWechat').value.trim();
             const phoneNumber = document.getElementById('newContactPhone').value.trim();
             const region = document.getElementById('newContactRegion').value.trim();
+            const signature = document.getElementById('newContactSignature').value.trim();
             const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
 
@@ -2824,6 +2845,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             contact.wechat = wechat;
             contact.phoneNumber = phoneNumber;
             contact.region = region;
+            contact.signature = signature;
             contact.phone = wechat || nickname || netName || '未设置';
             if (category !== '__custom__') contact.category = category;
             contact.design = design;
@@ -2913,6 +2935,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const wechat = document.getElementById('newContactWechat').value.trim();
             const phoneNumber = document.getElementById('newContactPhone').value.trim();
             const region = document.getElementById('newContactRegion').value.trim();
+            const signature = document.getElementById('newContactSignature').value.trim();
             const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
             const avatar = document.getElementById('newContactAvatar').src;
@@ -2939,6 +2962,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         contact.wechat = wechat;
                         contact.phoneNumber = phoneNumber;
                         contact.region = region;
+                        contact.signature = signature;
                         contact.category = category;
                         contact.design = design;
                     }
@@ -2954,6 +2978,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         wechat: wechat,
                         phoneNumber: phoneNumber,
                         region: region,
+                        signature: signature,
                         category: category,
                         design: design
                     };
@@ -5728,12 +5753,20 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             const configId = localStorage.getItem('current_api_config_id') || 'default';
             const configs = await dbGetAll('api_configs');
             const config = configs.find(c => c.id === configId);
-            if (!config || !config.url || !config.key) return;
+            if (!config || !config.url || !config.key) {
+                alert('请先在设置中配置有效的 API 以使用 AI 朋友圈功能');
+                return;
+            }
+
+            // 获取最近的聊天记录作为上下文
+            const history = chatHistories[friendId] || [];
+            const recentMsgs = history.slice(-10).map(m => `${m.type === 'sent' ? '用户' : '你'}: ${m.content}`).join('\n');
 
             let systemPrompt = `你现在的身份是微信好友：${getFriendDisplayName(friend)}。
 【身份信息】：你是一个真实的联系人，现在正准备发一条朋友圈。
 【人设信息】：${contact.design || '一个普通的微信好友'}。
-【任务】：请根据你的人设发一条朋友圈。
+${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
+【任务】：请根据你的人设以及最近和用户的互动内容（如果有），发一条朋友圈。朋友圈内容可以是你的生活琐事、感悟、或者隐晦地提到你们刚才聊的话题。
 要求：
 1. 文案要符合你的人设语气，自然、口语化。
 2. 字数在50字以内。

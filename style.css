@@ -378,6 +378,7 @@
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
+        #contactDetailPage,
         #wechatAccountSwitchContainer {
             padding-top: 49px !important;
         }
@@ -386,6 +387,15 @@
         #momentsContainer {
             padding-top: 0 !important;
             background-color: #f7f7f7 !important; /* 保持灰色背景 */
+        }
+
+        #momentsHeader {
+            background-color: transparent;
+            transition: background-color 0.2s ease;
+        }
+
+        #momentsHeader.scrolled {
+            background-color: #f2f2f2 !important; /* 向上滑动时出现的灰色背景 */
         }
 
         /* 朋友圈激活时状态栏强制透明 */
@@ -4291,9 +4301,9 @@
         }
 
         .moments-header.scrolled {
-            background-color: #f7f7f7;
+            background-color: #f2f2f2 !important;
             color: #000;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e1e1e1;
         }
 
         .moments-header-left, .moments-header-right {
@@ -5172,4 +5182,35 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     border-top: 1px solid #f0f0f0;
     border-bottom: 1px solid #f0f0f0;
     margin-bottom: 10px;
+}
+
+/* 联系人详情页布局调整 */
+#contactDetailPage {
+    background-color: #f7f7f7 !important;
+}
+
+#contactDetailPage .contact-detail-content {
+    background-color: #f7f7f7;
+    height: 100%;
+}
+
+#contactDetailPage .profile-basic-info,
+#contactDetailPage .profile-section,
+#contactDetailPage .profile-actions {
+    background-color: #fff;
+}
+
+#contactDetailPage .wechat-nav-bar {
+    background-color: #fff !important;
+    padding-top: 0 !important; /* 对齐其他页面顶部导航栏逻辑 */
+    height: 44px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+/* 确保下方空白页面为纯灰色 */
+#contactDetailPage .contact-detail-content::after {
+    content: "";
+    display: block;
+    height: 100%;
+    background-color: #f7f7f7;
 }

@@ -607,9 +607,9 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><path d="M15 18l-6-6 6-6"/></svg>
                 </div>
                 <div class="moments-header-title">朋友圈</div>
-                <div class="moments-header-right" onclick="openMomentsEdit()" style="cursor: pointer;">
+                <div class="moments-header-right" onclick="refreshAiMoments()" style="cursor: pointer;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                     </svg>
                 </div>
             </div>
@@ -1628,6 +1628,11 @@
             <div class="form-field">
                 <label class="form-label">地区 (Region)</label>
                 <input type="text" class="form-input" id="newContactRegion" placeholder="角色地区" oninput="syncContactEdit()">
+            </div>
+
+            <div class="form-field">
+                <label class="form-label">签名 (Signature)</label>
+                <input type="text" class="form-input" id="newContactSignature" placeholder="角色签名" oninput="syncContactEdit()">
             </div>
 
             <div class="form-field">

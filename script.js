@@ -4790,7 +4790,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 item.addEventListener('touchmove', () => clearTimeout(timer));
                 
                 item.onclick = () => sendStickerMessage(sticker);
-                item.innerHTML = `<img src="${sticker.src}" alt="${sticker.name}">`;
+                item.innerHTML = `<img src="${sticker.src}" alt="${sticker.name}" class="chat-sticker-img">`;
                 grid.appendChild(item);
             });
         }

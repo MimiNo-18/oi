@@ -7485,10 +7485,59 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                 updateFavPageUI();
             } else {
                 const fav = favoritesData.find(f => f.id === id);
+                if (!fav) return;
+
+                // 需求 2: 点击收藏页面的内容可以发送收藏
+                if (currentChatFriendId) {
+                    if (confirm('是否发送该收藏内容？')) {
+                        sendFavoriteMessage(fav);
+                        closeWechatFavorites();
+                        return;
+                    }
+                }
+
                 if (fav && fav.isMergedForward) {
                     openMergedChatDetail(fav);
                 }
             }
+        }
+
+        function sendFavoriteMessage(fav) {
+            if (!currentChatFriendId) return;
+            
+            const history = chatHistories[currentChatFriendId] || [];
+            let newMessage;
+
+            if (fav.isMergedForward) {
+                newMessage = {
+                    type: 'sent',
+                    isMergedForward: true,
+                    title: fav.title,
+                    fullHistory: JSON.parse(JSON.stringify(fav.fullHistory)),
+                    content: '[聊天记录]',
+                    time: new Date().getTime()
+                };
+            } else {
+                newMessage = {
+                    type: 'sent',
+                    content: fav.content,
+                    time: new Date().getTime()
+                };
+            }
+            
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = fav.isMergedForward ? '[聊天记录]' : fav.content;
+                friend.time = formatTime(new Date());
+            }
+
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
         }
 
         function toggleFavSelectMode() {

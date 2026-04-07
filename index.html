@@ -333,18 +333,23 @@
                 <div class="chat-more-icon">📷</div>
                 <div class="chat-more-label">拍照</div>
             </div>
+            <!-- 需求 1: 聊天背景改成相册放到相机旁边 -->
+            <div class="chat-more-item" onclick="openChatBackgroundModal()">
+                <div class="chat-more-icon">🖼️</div>
+                <div class="chat-more-label">相册</div>
+            </div>
             <div class="chat-more-item" onclick="alert('语音通话功能开发中')">
                 <div class="chat-more-icon">📞</div>
                 <div class="chat-more-label">语音通话</div>
             </div>
+            <!-- 需求 1: 语音通话旁边增加一个视频通话 -->
+            <div class="chat-more-item" onclick="alert('视频通话功能开发中')">
+                <div class="chat-more-icon">📹</div>
+                <div class="chat-more-label">视频通话</div>
+            </div>
             <div class="chat-more-item" onclick="alert('位置功能开发中')">
                 <div class="chat-more-icon">📍</div>
                 <div class="chat-more-label">位置</div>
-            </div>
-            <!-- 需求 3: 聊天背景设置 -->
-            <div class="chat-more-item" onclick="openChatBackgroundModal()">
-                <div class="chat-more-icon">🖼️</div>
-                <div class="chat-more-label">聊天背景</div>
             </div>
             <div class="chat-more-item" onclick="alert('红包功能开发中')">
                 <div class="chat-more-icon">🧧</div>
@@ -354,7 +359,8 @@
                 <div class="chat-more-icon">💸</div>
                 <div class="chat-more-label">转账</div>
             </div>
-            <div class="chat-more-item" onclick="alert('收藏功能开发中')">
+            <!-- 需求 2: 点击收藏进入收藏页面 -->
+            <div class="chat-more-item" onclick="openWechatFavorites()">
                 <div class="chat-more-icon">⭐️</div>
                 <div class="chat-more-label">收藏</div>
             </div>

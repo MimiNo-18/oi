@@ -38,10 +38,21 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         let currentMomentsFriendId = null;
 
         function openMoments(friendId = null) {
+            // 如果是从联系人详情页进入，立即隐藏详情页，不留痕迹
+            const detailPage = document.getElementById('contactDetailPage');
+            if (detailPage && detailPage.style.display === 'flex') {
+                detailPage.style.display = 'none';
+                document.body.classList.remove('contact-detail-active');
+            }
+
             currentMomentsFriendId = friendId;
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
             document.body.classList.add('moments-active');
+            
+            // 重置朋友圈状态
+            document.body.classList.remove('moments-scrolled');
+            container.scrollTop = 0;
 
             // 点击空白区域隐藏弹窗和评论框
             container.onclick = (e) => {
@@ -140,13 +151,15 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function handleMomentsScroll(el) {
             const header = document.getElementById('momentsHeader');
             if (!header) return;
-            const scrollThreshold = 50;
+            const scrollThreshold = 5;
             if (el.scrollTop > scrollThreshold) {
                 header.classList.add('scrolled');
+                document.body.classList.add('moments-scrolled');
                 header.style.backgroundColor = '#f2f2f2';
                 header.style.color = '#000';
             } else {
                 header.classList.remove('scrolled');
+                document.body.classList.remove('moments-scrolled');
                 header.style.backgroundColor = 'transparent';
                 header.style.color = '#000';
             }
@@ -2786,12 +2799,28 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             }
 
             document.getElementById('contactDetailPage').style.display = 'flex';
+            document.body.classList.add('contact-detail-active');
             document.getElementById('wechatContainer').style.display = 'none';
+            
+            // 检查内容高度，决定是否允许滚动
+            setTimeout(() => {
+                const detailPage = document.getElementById('contactDetailPage');
+                const content = detailPage.querySelector('.contact-detail-content');
+                if (content) {
+                    if (content.scrollHeight <= content.clientHeight) {
+                        content.style.overflowY = 'hidden';
+                    } else {
+                        content.style.overflowY = 'auto';
+                    }
+                }
+            }, 50);
+
             saveUIState();
         }
 
         function closeContactDetail() {
             document.getElementById('contactDetailPage').style.display = 'none';
+            document.body.classList.remove('contact-detail-active');
             document.getElementById('wechatContainer').style.display = 'block';
             currentDetailFriendId = null;
             saveUIState();

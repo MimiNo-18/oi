@@ -349,6 +349,7 @@
 
         /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
         .phone-container,
+        #contactDetailPage,
         #worldBookContainer,
         #settingsContainer,
         #accountContainer,
@@ -401,6 +402,18 @@
         /* 朋友圈激活时状态栏强制透明 */
         body.moments-active .status-bar {
             background: transparent !important;
+            transition: background 0.2s ease;
+        }
+
+        body.moments-active.moments-scrolled .status-bar {
+            background: #f2f2f2 !important; /* 向上滑动时出现的灰色背景 */
+            pointer-events: auto;
+        }
+
+        /* 联系人详情页激活时状态栏背景为白色 */
+        body.contact-detail-active .status-bar {
+            background: #fff !important;
+            pointer-events: auto;
         }
 
         .status-left, .status-right {
@@ -5187,11 +5200,14 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 /* 联系人详情页布局调整 */
 #contactDetailPage {
     background-color: #f7f7f7 !important;
+    z-index: 200; /* 保持在微信之上 */
 }
 
 #contactDetailPage .contact-detail-content {
     background-color: #f7f7f7;
     height: 100%;
+    overflow-y: auto;
+    overscroll-behavior-y: none; /* 防止橡皮筋效果 */
 }
 
 #contactDetailPage .profile-basic-info,

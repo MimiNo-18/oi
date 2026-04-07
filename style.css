@@ -5202,8 +5202,6 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 
 #contactDetailPage .wechat-nav-bar {
     background-color: #fff !important;
-    padding-top: 0 !important; /* 对齐其他页面顶部导航栏逻辑 */
-    height: 44px;
     border-bottom: 1px solid #f5f5f5;
 }
 

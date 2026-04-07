@@ -87,14 +87,35 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     nameEl.textContent = remark || netName || (friend ? friend.name : '未知');
                 }
                 if (sigEl) sigEl.textContent = (contact ? contact.signature : '') || '';
-                if (postBtn) postBtn.style.visibility = 'hidden'; // AI 朋友圈隐藏发布按钮
+                
+                // 需求3：联系人的朋友圈页面上方显示的才是刷新图标，点击可以生成内容
+                if (postBtn) {
+                    postBtn.style.visibility = 'visible';
+                    postBtn.onclick = () => refreshAiMoments();
+                    postBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>`;
+                }
             } else {
                 // 自己的朋友圈模式
                 const me = wechatUserInfo;
                 if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
                 if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
                 if (sigEl) sigEl.textContent = me.signature || '个性签名...';
-                if (postBtn) postBtn.style.visibility = 'visible';
+                
+                // 需求2：朋友圈页面的上面是照相机图标点击可以编辑内容发布朋友圈
+                if (postBtn) {
+                    postBtn.style.visibility = 'visible';
+                    postBtn.onclick = () => openMomentsEdit();
+                    postBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>`;
+                }
             }
             
             // 重置头部样式，确保颜色为黑色且背景透明

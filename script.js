@@ -45,14 +45,28 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 document.body.classList.remove('contact-detail-active');
             }
 
-            currentMomentsFriendId = friendId;
+            // 修复白屏问题：进入朋友圈前隐藏聊天页和聊天信息页，防止它们的高层级遮挡朋友圈 (Issue 1)
+            const chatPage = document.getElementById('chatPageContainer');
+            if (chatPage) chatPage.style.display = 'none';
+            const chatInfo = document.getElementById('chatInfoContainer');
+            if (chatInfo) chatInfo.style.display = 'none';
+
+            // 确保微信容器是显示的，因为朋友圈容器是它的子元素
+            const wechatContainer = document.getElementById('wechatContainer');
+            if (wechatContainer) {
+                wechatContainer.style.display = 'flex';
+            }
+
+            // 统一 ID 类型为数字，防止比较失败
+            currentMomentsFriendId = friendId ? Number(friendId) : null;
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
             document.body.classList.add('moments-active');
             
             // 重置朋友圈状态
             document.body.classList.remove('moments-scrolled');
-            container.scrollTop = 0;
+            const scrollArea = document.getElementById('momentsScrollArea');
+            if (scrollArea) scrollArea.scrollTop = 0;
 
             // 点击空白区域隐藏弹窗和评论框
             container.onclick = (e) => {
@@ -2822,7 +2836,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('contactDetailPage').style.display = 'none';
             document.body.classList.remove('contact-detail-active');
             document.getElementById('wechatContainer').style.display = 'block';
-            currentDetailFriendId = null;
+            // 不在关闭时立即清除 ID，以便从聊天信息页返回
             saveUIState();
         }
 
@@ -2834,10 +2848,12 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             }
         }
 
+        let isOpenedFromContactDetail = false;
         function openContactDetailMenu() {
             if (currentDetailFriendId) {
                 const friend = chatList.find(f => f.id === currentDetailFriendId);
                 if (friend) {
+                    isOpenedFromContactDetail = true;
                     // 进入原有的聊天信息设置页或系统编辑页
                     closeContactDetail();
                     openChat(friend.id);
@@ -4341,6 +4357,14 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
         function closeChatInfo() {
             document.getElementById('chatInfoContainer').style.display = 'none';
+            if (isOpenedFromContactDetail) {
+                isOpenedFromContactDetail = false;
+                // 返回联系人详情页
+                closeChat();
+                if (currentDetailFriendId) {
+                    openContactDetail(currentDetailFriendId);
+                }
+            }
             saveUIState();
         }
 

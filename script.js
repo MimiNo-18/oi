@@ -4956,6 +4956,148 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             // callAI();
         }
 
+        function handleChatAlbum() {
+            const originalConfirmUrl = window.confirmUrl;
+            const originalCloseModal = window.closeModal;
+
+            window.confirmUrl = function() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (url) {
+                    const description = prompt("请输入图片描述（以便AI理解图片内容）：");
+                    sendChatImage(url, description || "一张图片");
+                    closeModal();
+                }
+                window.confirmUrl = originalConfirmUrl;
+            };
+
+            document.getElementById('urlInputContainer').style.display = 'none';
+            document.getElementById('modalMainButtons').style.display = 'flex';
+            document.getElementById('imageModal').classList.add('active');
+            document.querySelector('#imageModal .modal-title').textContent = '选择图片方式';
+            
+            const albumBtn = document.querySelector('#imageModal .image-option-btn');
+            const originalAlbumClick = albumBtn.onclick;
+            albumBtn.onclick = () => {
+                document.getElementById('chatAlbumInput').click();
+                closeModal();
+            };
+
+            window.closeModal = function() {
+                originalCloseModal();
+                albumBtn.onclick = originalAlbumClick;
+                window.confirmUrl = originalConfirmUrl;
+                window.closeModal = originalCloseModal;
+                document.querySelector('#imageModal .modal-title').textContent = '更改图片';
+            };
+        }
+
+        function handleChatAlbumSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const description = prompt("请输入图片描述（以便AI理解图片内容）：");
+                    sendChatImage(e.target.result, description || "一张图片");
+                };
+                reader.readAsDataURL(file);
+            }
+            event.target.value = '';
+        }
+
+        function sendChatImage(src, description) {
+            if (!currentChatFriendId) return;
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: 'sent',
+                msgType: 'image',
+                content: src,
+                description: description,
+                time: new Date().getTime()
+            };
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = '[图片]';
+                friend.time = formatTime(new Date());
+            }
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+            callAI(description);
+        }
+
+        function handleChatCamera() {
+            const modal = document.getElementById('imageContentModal');
+            const title = modal.querySelector('.modal-title');
+            const confirmBtn = modal.querySelector('.confirm');
+            const textarea = document.getElementById('imageContentInput');
+            
+            const originalTitle = title.textContent;
+            const originalConfirm = confirmBtn.onclick;
+
+            title.textContent = '照片描写';
+            textarea.value = '';
+            confirmBtn.onclick = () => {
+                const content = textarea.value.trim();
+                if (content) {
+                    sendChatPhoto(content);
+                    modal.classList.remove('active');
+                    title.textContent = originalTitle;
+                    confirmBtn.onclick = originalConfirm;
+                }
+            };
+
+            modal.classList.add('active');
+            textarea.focus();
+
+            window.closeImageContentModal = function() {
+                modal.classList.remove('active');
+                title.textContent = originalTitle;
+                confirmBtn.onclick = originalConfirm;
+            };
+        }
+
+        function sendChatPhoto(content) {
+            if (!currentChatFriendId) return;
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: 'sent',
+                msgType: 'photo',
+                content: content,
+                time: new Date().getTime()
+            };
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = '[照片]';
+                friend.time = formatTime(new Date());
+            }
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+            callAI(`发送了一张照片，内容描写为：${content}`);
+        }
+
+        function showPhotoDetail(content) {
+            const modal = document.getElementById('imageDetailModal');
+            const textEl = document.getElementById('imageDetailText');
+            if (modal && textEl) {
+                textEl.textContent = content;
+                textEl.style.color = '#000';
+                textEl.parentElement.style.background = '#fff';
+                modal.classList.add('active');
+                modal.onclick = () => {
+                    modal.classList.remove('active');
+                };
+            }
+        }
+
         function toggleChatMorePanel(e) {
             if (e) {
                 e.preventDefault();
@@ -5174,6 +5316,10 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     bubble.appendChild(footer);
                 } else if (msg.msgType === 'sticker') {
                     bubble.className = 'msg-bubble sticker-bubble';
+                } else if (msg.msgType === 'image') {
+                    bubble.className = 'msg-bubble image-bubble';
+                } else if (msg.msgType === 'photo') {
+                    bubble.className = 'msg-bubble photo-bubble';
                 } else {
                     bubble.className = 'msg-bubble';
                 }
@@ -5208,6 +5354,41 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         img.src = msg.content;
                         img.className = 'msg-sticker-img';
                         bubble.appendChild(img);
+                    } else if (msg.msgType === 'image') {
+                        const img = document.createElement('img');
+                        img.src = msg.content;
+                        img.style.maxWidth = '150px';
+                        img.style.maxHeight = '200px';
+                        img.style.borderRadius = '4px';
+                        img.onclick = (e) => {
+                            e.stopPropagation();
+                            const modal = document.getElementById('imageDetailModal');
+                            if (modal) {
+                                modal.innerHTML = `<img src="${msg.content}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+                                modal.classList.add('active');
+                                modal.onclick = () => modal.classList.remove('active');
+                            }
+                        };
+                        bubble.appendChild(img);
+                    } else if (msg.msgType === 'photo') {
+                        bubble.style.width = '100px';
+                        bubble.style.height = '100px';
+                        bubble.style.background = '#888';
+                        bubble.style.color = '#fff';
+                        bubble.style.display = 'flex';
+                        bubble.style.alignItems = 'center';
+                        bubble.style.justifyContent = 'center';
+                        bubble.style.padding = '10px';
+                        bubble.style.fontSize = '12px';
+                        bubble.style.cursor = 'pointer';
+                        bubble.style.borderRadius = '4px';
+                        bubble.style.overflow = 'hidden';
+                        bubble.style.textAlign = 'center';
+                        bubble.textContent = msg.content;
+                        bubble.onclick = (e) => {
+                            e.stopPropagation();
+                            showPhotoDetail(msg.content);
+                        };
                     } else {
                         const textNode = document.createElement('div');
                         textNode.textContent = msg.content;
@@ -5496,6 +5677,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 let content = h.content;
                 if (h.msgType === 'sticker') {
                     content = `[发送了一个表情包: ${h.stickerName || '未知'}]`;
+                } else if (h.msgType === 'image') {
+                    content = `[发送了一张图片，描述内容为：${h.description || '无'}]`;
+                } else if (h.msgType === 'photo') {
+                    content = `[发送了一张拍照照片，文字描写为：${h.content}]`;
                 } else if (h.isMergedForward && h.fullHistory) {
                     // 合并转发的内容，展开给 AI 识别
                     content = `[合并转发的聊天记录]\n`;
@@ -5668,23 +5853,37 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 content = quoteMatch[2].trim();
             }
 
-            // 2. 处理表情包解析与过滤
+            // 2. 处理表情包、照片解析与过滤
             const stickerRegex = /\[表情[:：]\s*(.*?)\]/g;
-            let match;
+            const photoRegex = /\[照片[:：]\s*(.*?)\]/g;
+            
+            let combinedMatches = [];
+            let m;
+            while ((m = stickerRegex.exec(content)) !== null) {
+                combinedMatches.push({ index: m.index, length: m[0].length, type: 'sticker', value: m[1].trim() });
+            }
+            while ((m = photoRegex.exec(content)) !== null) {
+                combinedMatches.push({ index: m.index, length: m[0].length, type: 'photo', value: m[1].trim() });
+            }
+            combinedMatches.sort((a, b) => a.index - b.index);
+
             let lastIndex = 0;
             let finalParts = [];
 
-            while ((match = stickerRegex.exec(content)) !== null) {
+            combinedMatches.forEach(match => {
                 const prevText = content.substring(lastIndex, match.index).trim();
                 if (prevText) finalParts.push({ type: 'text', content: prevText });
                 
-                const sName = match[1].trim();
-                const foundSticker = stickerList.find(s => s.name === sName);
-                if (foundSticker) {
-                    finalParts.push({ type: 'sticker', content: foundSticker });
+                if (match.type === 'sticker') {
+                    const foundSticker = stickerList.find(s => s.name === match.value);
+                    if (foundSticker) {
+                        finalParts.push({ type: 'sticker', content: foundSticker });
+                    }
+                } else if (match.type === 'photo') {
+                    finalParts.push({ type: 'photo', content: match.value });
                 }
-                lastIndex = stickerRegex.lastIndex;
-            }
+                lastIndex = match.index + match.length;
+            });
             
             const remainingText = content.substring(lastIndex).trim();
             if (remainingText) finalParts.push({ type: 'text', content: remainingText });
@@ -5700,6 +5899,8 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                         receiveAIMessage(part.content, currentQuote, null, friendId);
                     } else if (part.type === 'sticker') {
                         receiveAIMessage(null, currentQuote, part.content, friendId);
+                    } else if (part.type === 'photo') {
+                        receiveAIMessage(null, currentQuote, null, friendId, part.content);
                     }
                     
                     if (i < finalParts.length - 1) {
@@ -5779,7 +5980,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             saveUIState();
         };
 
-        function receiveAIMessage(content, quote = null, sticker = null, targetFriendId = null) {
+        function receiveAIMessage(content, quote = null, sticker = null, targetFriendId = null, photo = null) {
             const friendId = targetFriendId || currentChatFriendId;
             if (!friendId) return;
 
@@ -5787,7 +5988,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
             const newMessage = {
                 type: 'received',
-                content: content,
+                content: content || photo,
                 time: new Date().getTime()
             };
 
@@ -5800,12 +6001,21 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 newMessage.content = sticker.src;
                 newMessage.stickerName = sticker.name;
             }
+
+            if (photo) {
+                newMessage.msgType = 'photo';
+                newMessage.content = photo;
+            }
             
             chatHistories[friendId].push(newMessage);
             
             const friend = chatList.find(f => f.id === friendId);
             if (friend) {
-                friend.message = sticker ? `[${sticker.name}]` : (content || "[收到一条消息]");
+                let displayMsg = content || "[收到一条消息]";
+                if (sticker) displayMsg = `[${sticker.name}]`;
+                else if (photo) displayMsg = `[照片]`;
+                
+                friend.message = displayMsg;
                 friend.time = formatTime(new Date());
             }
 

@@ -329,15 +329,16 @@
         </div>
         <!-- 更多功能面板 -->
         <div class="chat-more-panel" id="chatMorePanel">
-            <div class="chat-more-item" onclick="alert('拍照功能开发中')">
+            <div class="chat-more-item" onclick="handleChatCamera()">
                 <div class="chat-more-icon">📷</div>
                 <div class="chat-more-label">拍照</div>
             </div>
             <!-- 需求 1: 聊天背景改成相册放到相机旁边 -->
-            <div class="chat-more-item" onclick="openChatBackgroundModal()">
+            <div class="chat-more-item" onclick="handleChatAlbum()">
                 <div class="chat-more-icon">🖼️</div>
                 <div class="chat-more-label">相册</div>
             </div>
+            <input type="file" id="chatAlbumInput" accept="image/*" style="display: none;" onchange="handleChatAlbumSelect(event)">
             <div class="chat-more-item" onclick="alert('语音通话功能开发中')">
                 <div class="chat-more-icon">📞</div>
                 <div class="chat-more-label">语音通话</div>

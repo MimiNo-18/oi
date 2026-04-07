@@ -4073,6 +4073,33 @@
     cursor: pointer;
 }
 
+.msg-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 4px;
+    display: block;
+    cursor: pointer;
+}
+
+/* 拍照生成的正方形气泡 */
+.msg-bubble.photo-bubble {
+    background-color: #999 !important;
+    color: white !important;
+    width: 100px !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 13px;
+    border-radius: 8px;
+    word-break: break-all;
+    overflow: hidden;
+    box-shadow: none !important;
+}
+
 /* 表情包消息气泡 - 无背景 */
 .msg-bubble.sticker-bubble {
     background: transparent !important;

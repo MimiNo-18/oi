@@ -4100,6 +4100,45 @@
     box-shadow: none !important;
 }
 
+/* 文件消息气泡 */
+.msg-bubble.file-bubble {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #eee !important;
+}
+.msg-row.sent .msg-bubble.file-bubble {
+    background: #000 !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+/* 名片消息气泡 */
+.msg-bubble.card-bubble {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #eee !important;
+}
+.msg-row.sent .msg-bubble.card-bubble {
+    background: #000 !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+/* 需求3：名片选择弹窗样式优化 */
+#contactCardModal .modal-content {
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+#contactCardList {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
 /* 表情包消息气泡 - 无背景 */
 .msg-bubble.sticker-bubble {
     background: transparent !important;

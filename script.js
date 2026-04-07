@@ -255,9 +255,16 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         });
 
         function selectMomentImage() {
-            document.getElementById('imageContentModal').classList.add('active');
-            document.getElementById('imageContentInput').value = '';
-            document.getElementById('imageContentInput').focus();
+            const modal = document.getElementById('imageContentModal');
+            if (!modal) return;
+            modal.classList.add('active');
+            const textarea = document.getElementById('imageContentInput');
+            textarea.value = '';
+            textarea.focus();
+            
+            // 确保确认按钮行为正确（防止被聊天相机的行为覆盖）
+            const confirmBtn = modal.querySelector('.modal-btn.confirm');
+            if (confirmBtn) confirmBtn.onclick = confirmImageContent;
         }
 
         function closeImageContentModal() {
@@ -4956,48 +4963,19 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             // callAI();
         }
 
-        function handleChatAlbum() {
-            const originalConfirmUrl = window.confirmUrl;
-            const originalCloseModal = window.closeModal;
-
-            window.confirmUrl = function() {
-                const url = document.getElementById('urlInput').value.trim();
-                if (url) {
-                    const description = prompt("请输入图片描述（以便AI理解图片内容）：");
-                    sendChatImage(url, description || "一张图片");
-                    closeModal();
-                }
-                window.confirmUrl = originalConfirmUrl;
-            };
-
-            document.getElementById('urlInputContainer').style.display = 'none';
-            document.getElementById('modalMainButtons').style.display = 'flex';
-            document.getElementById('imageModal').classList.add('active');
-            document.querySelector('#imageModal .modal-title').textContent = '选择图片方式';
-            
-            const albumBtn = document.querySelector('#imageModal .image-option-btn');
-            const originalAlbumClick = albumBtn.onclick;
-            albumBtn.onclick = () => {
-                document.getElementById('chatAlbumInput').click();
-                closeModal();
-            };
-
-            window.closeModal = function() {
-                originalCloseModal();
-                albumBtn.onclick = originalAlbumClick;
-                window.confirmUrl = originalConfirmUrl;
-                window.closeModal = originalCloseModal;
-                document.querySelector('#imageModal .modal-title').textContent = '更改图片';
-            };
+        window.handleChatAlbum = function() {
+            document.getElementById('chatAlbumInput').click();
         }
 
-        function handleChatAlbumSelect(event) {
+        window.handleChatAlbumSelect = function(event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const description = prompt("请输入图片描述（以便AI理解图片内容）：");
-                    sendChatImage(e.target.result, description || "一张图片");
+                    if (description !== null) {
+                        sendChatImage(e.target.result, description || "一张图片");
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -5029,35 +5007,166 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             callAI(description);
         }
 
-        function handleChatCamera() {
+        window.handleChatCamera = function() {
             const modal = document.getElementById('imageContentModal');
-            const title = modal.querySelector('.modal-title');
-            const confirmBtn = modal.querySelector('.confirm');
+            if (!modal) return;
             const textarea = document.getElementById('imageContentInput');
             
-            const originalTitle = title.textContent;
-            const originalConfirm = confirmBtn.onclick;
-
-            title.textContent = '照片描写';
             textarea.value = '';
+            modal.classList.add('active');
+            textarea.focus();
+
+            // 定义确认按钮行为
+            const confirmBtn = modal.querySelector('.modal-btn.confirm');
             confirmBtn.onclick = () => {
                 const content = textarea.value.trim();
                 if (content) {
                     sendChatPhoto(content);
-                    modal.classList.remove('active');
-                    title.textContent = originalTitle;
-                    confirmBtn.onclick = originalConfirm;
+                    closeImageContentModal();
                 }
             };
+        }
+        
+        window.closeImageContentModal = function() {
+            const modal = document.getElementById('imageContentModal');
+            if (modal) modal.classList.remove('active');
+        };
 
-            modal.classList.add('active');
-            textarea.focus();
+        // 需求2：文件发送逻辑
+        window.handleChatFile = function() {
+            document.getElementById('chatFileInput').click();
+        }
 
-            window.closeImageContentModal = function() {
-                modal.classList.remove('active');
-                title.textContent = originalTitle;
-                confirmBtn.onclick = originalConfirm;
+        window.handleChatFileSelect = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            if (extension === 'docx') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    if (window.mammoth) {
+                        mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                            .then(function(result) {
+                                sendChatFile(file.name, result.value);
+                            })
+                            .catch(function(err) {
+                                alert('Docx解析失败：' + err.message);
+                            });
+                    } else {
+                        alert('正在加载Docx解析组件，请稍后再试');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    sendChatFile(file.name, content);
+                };
+                // 尝试读取为文本
+                reader.readAsText(file);
+            }
+            event.target.value = '';
+        }
+
+        function sendChatFile(fileName, fileContent) {
+            if (!currentChatFriendId) return;
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: 'sent',
+                msgType: 'file',
+                fileName: fileName,
+                content: `[文件: ${fileName}]`,
+                fileContent: fileContent,
+                time: new Date().getTime()
             };
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = `[文件] ${fileName}`;
+                friend.time = formatTime(new Date());
+            }
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+            // 触发 AI 回复，并附带文件内容
+            callAI(`用户发送了一个名为 \"${fileName}\" 的文件，内容如下：\n${fileContent}`);
+        }
+
+        // 需求3：名片逻辑
+        window.openContactCardModal = function() {
+            document.getElementById('contactCardModal').classList.add('active');
+            renderContactCardList();
+        }
+
+        window.closeContactCardModal = function() {
+            document.getElementById('contactCardModal').classList.remove('active');
+            document.getElementById('contactCardSearchInput').value = '';
+        }
+
+        window.renderContactCardList = function() {
+            const container = document.getElementById('contactCardList');
+            const keyword = document.getElementById('contactCardSearchInput').value.trim().toLowerCase();
+            
+            // 获取已有的联系人 (已经加到微信里面的联系人)
+            let filtered = chatList.filter(friend => {
+                const displayName = getFriendDisplayName(friend).toLowerCase();
+                return displayName.includes(keyword);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 10px; font-size: 12px; color: #999;">无匹配联系人</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(friend => {
+                const contact = contacts.find(c => c.id === friend.contactId);
+                const displayName = getFriendDisplayName(friend);
+                html += `
+                    <div class="wechat-contact-item" onclick="sendContactCard(${friend.contactId})" style="padding: 8px 12px; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px;">
+                        <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" style="width: 36px; height: 36px; border-radius: 4px; object-fit: cover;">
+                        <div class="wechat-contact-name" style="font-size: 15px; color: #000;">${displayName}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function sendContactCard(contactId) {
+            if (!currentChatFriendId) return;
+            const contact = contacts.find(c => c.id === contactId);
+            if (!contact) return;
+
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: 'sent',
+                msgType: 'card',
+                content: `[名片: ${contact.name || contact.netName}]`,
+                cardInfo: contact,
+                time: new Date().getTime()
+            };
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = `[个人名片] ${contact.name || contact.netName}`;
+                friend.time = formatTime(new Date());
+            }
+
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+            closeContactCardModal();
+            callAI(`用户向你推荐了一个名片：${contact.name || contact.netName}`);
         }
 
         function sendChatPhoto(content) {
@@ -5320,6 +5429,10 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     bubble.className = 'msg-bubble image-bubble';
                 } else if (msg.msgType === 'photo') {
                     bubble.className = 'msg-bubble photo-bubble';
+                } else if (msg.msgType === 'file') {
+                    bubble.className = 'msg-bubble file-bubble';
+                } else if (msg.msgType === 'card') {
+                    bubble.className = 'msg-bubble card-bubble';
                 } else {
                     bubble.className = 'msg-bubble';
                 }
@@ -5389,6 +5502,31 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                             e.stopPropagation();
                             showPhotoDetail(msg.content);
                         };
+                    } else if (msg.msgType === 'file') {
+                        bubble.style.padding = '10px';
+                        bubble.style.minWidth = '120px';
+                        bubble.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="font-size: 24px;">📄</div>
+                                <div style="flex: 1; overflow: hidden;">
+                                    <div style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${msg.fileName}</div>
+                                    <div style="font-size: 11px; color: ${msg.type === 'sent' ? 'rgba(255,255,255,0.7)' : '#999'};">文档</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.msgType === 'card') {
+                        bubble.style.padding = '10px';
+                        bubble.style.minWidth = '150px';
+                        bubble.innerHTML = `
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <img src="${msg.cardInfo.avatar || DEFAULT_AVATAR}" style="width: 40px; height: 40px; border-radius: 4px;">
+                                    <div style="font-size: 15px; font-weight: 500;">${msg.cardInfo.name || msg.cardInfo.netName}</div>
+                                </div>
+                                <div style="height: 1px; background: ${msg.type === 'sent' ? 'rgba(255,255,255,0.2)' : '#eee'};"></div>
+                                <div style="font-size: 11px; color: ${msg.type === 'sent' ? 'rgba(255,255,255,0.7)' : '#999'};">个人名片</div>
+                            </div>
+                        `;
                     } else {
                         const textNode = document.createElement('div');
                         textNode.textContent = msg.content;
@@ -5607,30 +5745,30 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             if (settings.senseTime) {
                 const now = new Date();
                 const timeStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}点${now.getMinutes()}分${now.getSeconds()}秒`;
-            systemPrompt += `\n- 当前真实时间：${timeStr}`;
-        }
-
-        // 注入世界书信息
-        const boundWorldBookIds = settings.boundWorldBookIds || [];
-        if (worldBooks && worldBooks.length > 0 && boundWorldBookIds.length > 0) {
-            let worldBookPrompt = "";
-            worldBooks.forEach(book => {
-                if (boundWorldBookIds.includes(book.id)) {
-                    const activeItems = book.items.filter(item => item.enabled);
-                    if (activeItems.length > 0) {
-                        worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
-                        activeItems.forEach(item => {
-                            worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
-                        });
-                    }
-                }
-            });
-            if (worldBookPrompt) {
-                systemPrompt += `\n\n以下是关于你们所处世界的背景知识（请牢记并根据需要提及）：${worldBookPrompt}`;
+                systemPrompt += `\n- 当前真实时间：${timeStr}`;
             }
-        }
 
-        systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
+            // 注入世界书信息
+            const boundWorldBookIds = settings.boundWorldBookIds || [];
+            if (worldBooks && worldBooks.length > 0 && boundWorldBookIds.length > 0) {
+                let worldBookPrompt = "";
+                worldBooks.forEach(book => {
+                    if (boundWorldBookIds.includes(book.id)) {
+                        const activeItems = book.items.filter(item => item.enabled);
+                        if (activeItems.length > 0) {
+                            worldBookPrompt += `\n【世界书：${book.name}】\n简介：${book.description || '无'}\n相关条目：\n`;
+                            activeItems.forEach(item => {
+                                worldBookPrompt += `- ${item.name}${item.remark ? ' (' + item.remark + ')' : ''}：${item.content}\n`;
+                            });
+                        }
+                    }
+                });
+                if (worldBookPrompt) {
+                    systemPrompt += `\n\n以下是关于你们所处世界的背景知识（请牢记并根据需要提及）：${worldBookPrompt}`;
+                }
+            }
+
+            systemPrompt += `\n\n请严格遵守以下【真实社交】准则：
 1. **角色一致性**：永远不要跳出角色，不要承认自己是AI。如果用户问你是谁，根据你的人设回答。**严禁做出任何违反你人设的行为。**
 2. **回复相关性**：仔细阅读用户发送的每一句话，确保你的回复不答非所问，逻辑连贯。
 3. **引用功能**：如果你想引用某条历史消息进行针对性回复，请在你的回复开头使用格式 \`(引用: 消息内容) 你的回复\`。例如：\`(引用: 晚上一起吃饭吗) 好啊，去哪吃？\`。你可以引用用户说的话，也可以引用你自己说的话。注意：你无法引用合并聊天记录里面的具体聊天内容，但可以引用合并聊天记录本身（如其标题）。
@@ -5681,6 +5819,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     content = `[发送了一张图片，描述内容为：${h.description || '无'}]`;
                 } else if (h.msgType === 'photo') {
                     content = `[发送了一张拍照照片，文字描写为：${h.content}]`;
+                } else if (h.msgType === 'file') {
+                    content = `[发送了一个名为 \"${h.fileName}\" 的文件，内容如下：\n${h.fileContent}]`;
+                } else if (h.msgType === 'card') {
+                    content = `[推荐了一个个人名片：${h.cardInfo.name || h.cardInfo.netName}]`;
                 } else if (h.isMergedForward && h.fullHistory) {
                     // 合并转发的内容，展开给 AI 识别
                     content = `[合并转发的聊天记录]\n`;

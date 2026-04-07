@@ -339,6 +339,7 @@
                 <div class="chat-more-label">相册</div>
             </div>
             <input type="file" id="chatAlbumInput" accept="image/*" style="display: none;" onchange="handleChatAlbumSelect(event)">
+            <input type="file" id="chatFileInput" style="display: none;" onchange="handleChatFileSelect(event)">
             <div class="chat-more-item" onclick="alert('语音通话功能开发中')">
                 <div class="chat-more-icon">📞</div>
                 <div class="chat-more-label">语音通话</div>
@@ -365,11 +366,11 @@
                 <div class="chat-more-icon">⭐️</div>
                 <div class="chat-more-label">收藏</div>
             </div>
-            <div class="chat-more-item" onclick="alert('名片功能开发中')">
+            <div class="chat-more-item" onclick="openContactCardModal()">
                 <div class="chat-more-icon">👤</div>
                 <div class="chat-more-label">名片</div>
             </div>
-            <div class="chat-more-item" onclick="alert('文件功能开发中')">
+            <div class="chat-more-item" onclick="handleChatFile()">
                 <div class="chat-more-icon">📁</div>
                 <div class="chat-more-label">文件</div>
             </div>
@@ -1280,6 +1281,24 @@
         <!-- 关系绑定内容 -->
         <div class="wechat-content-area" id="relationshipBindingContent" style="background: #f7f7f7; display: none;">
              <div class="empty-state" style="padding-top: 100px;">关系绑定功能开发中</div>
+        </div>
+    </div>
+
+    <!-- 选择名片模态框 -->
+    <div class="modal" id="contactCardModal">
+        <div class="modal-content" style="max-height: 450px; display: flex; flex-direction: column;">
+            <div class="modal-title">选择联系人</div>
+            <div class="wechat-search-bar" style="padding: 0 0 10px 0;">
+                <div class="wechat-search-input-wrapper" style="border: 1px solid #eee; background: #f7f7f7;">
+                    <input type="text" id="contactCardSearchInput" class="wechat-search-input" placeholder="搜索已添加的联系人" oninput="renderContactCardList()">
+                </div>
+            </div>
+            <div id="contactCardList" style="flex: 1; overflow-y: auto; min-height: 200px;">
+                <!-- 动态生成 -->
+            </div>
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="modal-btn cancel" type="button" onclick="closeContactCardModal()" style="width: 100%;">取消</button>
+            </div>
         </div>
     </div>
 

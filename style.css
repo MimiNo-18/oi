@@ -5253,6 +5253,31 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     background: #f2f2f2;
 }
 
+/* 灰色的正方形圆角卡片样式 */
+.message-gray-card {
+    width: 150px;
+    height: 150px;
+    background-color: #f2f2f2;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    color: #333;
+    font-size: 14px;
+    word-break: break-all;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.message.sent .message-gray-card {
+    background-color: #ebebeb;
+}
+
+.message.received .message-gray-card {
+    background-color: #f2f2f2;
+}
+
 /* 置顶间隔样式 - 改为物理节点实现 */
 .chat-list-physical-gap {
     height: 8px;

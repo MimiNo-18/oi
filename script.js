@@ -4972,10 +4972,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const description = prompt("请输入图片描述（以便AI理解图片内容）：");
-                    if (description !== null) {
-                        sendChatImage(e.target.result, description || "一张图片");
-                    }
+                    // 需求2：点击相册发送图片不需要对图片描述
+                    sendChatImage(e.target.result, "");
                 };
                 reader.readAsDataURL(file);
             }
@@ -4989,7 +4987,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 type: 'sent',
                 msgType: 'image',
                 content: src,
-                description: description,
+                description: description || "用户发送了一张图片",
                 time: new Date().getTime()
             };
             history.push(newMessage);
@@ -5004,7 +5002,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             saveChatHistories();
             saveChatListToStorage();
             renderChatList();
-            callAI(description);
+            // 移除自动调用 AI
+            // callAI(description);
         }
 
         window.handleChatCamera = function() {
@@ -5021,10 +5020,34 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             confirmBtn.onclick = () => {
                 const content = textarea.value.trim();
                 if (content) {
-                    sendChatPhoto(content);
+                    // 需求1：输入内容后点击确定用户发送一张灰色的正方形圆角卡片
+                    sendChatGrayCard(content);
                     closeImageContentModal();
                 }
             };
+        }
+
+        function sendChatGrayCard(content, sender = 'me') {
+            if (!currentChatFriendId) return;
+            const history = chatHistories[currentChatFriendId] || [];
+            const newMessage = {
+                type: sender === 'me' ? 'sent' : 'received',
+                msgType: 'gray_card',
+                content: content,
+                time: new Date().getTime()
+            };
+            history.push(newMessage);
+            chatHistories[currentChatFriendId] = history;
+            
+            const friend = chatList.find(f => f.id === currentChatFriendId);
+            if (friend) {
+                friend.message = '[卡片]';
+                friend.time = formatTime(new Date());
+            }
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
         }
         
         window.closeImageContentModal = function() {
@@ -5150,6 +5173,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 msgType: 'card',
                 content: `[名片: ${contact.name || contact.netName}]`,
                 cardInfo: contact,
+                cardContactId: contact.id, // 记录联系人ID
                 time: new Date().getTime()
             };
             history.push(newMessage);
@@ -5166,31 +5190,13 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             saveChatListToStorage();
             renderChatList();
             closeContactCardModal();
-            callAI(`用户向你推荐了一个名片：${contact.name || contact.netName}`);
+            // 移除自动调用 AI
+            // callAI(`用户向你推荐了一个名片：${contact.name || contact.netName}`);
         }
 
         function sendChatPhoto(content) {
-            if (!currentChatFriendId) return;
-            const history = chatHistories[currentChatFriendId] || [];
-            const newMessage = {
-                type: 'sent',
-                msgType: 'photo',
-                content: content,
-                time: new Date().getTime()
-            };
-            history.push(newMessage);
-            chatHistories[currentChatFriendId] = history;
-            
-            const friend = chatList.find(f => f.id === currentChatFriendId);
-            if (friend) {
-                friend.message = '[照片]';
-                friend.time = formatTime(new Date());
-            }
-            renderMessages();
-            saveChatHistories();
-            saveChatListToStorage();
-            renderChatList();
-            callAI(`发送了一张照片，内容描写为：${content}`);
+            // 已被 sendChatGrayCard 替代，为兼容保留
+            sendChatGrayCard(content);
         }
 
         function showPhotoDetail(content) {
@@ -5427,8 +5433,12 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                     bubble.className = 'msg-bubble sticker-bubble';
                 } else if (msg.msgType === 'image') {
                     bubble.className = 'msg-bubble image-bubble';
-                } else if (msg.msgType === 'photo') {
-                    bubble.className = 'msg-bubble photo-bubble';
+                } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
+                    bubble.className = 'msg-bubble'; // 使用普通容器
+                    bubble.style.background = 'transparent';
+                    bubble.style.boxShadow = 'none';
+                    bubble.style.padding = '0';
+                    bubble.style.maxWidth = 'none';
                 } else if (msg.msgType === 'file') {
                     bubble.className = 'msg-bubble file-bubble';
                 } else if (msg.msgType === 'card') {
@@ -5483,25 +5493,12 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                             }
                         };
                         bubble.appendChild(img);
-                    } else if (msg.msgType === 'photo') {
-                        bubble.style.width = '100px';
-                        bubble.style.height = '100px';
-                        bubble.style.background = '#888';
-                        bubble.style.color = '#fff';
-                        bubble.style.display = 'flex';
-                        bubble.style.alignItems = 'center';
-                        bubble.style.justifyContent = 'center';
-                        bubble.style.padding = '10px';
-                        bubble.style.fontSize = '12px';
-                        bubble.style.cursor = 'pointer';
-                        bubble.style.borderRadius = '4px';
-                        bubble.style.overflow = 'hidden';
-                        bubble.style.textAlign = 'center';
-                        bubble.textContent = msg.content;
-                        bubble.onclick = (e) => {
-                            e.stopPropagation();
-                            showPhotoDetail(msg.content);
-                        };
+                    } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
+                        // 需求1：展示灰色的正方形圆角卡片
+                        const card = document.createElement('div');
+                        card.className = 'message-gray-card';
+                        card.textContent = msg.content;
+                        bubble.appendChild(card);
                     } else if (msg.msgType === 'file') {
                         bubble.style.padding = '10px';
                         bubble.style.minWidth = '120px';
@@ -5515,8 +5512,16 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                             </div>
                         `;
                     } else if (msg.msgType === 'card') {
+                        // 需求3：用户点击名片可以看到名片上联系人的主页
                         bubble.style.padding = '10px';
                         bubble.style.minWidth = '150px';
+                        bubble.style.cursor = 'pointer';
+                        bubble.onclick = (e) => {
+                            e.stopPropagation();
+                            if (msg.cardContactId) {
+                                openContactDetail(msg.cardContactId);
+                            }
+                        };
                         bubble.innerHTML = `
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -5560,12 +5565,15 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
         // 处理小麦克风点击：如果有文字则发送并触发AI回复，如果没有则直接触发AI回复
         async function handleMicClick() {
+            // 需求4：用户需要点击输入框内部的小麦克风联系人才会回复用户
             if (!currentChatFriendId) return;
             const input = document.getElementById('chatInput');
             if (input.value.trim().length > 0) {
                 await sendChatMessage();
+                await callAI(null, false);
+            } else {
+                await callAI(null, true);
             }
-            await callAI(null, true);
         }
 
         async function sendChatMessage() {
@@ -5612,8 +5620,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             saveChatHistories();
             saveChatListToStorage();
             
-            // 移除自动调用 AI，改为手动点击麦克风触发
-            // callAI(content);
+            // 需求4：不再自动触发AI，必须由handleMicClick触发
         }
 
 
@@ -5782,6 +5789,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 7. **表情包使用**：你可以发送表情包。如果你想发送表情包，请在回复中使用格式 \`[表情: 表情名]\`。例如：\`[表情: 哭泣]\`。请确保表情名与上下文中提到的或你认为对方有的表情名一致。
 8. **记忆读取与提及**：请读取并记住“共同记忆”中的内容。当用户提及相关内容时，你应该能够准确回忆并以此进行回复。即使在日常对话中，也可以适当地提及这些记忆来增加真实感。
 9. **人设驱动的表情包**：发送表情包时，必须符合你的人设。例如，高冷的人设不应发送过于卖萌的表情，活泼的人设可以多发一些搞怪的表情。**严禁发送任何违反你人设的表情包。**
+10. **发送灰色卡片**：需求1：你可以发送灰色的正方形圆角卡片。如果你想发送卡片，请在回复中使用格式 \`[卡片: 卡片内容]\`。例如：\`[卡片: 这是一个秘密]\`。卡片内容应符合你的语气和当前聊天情境。
 
 现在，请开始以 ${contact.netName || contact.name} 的身份与用户进行真实的微信对话。`;
 
@@ -5816,9 +5824,11 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 if (h.msgType === 'sticker') {
                     content = `[发送了一个表情包: ${h.stickerName || '未知'}]`;
                 } else if (h.msgType === 'image') {
-                    content = `[发送了一张图片，描述内容为：${h.description || '无'}]`;
-                } else if (h.msgType === 'photo') {
-                    content = `[发送了一张拍照照片，文字描写为：${h.content}]`;
+                    // 需求2：直接识别图片内容。如果是多模态模型，这里可以发送 image_url，但为了兼容性，我们将图片内容放入上下文
+                    content = `[发送了一张图片]`;
+                    // 如果 API 支持，可以改进为多模态载荷，目前保持文本描述以兼容
+                } else if (h.msgType === 'photo' || h.msgType === 'gray_card') {
+                    content = `[发送了一张灰色卡片，内容为：${h.content}]`;
                 } else if (h.msgType === 'file') {
                     content = `[发送了一个名为 \"${h.fileName}\" 的文件，内容如下：\n${h.fileContent}]`;
                 } else if (h.msgType === 'card') {
@@ -5952,6 +5962,12 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                     }
                 }
 
+                // 需求4：回复完之后清除“正在输入”
+                if (chatStatus && isCurrentChat) {
+                    chatStatus.textContent = '';
+                    chatStatus.classList.remove('typing-status');
+                }
+
                 // 检查自动总结
                 if (settings.autoSum) {
                     const sumRounds = parseInt(settings.sumRounds) || 5;
@@ -5995,9 +6011,10 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 content = quoteMatch[2].trim();
             }
 
-            // 2. 处理表情包、照片解析与过滤
+            // 2. 处理表情包、照片、卡片解析与过滤
             const stickerRegex = /\[表情[:：]\s*(.*?)\]/g;
             const photoRegex = /\[照片[:：]\s*(.*?)\]/g;
+            const cardRegex = /\[卡片[:：]\s*(.*?)\]/g;
             
             let combinedMatches = [];
             let m;
@@ -6006,6 +6023,9 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             }
             while ((m = photoRegex.exec(content)) !== null) {
                 combinedMatches.push({ index: m.index, length: m[0].length, type: 'photo', value: m[1].trim() });
+            }
+            while ((m = cardRegex.exec(content)) !== null) {
+                combinedMatches.push({ index: m.index, length: m[0].length, type: 'gray_card', value: m[1].trim() });
             }
             combinedMatches.sort((a, b) => a.index - b.index);
 
@@ -6043,6 +6063,8 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                         receiveAIMessage(null, currentQuote, part.content, friendId);
                     } else if (part.type === 'photo') {
                         receiveAIMessage(null, currentQuote, null, friendId, part.content);
+                    } else if (part.type === 'gray_card') {
+                        receiveAIMessage(null, currentQuote, null, friendId, null, part.content);
                     }
                     
                     if (i < finalParts.length - 1) {
@@ -6122,7 +6144,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
             saveUIState();
         };
 
-        function receiveAIMessage(content, quote = null, sticker = null, targetFriendId = null, photo = null) {
+        function receiveAIMessage(content, quote = null, sticker = null, targetFriendId = null, photo = null, gray_card = null) {
             const friendId = targetFriendId || currentChatFriendId;
             if (!friendId) return;
 
@@ -6130,7 +6152,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 
             const newMessage = {
                 type: 'received',
-                content: content || photo,
+                content: content || photo || gray_card,
                 time: new Date().getTime()
             };
 
@@ -6148,6 +6170,11 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 newMessage.msgType = 'photo';
                 newMessage.content = photo;
             }
+
+            if (gray_card) {
+                newMessage.msgType = 'gray_card';
+                newMessage.content = gray_card;
+            }
             
             chatHistories[friendId].push(newMessage);
             
@@ -6156,6 +6183,7 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 let displayMsg = content || "[收到一条消息]";
                 if (sticker) displayMsg = `[${sticker.name}]`;
                 else if (photo) displayMsg = `[照片]`;
+                else if (gray_card) displayMsg = `[卡片]`;
                 
                 friend.message = displayMsg;
                 friend.time = formatTime(new Date());

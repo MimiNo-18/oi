@@ -4495,13 +4495,87 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             document.getElementById('chatAlbumInput').click();
         }
 
+        // 图片识别逻辑
+        let mobileNetModel = null;
+        async function loadMobileNet() {
+            if (!mobileNetModel) {
+                console.log('正在加载 MobileNet 模型...');
+                try {
+                    mobileNetModel = await mobilenet.load();
+                    console.log('MobileNet 模型加载成功');
+                } catch (e) {
+                    console.error("MobileNet 加载失败:", e);
+                }
+            }
+            return mobileNetModel;
+        }
+
+        async function recognizeImage(imgSrc) {
+            const model = await loadMobileNet();
+            if (!model) return [];
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = async () => {
+                    try {
+                        const predictions = await model.classify(img);
+                        resolve(predictions);
+                    } catch (err) {
+                        console.error("识别出错:", err);
+                        resolve([]);
+                    }
+                };
+                img.onerror = () => resolve([]);
+                img.src = imgSrc;
+            });
+        }
+
         window.handleChatAlbumSelect = function(event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    // 需求2：点击相册发送图片不需要对图片描述
-                    sendChatImage(e.target.result, "");
+                reader.onload = async function(e) {
+                    const imgSrc = e.target.result;
+                    
+                    // 显示识别状态
+                    const chatStatus = document.getElementById('chatStatus');
+                    if (chatStatus) {
+                        chatStatus.textContent = '正在识别图片内容...';
+                        chatStatus.classList.add('typing-status');
+                    }
+
+                    try {
+                        // 执行识别
+                        const predictions = await recognizeImage(imgSrc);
+                        let recognitionResult = "未能识别出具体内容";
+                        let topClassName = "图片";
+
+                        if (predictions && predictions.length > 0) {
+                            recognitionResult = predictions.map(p => 
+                                `${p.className} (置信度: ${(p.probability * 100).toFixed(1)}%)`
+                            ).join(', ');
+                            topClassName = predictions[0].className;
+                        }
+
+                        const description = `[图片识别结果：${recognitionResult}]`;
+                        
+                        // 发送图片，并将识别结果存入消息描述中
+                        sendChatImage(imgSrc, description);
+                        
+                        // 模拟点击麦克风触发 AI 回复，让联系人根据识别内容说话
+                        // 将识别到的最匹配物体告诉 AI
+                        setTimeout(() => {
+                            callAI(`(发送了一张图片，识别内容为：${topClassName}。详细识别数据：${recognitionResult})`);
+                        }, 500);
+
+                    } catch (err) {
+                        console.error("图片识别流程异常:", err);
+                        sendChatImage(imgSrc, "");
+                    } finally {
+                        if (chatStatus) {
+                            chatStatus.textContent = '';
+                            chatStatus.classList.remove('typing-status');
+                        }
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -5041,6 +5115,18 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                             previewImage(msg.content);
                         };
                         bubble.appendChild(img);
+                        
+                        // 输出物体名称和置信度
+                        if (msg.description && msg.description.includes('图片识别结果')) {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.style.fontSize = '10px';
+                            resultDiv.style.marginTop = '4px';
+                            resultDiv.style.lineHeight = '1.2';
+                            resultDiv.style.opacity = '0.8';
+                            resultDiv.style.wordBreak = 'break-all';
+                            resultDiv.textContent = msg.description;
+                            bubble.appendChild(resultDiv);
+                        }
                     } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
                         // 需求1：展示灰色的正方形圆角卡片
                         const card = document.createElement('div');

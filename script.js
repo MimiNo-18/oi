@@ -4691,7 +4691,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = '[图片]';
+                friend.message = '[照片]';
                 friend.time = formatTime(new Date());
             }
             renderMessages();
@@ -4737,7 +4737,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = '[卡片]';
+                friend.message = '[照片]';
                 friend.time = formatTime(new Date());
             }
             renderMessages();
@@ -5210,10 +5210,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         };
                         bubble.appendChild(img);
                     } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
-                        // 需求1：展示灰色的正方形圆角卡片，显示为[照片]
+                        // 需求1：展示灰色的正方形圆角卡片，显示内容
                         const card = document.createElement('div');
                         card.className = 'message-gray-card';
-                        card.textContent = '[照片]';
+                        card.textContent = msg.content;
                         card.onclick = (e) => {
                             e.stopPropagation();
                             showPhotoDetail(msg.content);
@@ -5823,8 +5823,8 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                     if (foundSticker) {
                         finalParts.push({ type: 'sticker', content: foundSticker });
                     }
-                } else if (match.type === 'photo') {
-                    finalParts.push({ type: 'photo', content: match.value });
+                } else if (match.type === 'photo' || match.type === 'gray_card') {
+                    finalParts.push({ type: match.type, content: match.value });
                 }
                 lastIndex = match.index + match.length;
             });
@@ -5965,7 +5965,7 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                 let displayMsg = content || "[收到一条消息]";
                 if (sticker) displayMsg = `[${sticker.name}]`;
                 else if (photo) displayMsg = `[照片]`;
-                else if (gray_card) displayMsg = `[卡片]`;
+                else if (gray_card) displayMsg = `[照片]`;
                 
                 friend.message = displayMsg;
                 friend.time = formatTime(new Date());

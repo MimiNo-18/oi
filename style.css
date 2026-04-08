@@ -4365,29 +4365,33 @@
 
 /* 拍照输入文字放大预览样式：微圆角正方形白色背景 */
 #imageDetailModal.photo-preview-mode {
-    background: #ffffff !important; /* 需求1：点击放大之后背景改为白色 */
+    background: rgba(0, 0, 0, 0.8) !important; /* 黑色半透明背景，让白色卡片更明显 */
 }
 
 #imageDetailModal.photo-preview-mode .image-detail-content {
-    background: #ffffff !important; /* 确保内容区也是白色 */
+    background: transparent !important;
 }
 
 #imageDetailModal.photo-preview-mode .image-card {
-    width: 280px;
-    height: 280px;
+    width: 300px;
+    height: 300px;
     padding: 30px;
     border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: none;
-    border: none; /* 移除边框，纯白背景 */
+    background-color: #ffffff !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #imageDetailModal.photo-preview-mode #imageDetailText {
-    color: #000000 !important; /* 需求1：文字为黑色 */
+    color: #000000 !important; /* 文字为黑色 */
     font-size: 18px;
     font-weight: 500;
     text-align: center;
     margin: 0;
+    word-break: break-all;
 }
 
 #imageDetailText {
@@ -5340,20 +5344,20 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
-    color: #888; /* 默认显示[照片]时颜色较淡 */
-    font-size: 13px;
+    padding: 12px;
+    color: #333; /* 文字颜色调深一点方便阅读内容 */
+    font-size: 14px;
     word-break: break-all;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     cursor: pointer;
 }
 
-.message.sent .message-gray-card {
+.msg-row.sent .message-gray-card {
     background-color: #ebebeb;
 }
 
-.message.received .message-gray-card {
+.msg-row.received .message-gray-card {
     background-color: #f2f2f2;
 }
 

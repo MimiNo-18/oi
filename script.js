@@ -5303,7 +5303,8 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
 【重要逻辑约束】：
 1. 如果你的人设设定是不知道用户的真实姓名、职业等（例如刚认识、网友关系等），即使实名信息里有这些内容，你也必须表现出不知道。
 2. 只有当你的人设是用户的熟人、家人或在对话中用户主动告知后，你才能表现出知道这些实名信息的内容。
-3. 请严格按照你设定的角色性格进行交流。`;
+3. 请严格按照你设定的角色性格进行交流。
+4. 你具备视觉识别能力，能够看清并理解用户发送的图片内容。请不要仅回复“收到图片”，而是要像真实人类一样，根据图片中的具体内容（人物、场景、物体、文字、情感等）进行自然、个性化的回应。`;
 
             // 感知真实时间
             if (settings.senseTime) {
@@ -5381,8 +5382,15 @@ ${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` :
                 if (h.msgType === 'sticker') {
                     content = `[发送了一个表情包: ${h.stickerName || '未知'}]`;
                 } else if (h.msgType === 'image') {
-                    // 联系人能识别内容并理解
-                    content = `[发送了一张图片，描述: ${h.description || '无描述'}]`;
+                    // 使用多模态格式发送图片，让 AI 能够直接识别内容
+                    messages.push({
+                        role: h.type === 'sent' ? 'user' : 'assistant',
+                        content: [
+                            { type: "text", text: h.description || "用户发送了一张图片" },
+                            { type: "image_url", image_url: { url: h.content } }
+                        ]
+                    });
+                    return;
                 } else if (h.msgType === 'photo' || h.msgType === 'gray_card') {
                     content = `[发送了一张灰色卡片，内容为：${h.content}]`;
                 } else if (h.msgType === 'file') {

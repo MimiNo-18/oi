@@ -2564,6 +2564,18 @@
     </div>
     </div>
 
+    <!-- 朋友圈加号选项弹窗 -->
+    <div class="modal" id="momentUploadOptionsModal">
+        <div class="modal-content">
+            <div class="modal-title">上传选项</div>
+            <div class="image-options">
+                <button class="image-option-btn" onclick="triggerMomentInputContent()">输入图片内容</button>
+                <button class="image-option-btn" onclick="triggerMomentAlbumSelect()">从相册选择</button>
+                <button class="modal-btn cancel" type="button" onclick="document.getElementById('momentUploadOptionsModal').classList.remove('active')" style="width: 100%; margin-top: 5px;">取消</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 图片内容输入模态框 -->
     <div class="modal" id="imageContentModal">
         <div class="modal-content">

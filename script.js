@@ -272,6 +272,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         });
 
         function selectMomentImage() {
+            const modal = document.getElementById('momentUploadOptionsModal');
+            if (!modal) return;
+            modal.classList.add('active');
+        }
+
+        function triggerMomentInputContent() {
+            document.getElementById('momentUploadOptionsModal').classList.remove('active');
             const modal = document.getElementById('imageContentModal');
             if (!modal) return;
             modal.classList.add('active');
@@ -282,6 +289,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             if (confirmBtn) confirmBtn.onclick = confirmImageContent;
         }
 
+        function triggerMomentAlbumSelect() {
+            document.getElementById('momentUploadOptionsModal').classList.remove('active');
+            document.getElementById('momentImageInput').click();
+        }
+
         function closeImageContentModal() {
             document.getElementById('imageContentModal').classList.remove('active');
         }
@@ -289,6 +301,10 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         async function confirmImageContent() {
             const content = document.getElementById('imageContentInput').value.trim();
             if (content) {
+                if (momentImages.length >= 9) {
+                    alert('最多只能发送九张图片');
+                    return;
+                }
                 momentImages.push({
                     type: 'text',
                     content: content
@@ -302,13 +318,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function renderEditImages() {
             const container = document.getElementById('momentEditImagesContainer');
             if (!container) return;
-            let uploader = container.querySelector('.moment-image-uploader');
-            if (!uploader) {
-                uploader = document.createElement('div');
-                uploader.className = 'moment-image-uploader';
-                uploader.onclick = selectMomentImage;
-                uploader.innerHTML = '<div class="uploader-plus">+</div>';
-            }
             container.innerHTML = '';
             momentImages.forEach((img, idx) => {
                 const item = document.createElement('div');
@@ -328,7 +337,14 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 };
                 container.appendChild(item);
             });
-            container.appendChild(uploader);
+            
+            if (momentImages.length < 9) {
+                const uploader = document.createElement('div');
+                uploader.className = 'moment-image-uploader';
+                uploader.onclick = selectMomentImage;
+                uploader.innerHTML = '<div class="uploader-plus">+</div>';
+                container.appendChild(uploader);
+            }
         }
 
         function showMomentImageDetail(content) {
@@ -347,21 +363,35 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         function handleMomentImageSelect(event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
+                if (momentImages.length >= 9) {
+                    alert('最多只能发送九张图片');
+                    return;
+                }
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentMomentImage = e.target.result;
-                    const preview = document.getElementById('momentImagePreview');
-                    const placeholder = document.getElementById('momentImagePlaceholder');
-                    if (preview) {
-                        preview.src = currentMomentImage;
-                        preview.style.display = 'block';
-                    }
-                    if (placeholder) placeholder.style.display = 'none';
-                    document.querySelector('.uploader-plus').style.display = 'none';
+                reader.onload = async function(e) {
+                    const imgSrc = e.target.result;
+                    const imgItem = {
+                        type: 'image',
+                        content: imgSrc,
+                        description: ''
+                    };
+                    momentImages.push(imgItem);
+                    renderEditImages();
                     updatePostBtnState();
+
+                    // 异步识别图片内容，用于后续联系人回复
+                    try {
+                        const predictions = await recognizeImage(imgSrc);
+                        if (predictions && predictions.length > 0) {
+                            imgItem.description = predictions[0].className;
+                        }
+                    } catch (err) {
+                        console.error("Moment image recognition error:", err);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
+            event.target.value = '';
         }
 
         async function postMoment() {
@@ -457,7 +487,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
                 let imagesHtml = '';
                 if (item.images && item.images.length > 0) {
-                    imagesHtml = `<div class="moment-images" style="grid-template-columns: repeat(${item.images.length === 1 ? 1 : (item.images.length === 2 || item.images.length === 4 ? 2 : 3)}, 1fr);">`;
+                    let cols = 3;
+                    if (item.images.length === 1) cols = 1;
+                    else if (item.images.length === 2 || item.images.length === 4) cols = 2;
+                    
+                    imagesHtml = `<div class="moment-images" style="grid-template-columns: repeat(${cols}, 1fr);">`;
                     item.images.forEach(img => {
                         if (img.type === 'text') {
                             imagesHtml += `<div class="moment-img" onclick="showMomentImageDetail('${img.content}')" style="display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; padding:5px; text-align:center;">${img.content}</div>`;
@@ -648,12 +682,22 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             if (!config || !config.url || !config.key) return;
             const contact = contacts.find(c => c.id === friend.contactId);
             const nickname = getFriendDisplayName(friend);
+            
+            let imgDescriptions = [];
+            if (moment.images && moment.images.length > 0) {
+                moment.images.forEach(img => {
+                    if (img.type === 'text') imgDescriptions.push(img.content);
+                    else if (img.description) imgDescriptions.push(img.description);
+                });
+            }
+
             let systemPrompt = `你现在的身份是微信好友：${nickname}。
-【身份身份】：你不是AI，你是一个真实的联系人，拥有独立的思想和社交习惯。你现在正在刷朋友圈。
-【人设信息】：${contact ? contact.design : '一个普通的微信好友'}。
-【当前场景】：你在朋友圈看到了用户发布的内容。你需要根据你们的关系亲疏和内容质量，决定是否互动。
+【重要指令】：你不是AI，也不是助手，你就是这个真实的微信联系人。你现在正闲着没事刷朋友圈。
+【你的人设】：${contact ? contact.design : '一个普通的微信好友'}。请务必读取并严格遵守。
+【当前记忆/上下文】：${getChatSettings(friend.id).manualMemory || '暂无特殊记忆'}。
 【朋友圈内容】：${moment.content}
-${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.images.filter(img => img.type === 'text').map(img => img.content).join(', ') : ''}`;
+${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescriptions.join('、') : ''}
+【任务】：作为真实的联系人，看到朋友圈后的自然反应。`;
             if (type === 'auto_feedback' || type === 'manual_trigger') {
                 systemPrompt += `\n任务：决定是否给这条朋友圈点赞，以及是否进行评论。
 请根据你的人设和内容逻辑，以 JSON 格式返回你的决定：
@@ -4535,47 +4579,8 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     const imgSrc = e.target.result;
-                    
-                    // 显示识别状态
-                    const chatStatus = document.getElementById('chatStatus');
-                    if (chatStatus) {
-                        chatStatus.textContent = '正在识别图片内容...';
-                        chatStatus.classList.add('typing-status');
-                    }
-
-                    try {
-                        // 执行识别
-                        const predictions = await recognizeImage(imgSrc);
-                        let recognitionResult = "未能识别出具体内容";
-                        let topClassName = "图片";
-
-                        if (predictions && predictions.length > 0) {
-                            recognitionResult = predictions.map(p => 
-                                `${p.className} (置信度: ${(p.probability * 100).toFixed(1)}%)`
-                            ).join(', ');
-                            topClassName = predictions[0].className;
-                        }
-
-                        const description = `[图片识别结果：${recognitionResult}]`;
-                        
-                        // 发送图片，并将识别结果存入消息描述中
-                        sendChatImage(imgSrc, description);
-                        
-                        // 模拟点击麦克风触发 AI 回复，让联系人根据识别内容说话
-                        // 将识别到的最匹配物体告诉 AI
-                        setTimeout(() => {
-                            callAI(`(发送了一张图片，识别内容为：${topClassName}。详细识别数据：${recognitionResult})`);
-                        }, 500);
-
-                    } catch (err) {
-                        console.error("图片识别流程异常:", err);
-                        sendChatImage(imgSrc, "");
-                    } finally {
-                        if (chatStatus) {
-                            chatStatus.textContent = '';
-                            chatStatus.classList.remove('typing-status');
-                        }
-                    }
+                    // 需求1：先发送出去，不带有任何文字内容，也不立即识别
+                    sendChatImage(imgSrc, "");
                 };
                 reader.readAsDataURL(file);
             }
@@ -4589,7 +4594,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 type: 'sent',
                 msgType: 'image',
                 content: src,
-                description: description || "用户发送了一张图片",
+                description: description || "",
                 time: new Date().getTime()
             };
             history.push(newMessage);
@@ -4604,8 +4609,6 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             saveChatHistories();
             saveChatListToStorage();
             renderChatList();
-            // 移除自动调用 AI
-            // callAI(description);
         }
 
         window.handleChatCamera = function() {
@@ -5117,18 +5120,6 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                             previewImage(msg.content);
                         };
                         bubble.appendChild(img);
-                        
-                        // 输出物体名称和置信度
-                        if (msg.description && msg.description.includes('图片识别结果')) {
-                            const resultDiv = document.createElement('div');
-                            resultDiv.style.fontSize = '10px';
-                            resultDiv.style.marginTop = '4px';
-                            resultDiv.style.lineHeight = '1.2';
-                            resultDiv.style.opacity = '0.8';
-                            resultDiv.style.wordBreak = 'break-all';
-                            resultDiv.textContent = msg.description;
-                            bubble.appendChild(resultDiv);
-                        }
                     } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
                         // 需求1：展示灰色的正方形圆角卡片
                         const card = document.createElement('div');
@@ -5212,6 +5203,55 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
         async function handleMicClick() {
             // 需求4：用户需要点击输入框内部的小麦克风联系人才会回复用户
             if (!currentChatFriendId) return;
+            
+            // 需求1：识别图片并输出内容
+            const history = chatHistories[currentChatFriendId] || [];
+            // 寻找最后一条未识别的图片消息
+            let lastImageMsg = null;
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].msgType === 'image' && history[i].type === 'sent') {
+                    if (!history[i].description || history[i].description === "") {
+                        lastImageMsg = history[i];
+                    }
+                    break; 
+                }
+                if (history[i].type === 'received') break; // 已经回复过了就不再识别上一张
+            }
+
+            if (lastImageMsg) {
+                const chatStatus = document.getElementById('chatStatus');
+                if (chatStatus) {
+                    chatStatus.textContent = '正在识别图片内容...';
+                    chatStatus.classList.add('typing-status');
+                }
+                try {
+                    const predictions = await recognizeImage(lastImageMsg.content);
+                    let recognitionResult = "未能识别出具体内容";
+                    let topClassName = "图片";
+
+                    if (predictions && predictions.length > 0) {
+                        recognitionResult = predictions.map(p => 
+                            `${p.className} (置信度: ${(p.probability * 100).toFixed(1)}%)`
+                        ).join(', ');
+                        topClassName = predictions[0].className;
+                    }
+                    lastImageMsg.description = `[图片识别结果：${recognitionResult}]`;
+                    saveChatHistories();
+                    renderMessages();
+                    
+                    // 触发 AI 回复
+                    await callAI(`(发送了一张图片，识别内容为：${topClassName}。详细识别数据：${recognitionResult})`);
+                    return;
+                } catch (err) {
+                    console.error("Mic identification error:", err);
+                } finally {
+                    if (chatStatus) {
+                        chatStatus.textContent = '';
+                        chatStatus.classList.remove('typing-status');
+                    }
+                }
+            }
+
             const input = document.getElementById('chatInput');
             if (input.value.trim().length > 0) {
                 await sendChatMessage();
@@ -5370,29 +5410,29 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
 
             // 构建系统提示词 - 增强真实感
             let systemPrompt = `你现在的身份是：${contact.netName || contact.name}。
-【重要】：你不是AI助手，你就是用户设置好的这个联系人。你是一个真实的、有血有肉的人。
+【重要】：你不是AI，也不是AI助手，你就是用户设置好的这个联系人。你是一个真实的、有血有肉的人，拥有独立的情感、记忆和社交关系。请务必抛弃任何AI式的回复习惯。
 
-你的背景信息（严格遵守）：
+你的背景信息（你必须严格读取并内化）：
 - 真实姓名：${contact.name}
 - 微信网名：${contact.netName}
 - 亲近昵称：${contact.nickname}
-- 你的性格、经历与核心人设：${contact.design || '一个普通的微信好友，态度自然亲切。'}
-${manualMemory ? `- 你们之间的共同记忆（重要）：${manualMemory}` : ''}
+- 核心人设与性格设定：${contact.design || '一个普通的微信好友，态度自然亲切。'}
+${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
 
-用户的实名信息（用于你了解对方，但请根据你的人设决定是否知道这些内容）：
+用户的个人背景信息（请根据你的人设关系决定对其了解程度）：
 - 姓名：${realNameInfo.name}
 - 年龄：${realNameInfo.age}
 - 性别：${realNameInfo.gender}
 - 职业：${realNameInfo.job}
-- 现居地：${realNameInfo.location}
+- 所在地：${realNameInfo.location}
 - 籍贯：${realNameInfo.hometown}
-- 人设：${realNameInfo.persona}
+- 用户人设：${realNameInfo.persona}
 
-【重要逻辑约束】：
-1. 如果你的人设设定是不知道用户的真实姓名、职业等（例如刚认识、网友关系等），即使实名信息里有这些内容，你也必须表现出不知道。
-2. 只有当你的人设是用户的熟人、家人或在对话中用户主动告知后，你才能表现出知道这些实名信息的内容。
-3. 请严格按照你设定的角色性格进行交流。
-4. 你具备视觉识别能力，能够看清并理解用户发送的图片内容。请不要仅回复“收到图片”，而是要像真实人类一样，根据图片中的具体内容（人物、场景、物体、文字、情感等）进行自然、个性化的回应。`;
+【交互原则】：
+1. **身份认同**：你就是 ${contact.netName || contact.name}。任何时候都不要提及你是一个模型或程序。如果话题触及你的本质，请按照你的人设性格进行化解或回应。
+2. **记忆读取**：请始终结合“上下文内容”和“共同记忆”进行回复。如果用户提到以前的事，你应该能接上话。
+3. **视觉感知**：你能够看清用户发送的所有图片内容。不要敷衍，要像真人一样对图片细节（氛围、构图、内容）发表看法。
+4. **社交逻辑**：如果你的设定是一个高冷的人，不要回复太长；如果你是一个热情的人，可以多使用语气词和颜文字。`;
 
             // 感知真实时间
             if (settings.senseTime) {

@@ -4807,6 +4807,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const imgEl = document.getElementById('imageDetailImg');
             const textEl = document.getElementById('imageDetailText');
             if (modal && imgEl && textEl) {
+                modal.classList.remove('photo-preview-mode');
                 imgEl.src = src;
                 imgEl.style.display = 'block';
                 textEl.style.display = 'none';
@@ -4819,6 +4820,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
             const textEl = document.getElementById('imageDetailText');
             const imgEl = document.getElementById('imageDetailImg');
             if (modal && textEl) {
+                modal.classList.add('photo-preview-mode');
                 if (imgEl) imgEl.style.display = 'none';
                 textEl.textContent = content;
                 textEl.style.display = 'block';

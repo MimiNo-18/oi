@@ -206,25 +206,30 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
         async function refreshAiMoments() {
             const postBtn = document.querySelector('.moments-header-right');
-            if (postBtn) {
-                const svg = postBtn.querySelector('svg');
-                if (svg) {
-                    svg.classList.add('spinning');
-                    setTimeout(() => svg.classList.remove('spinning'), 800);
+            const svg = postBtn ? postBtn.querySelector('svg') : null;
+            
+            if (!svg || svg.classList.contains('spinning')) return;
+            
+            svg.classList.add('spinning');
+
+            try {
+                if (currentMomentsFriendId) {
+                    await generateAiMoment(currentMomentsFriendId);
+                } else {
+                    const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
+                    const availableFriends = chatList.filter(f => allSettings[f.id] && allSettings[f.id].proactiveMoment);
+                    if (availableFriends.length > 0) {
+                        const randomFriend = availableFriends[Math.floor(Math.random() * availableFriends.length)];
+                        await generateAiMoment(randomFriend.id);
+                    } else if (chatList.length > 0) {
+                        const randomFriend = chatList[Math.floor(Math.random() * chatList.length)];
+                        await generateAiMoment(randomFriend.id);
+                    }
                 }
-            }
-            if (currentMomentsFriendId) {
-                await generateAiMoment(currentMomentsFriendId);
-            } else {
-                const allSettings = JSON.parse(localStorage.getItem('wechat_chat_settings') || '{}');
-                const availableFriends = chatList.filter(f => allSettings[f.id] && allSettings[f.id].proactiveMoment);
-                if (availableFriends.length > 0) {
-                    const randomFriend = availableFriends[Math.floor(Math.random() * availableFriends.length)];
-                    await generateAiMoment(randomFriend.id);
-                } else if (chatList.length > 0) {
-                    const randomFriend = chatList[Math.floor(Math.random() * chatList.length)];
-                    await generateAiMoment(randomFriend.id);
-                }
+            } catch (err) {
+                console.error("Refresh AI Moments error:", err);
+            } finally {
+                svg.classList.remove('spinning');
             }
         }
 

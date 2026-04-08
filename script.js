@@ -205,6 +205,14 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         }
 
         async function refreshAiMoments() {
+            const postBtn = document.querySelector('.moments-header-right');
+            if (postBtn) {
+                const svg = postBtn.querySelector('svg');
+                if (svg) {
+                    svg.classList.add('spinning');
+                    setTimeout(() => svg.classList.remove('spinning'), 800);
+                }
+            }
             if (currentMomentsFriendId) {
                 await generateAiMoment(currentMomentsFriendId);
             } else {
@@ -521,10 +529,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                             let replyText = c.replyTo ? ` <span class="moment-comment-reply">回复</span> <span class="moment-comment-nickname">${c.replyTo}</span>` : '';
                             return `<div class="moment-comment-item" 
                                 onclick="handleCommentClick(${item.id}, ${cIdx}, event)"
-                                ontouchstart="window.commentLongPressTimer = setTimeout(() => { if(confirm('是否删除评论？')){ const m = momentsData.find(mo => mo.id === ${item.id}); if(m){ m.comments.splice(${cIdx}, 1); saveMoments(); renderMoments(); } } }, 700)"
+                                oncontextmenu="event.preventDefault(); showCommentContextMenu(${item.id}, ${cIdx}, event)"
+                                ontouchstart="window.commentLongPressTimer = setTimeout(() => { showCommentContextMenu(${item.id}, ${cIdx}, event); }, 700)"
                                 ontouchend="clearTimeout(window.commentLongPressTimer)"
                                 ontouchmove="clearTimeout(window.commentLongPressTimer)"
-                                onmousedown="window.commentLongPressTimer = setTimeout(() => { if(confirm('是否删除评论？')){ const m = momentsData.find(mo => mo.id === ${item.id}); if(m){ m.comments.splice(${cIdx}, 1); saveMoments(); renderMoments(); } } }, 700)"
+                                onmousedown="if(event.button === 0) window.commentLongPressTimer = setTimeout(() => { showCommentContextMenu(${item.id}, ${cIdx}, event); }, 700)"
                                 onmouseup="clearTimeout(window.commentLongPressTimer)"
                                 onmouseleave="clearTimeout(window.commentLongPressTimer)">
                                 <span class="moment-comment-nickname">${c.nickname}</span>${replyText}：${c.content}
@@ -576,10 +585,67 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             if (comment.nickname === myNickname) {
                 currentMomentId = momentId;
                 currentCommentIndex = commentIdx;
-                document.getElementById('commentActionModal').classList.add('active');
+                showCommentContextMenu(momentId, commentIdx, event);
             } else {
                 showMomentCommentInput(momentId, event, comment.nickname);
             }
+        }
+
+        function showCommentContextMenu(momentId, commentIdx, event) {
+            if (event && event.preventDefault) event.preventDefault();
+            const menu = document.getElementById('commentActionModal');
+            if (!menu) return;
+            
+            currentMomentId = momentId;
+            currentCommentIndex = commentIdx;
+            
+            const moment = momentsData.find(m => m.id === momentId);
+            const comment = moment.comments[commentIdx];
+            const myNickname = wechatUserInfo.nickname || '我';
+            
+            const btnGroup = menu.querySelector('.modal-buttons');
+            btnGroup.innerHTML = '';
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'modal-btn';
+            copyBtn.style.cssText = 'background: #fff; color: #000; border-bottom: 1px solid #eee; border-radius: 0;';
+            copyBtn.textContent = '复制';
+            copyBtn.onclick = copyComment;
+            btnGroup.appendChild(copyBtn);
+
+            // 如果不是自己发的评论，显示“重回”
+            if (comment.nickname !== myNickname) {
+                const redoBtn = document.createElement('button');
+                redoBtn.className = 'modal-btn';
+                redoBtn.style.cssText = 'background: #fff; color: #07c160; border-bottom: 1px solid #eee; border-radius: 0;';
+                redoBtn.textContent = '重回';
+                redoBtn.onclick = async () => {
+                    menu.classList.remove('active');
+                    const friend = chatList.find(f => getFriendDisplayName(f) === comment.nickname);
+                    if (friend) {
+                        // 删除当前及之后的该人的回复？不，通常重回是指让AI重新针对之前的语境回复一次
+                        // 这里我们简单的再次触发 AI 回复
+                        await callAIForMoment(momentId, friend, 'reply_to_user', { userComment: "(系统触发重回)" });
+                    } else {
+                        const contact = contacts.find(c => (c.remark || c.netName || c.name) === comment.nickname);
+                        if (contact) {
+                            const tempFriend = { id: 0, contactId: contact.id, name: contact.name };
+                            await callAIForMoment(momentId, tempFriend, 'reply_to_user', { userComment: "(系统触发重回)" });
+                        }
+                    }
+                };
+                btnGroup.appendChild(redoBtn);
+            }
+            
+            const delBtn = document.createElement('button');
+            delBtn.className = 'modal-btn';
+            delBtn.style.cssText = 'background: #fff; color: #fa5151; border-radius: 0;';
+            delBtn.textContent = '删除';
+            delBtn.onclick = deleteComment;
+            btnGroup.appendChild(delBtn);
+            
+            menu.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(50);
         }
 
         async function deleteComment() {
@@ -658,8 +724,20 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 alert('请先添加好友以进行联系人回复');
                 return;
             }
-            const randomFriend = chatList[Math.floor(Math.random() * chatList.length)];
-            await callAIForMoment(id, randomFriend, 'manual_trigger');
+            
+            let targetFriend = null;
+            // 需求4：AI朋友圈页面点击联系人回复会优先让该AI回复
+            if (currentMomentsFriendId) {
+                targetFriend = chatList.find(f => f.id === currentMomentsFriendId);
+            } else if (!moment.isMine && moment.friendId) {
+                targetFriend = chatList.find(f => f.id === moment.friendId);
+            }
+
+            if (!targetFriend) {
+                targetFriend = chatList[Math.floor(Math.random() * chatList.length)];
+            }
+            
+            await callAIForMoment(id, targetFriend, 'manual_trigger');
         }
 
         function triggerAutoMomentsFeedback(momentId) {
@@ -691,16 +769,21 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 });
             }
 
+            // 获取私聊历史作为参考 (需求2：根据消息等内容评论回复)
+            const history = chatHistories[friend.id] || [];
+            const chatContext = history.slice(-10).map(m => `${m.type === 'sent' ? '用户' : '你'}: ${m.content}`).join('\n');
+
             let systemPrompt = `你现在的身份是微信好友：${nickname}。
 【重要指令】：你不是AI，也不是助手，你就是这个真实的微信联系人。你现在正闲着没事刷朋友圈。
 【你的人设】：${contact ? contact.design : '一个普通的微信好友'}。请务必读取并严格遵守。
 【当前记忆/上下文】：${getChatSettings(friend.id).manualMemory || '暂无特殊记忆'}。
+【私聊历史参考】：\n${chatContext || '暂无私聊记录'}
 【朋友圈内容】：${moment.content}
 ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescriptions.join('、') : ''}
 【任务】：作为真实的联系人，看到朋友圈后的自然反应。`;
             if (type === 'auto_feedback' || type === 'manual_trigger') {
                 systemPrompt += `\n任务：决定是否给这条朋友圈点赞，以及是否进行评论。
-请根据你的人设和内容逻辑，以 JSON 格式返回你的决定：
+请根据你的人设、记忆和你们之前的私聊默契，以 JSON 格式返回你的决定：
 {
   "like": boolean, // 是否点赞
   "comment": string // 评论内容，如果不评论则留空 ""。评论应在20字以内，口语化，不带引号。
@@ -708,11 +791,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 如果由于人设或忙碌不打算进行任何互动，请依然返回该 JSON，like 设为 false，comment 设为 ""。
 直接返回 JSON，不要有前缀或后缀。`;
             } else if (type === 'reply_to_user') {
-                const history = chatHistories[friend.id] || [];
-                const chatContext = history.slice(-5).map(m => `${m.type === 'sent' ? '用户' : '你'}: ${m.content}`).join('\n');
-                systemPrompt += `\n你们最近的私聊记录：\n${chatContext || '暂无交流'}`;
                 systemPrompt += `\n用户在朋友圈回复了你的评论："${context.userComment}"。
-【任务】：作为真实的联系人，根据你们的私聊默契、朋友圈语境和人设决定是否在朋友圈回复用户。
+【任务】：作为真实的联系人，根据你们的私聊默契、朋友圈语境、人设和记忆决定是否在朋友圈回复用户。
 直接返回回复内容（20字以内，口语化，不要前缀，不要引号，不要有动作描写）。
 如果不打算回复，或者此时觉得不便回复，请返回 "SKIP"。`;
             }
@@ -942,6 +1022,15 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 if (currentReplyTo) newComment.replyTo = currentReplyTo;
                 moment.comments.push(newComment);
                 await saveMoments();
+
+                // 需求4：在AI的朋友圈下面评论AI会自动回复
+                if (!moment.isMine && moment.friendId) {
+                    const friend = chatList.find(f => f.id === moment.friendId);
+                    if (friend) {
+                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000 + Math.random() * 2000);
+                    }
+                }
+
                 if (currentReplyTo && currentReplyTo !== myNickname) {
                     const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
                     if (friend) {
@@ -5121,10 +5210,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         };
                         bubble.appendChild(img);
                     } else if (msg.msgType === 'photo' || msg.msgType === 'gray_card') {
-                        // 需求1：展示灰色的正方形圆角卡片
+                        // 需求1：展示灰色的正方形圆角卡片，显示为[照片]
                         const card = document.createElement('div');
                         card.className = 'message-gray-card';
-                        card.textContent = msg.content;
+                        card.textContent = '[照片]';
                         card.onclick = (e) => {
                             e.stopPropagation();
                             showPhotoDetail(msg.content);

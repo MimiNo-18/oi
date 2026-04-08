@@ -349,7 +349,6 @@
 
         /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
         .phone-container,
-        #contactDetailPage,
         #worldBookContainer,
         #settingsContainer,
         #accountContainer,
@@ -379,15 +378,24 @@
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
-        #contactDetailPage,
         #wechatAccountSwitchContainer {
             padding-top: 49px !important;
         }
 
-        /* 朋友圈页面背景图从顶部状态栏开始 */
-        #momentsContainer {
+        /* 朋友圈和联系人详情页面背景图从顶部状态栏开始 */
+        #momentsContainer,
+        #contactDetailPage {
             padding-top: 0 !important;
             background-color: #f7f7f7 !important; /* 保持灰色背景 */
+        }
+
+        #contactDetailPage .wechat-nav-bar {
+            height: 108px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 16px 12px;
+            background-color: #fff !important;
+            border-bottom: 1px solid #f5f5f5;
         }
 
         #momentsHeader {
@@ -4356,17 +4364,26 @@
 }
 
 /* 拍照输入文字放大预览样式：微圆角正方形白色背景 */
+#imageDetailModal.photo-preview-mode {
+    background: #ffffff !important; /* 需求1：点击放大之后背景改为白色 */
+}
+
+#imageDetailModal.photo-preview-mode .image-detail-content {
+    background: #ffffff !important; /* 确保内容区也是白色 */
+}
+
 #imageDetailModal.photo-preview-mode .image-card {
     width: 280px;
     height: 280px;
     padding: 30px;
     border-radius: 12px;
     background-color: #ffffff;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: none;
+    border: none; /* 移除边框，纯白背景 */
 }
 
 #imageDetailModal.photo-preview-mode #imageDetailText {
-    color: #000000; /* 黑色文字 */
+    color: #000000 !important; /* 需求1：文字为黑色 */
     font-size: 18px;
     font-weight: 500;
     text-align: center;
@@ -5316,19 +5333,20 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 
 /* 灰色的正方形圆角卡片样式 */
 .message-gray-card {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     background-color: #f2f2f2;
-    border-radius: 12px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 15px;
-    color: #333;
-    font-size: 14px;
+    padding: 10px;
+    color: #888; /* 默认显示[照片]时颜色较淡 */
+    font-size: 13px;
     word-break: break-all;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    cursor: pointer;
 }
 
 .message.sent .message-gray-card {
@@ -5353,13 +5371,16 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 #contactDetailPage {
     background-color: #f7f7f7 !important;
     z-index: 200; /* 保持在微信之上 */
+    overflow: hidden !important; /* 禁止主容器滑动 */
+    display: flex;
+    flex-direction: column;
 }
 
 #contactDetailPage .contact-detail-content {
     background-color: #f7f7f7;
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior-y: none; /* 防止橡皮筋效果 */
+    flex: 1;
+    overflow-y: hidden !important; /* 需求3：禁止向上滑动 */
+    overscroll-behavior-y: contain;
 }
 
 #contactDetailPage .profile-basic-info,
@@ -5379,4 +5400,15 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     display: block;
     height: 100%;
     background-color: #f7f7f7;
+}
+
+/* 旋转动画 */
+@keyframes spin-refresh {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinning {
+    display: inline-block;
+    animation: spin-refresh 0.8s linear infinite;
 }

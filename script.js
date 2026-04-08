@@ -4749,11 +4749,20 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                 textEl.textContent = content;
                 textEl.style.display = 'block';
                 textEl.style.color = '#000';
-                textEl.parentElement.style.background = '#fff';
                 modal.classList.add('active');
-                modal.onclick = () => {
-                    modal.classList.remove('active');
-                };
+            }
+        }
+
+        function showFilePreview(fileName, fileContent) {
+            const modal = document.getElementById('filePreviewModal');
+            const titleEl = document.getElementById('filePreviewTitle');
+            const textEl = document.getElementById('filePreviewText');
+            const scrollEl = document.getElementById('filePreviewScroll');
+            if (modal && titleEl && textEl) {
+                titleEl.textContent = fileName;
+                textEl.textContent = fileContent || '无内容';
+                modal.classList.add('active');
+                if (scrollEl) scrollEl.scrollTop = 0;
             }
         }
 
@@ -5048,7 +5057,7 @@ ${moment.images && moment.images.length > 0 ? '包含图片描述：' + moment.i
                         bubble.style.cursor = 'pointer';
                         bubble.onclick = (e) => {
                             e.stopPropagation();
-                            showPhotoDetail(`文件名称: ${msg.fileName}\n\n内容预览:\n${msg.fileContent || '无内容'}`);
+                            showFilePreview(msg.fileName, msg.fileContent);
                         };
                         bubble.innerHTML = `
                             <div style="display: flex; align-items: center; gap: 8px;">

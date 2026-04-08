@@ -651,28 +651,6 @@
             </div>
         </div>
 
-        <!-- 图片内容输入模态框 -->
-        <div class="modal" id="imageContentModal">
-            <div class="modal-content">
-                <div class="modal-title">输入图片内容</div>
-                <textarea class="modal-input" id="imageContentInput" style="height: 100px;" placeholder="请输入图片描述内容..."></textarea>
-                <div class="modal-buttons">
-                    <button class="modal-btn cancel" type="button" onclick="closeImageContentModal()">取消</button>
-                    <button class="modal-btn confirm" type="button" onclick="confirmImageContent()">确定</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 图片详情显示模态框 (点击灰色图片放大) -->
-        <div class="modal" id="imageDetailModal" onclick="this.classList.remove('active')">
-            <div class="image-detail-content">
-                <div class="image-card" onclick="event.stopPropagation()">
-                    <img id="imageDetailImg" src="" style="max-width: 100%; max-height: 80vh; display: none; border-radius: 8px;">
-                    <div id="imageDetailText"></div>
-                </div>
-            </div>
-        </div>
-
     <!-- 朋友圈评论操作模态框 (删除/复制) -->
     <div class="modal" id="commentActionModal">
         <div class="modal-content" style="padding: 10px; width: 200px;">
@@ -2580,6 +2558,40 @@
             <div style="height: 100px; background: #f7f7f7;"></div>
         </div>
     </div>
+    </div>
+
+    <!-- 图片内容输入模态框 -->
+    <div class="modal" id="imageContentModal">
+        <div class="modal-content">
+            <div class="modal-title">输入图片内容</div>
+            <textarea class="modal-input" id="imageContentInput" style="height: 100px;" placeholder="请输入图片描述内容..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeImageContentModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="confirmImageContent()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片详情显示模态框 (点击灰色图片放大) -->
+    <div class="modal" id="imageDetailModal" onclick="this.classList.remove('active')">
+        <div class="image-detail-content">
+            <div class="image-card" onclick="event.stopPropagation()">
+                <img id="imageDetailImg" src="" style="max-width: 100%; max-height: 80vh; display: none; border-radius: 8px;">
+                <div id="imageDetailText"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文件预览模态框 -->
+    <div class="modal" id="filePreviewModal" onclick="this.classList.remove('active')">
+        <div class="modal-content file-preview-content" onclick="event.stopPropagation()">
+            <div class="file-preview-header">
+                <div id="filePreviewTitle" class="file-preview-title">文件名</div>
+            </div>
+            <div id="filePreviewScroll" class="file-preview-body">
+                <div id="filePreviewText" class="file-preview-text"></div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

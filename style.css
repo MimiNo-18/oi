@@ -4344,8 +4344,6 @@
 }
 
 .image-card {
-    background: #fff; /* 白色背景 */
-    border: 1px solid #d0d0d0; /* 灰色描边 */
     border-radius: 8px;
     width: 280px; /* 正方形卡片感 */
     height: 280px;
@@ -4353,7 +4351,6 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px rgba(128, 128, 128, 0.3); /* 灰色阴影 */
 }
 
 #imageDetailText {
@@ -5182,6 +5179,50 @@ body.category-management-active .status-bar {
 /* 确保分类管理列表在高度受限时可滚动 */
 body.has-phone-border #categoryManagementContainer .wechat-content-area {
     height: calc(812px - 44px - 49px) !important; /* 减去状态栏占位和导航栏高度 */
+}
+
+/* 文件预览弹窗样式 */
+.file-preview-content {
+    background: #fff;
+    width: 85% !important;
+    max-width: 320px;
+    height: 60% !important;
+    border-radius: 16px !important;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.file-preview-header {
+    padding: 15px;
+    border-bottom: 1px solid #f2f2f2;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.file-preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-preview-body {
+    flex: 1;
+    overflow-y: auto !important;
+    padding: 15px;
+}
+
+.file-preview-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-all;
 }
 
 /* AI朋友圈可见范围弹窗样式 */

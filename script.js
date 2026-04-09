@@ -3451,6 +3451,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 id: Date.now(),
                 contactId: contact.id,
                 name: contact.name,
+                remark: contact.netName || '', // 需求3：备注一开始为网名
                 avatar: contact.avatar || '',
                 message: '我通过了你的朋友验证请求，现在我们可以开始聊天了',
                 time: formatTime(new Date()),
@@ -3719,7 +3720,18 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             if (!quotedMessage) return;
             const preview = document.getElementById('quotePreview');
             const text = document.getElementById('quotePreviewText');
-            text.textContent = quotedMessage.content;
+            
+            // 需求4：引用显示逻辑
+            if (quotedMessage.msgType === 'image') {
+                text.innerHTML = `<img src="${quotedMessage.content}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; vertical-align:middle; margin-right:5px;">图片`;
+            } else if (quotedMessage.msgType === 'photo' || quotedMessage.msgType === 'gray_card') {
+                text.textContent = '[照片]';
+            } else if (quotedMessage.msgType === 'sticker') {
+                text.textContent = `[${quotedMessage.stickerName || '表情'}]`;
+            } else {
+                text.textContent = quotedMessage.content;
+            }
+            
             preview.style.display = 'block';
             
             // 自动聚焦输入框
@@ -4886,10 +4898,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             if (!contact) return;
 
             const history = chatHistories[currentChatFriendId] || [];
+            const displayName = contact.netName || contact.name; // 需求3：发送的名片的名字为网名
             const newMessage = {
                 type: 'sent',
                 msgType: 'card',
-                content: `[名片: ${contact.name || contact.netName}]`,
+                content: `[名片: ${displayName}]`,
                 cardInfo: contact,
                 cardContactId: contact.id, // 记录联系人ID
                 time: new Date().getTime()
@@ -4899,7 +4912,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (friend) {
-                friend.message = `[个人名片] ${contact.name || contact.netName}`;
+                friend.message = `[个人名片] ${displayName}`;
                 friend.time = formatTime(new Date());
             }
 
@@ -5200,6 +5213,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     quoteBox.style.marginBottom = '8px';
                     quoteBox.style.wordBreak = 'break-all';
                     quoteBox.style.lineHeight = '1.4';
+                    quoteBox.style.display = 'flex';
+                    quoteBox.style.alignItems = 'center';
+                    quoteBox.style.gap = '8px';
                     
                     if (msg.type === 'sent') {
                         quoteBox.style.background = 'rgba(255, 255, 255, 0.15)';
@@ -5211,7 +5227,22 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         quoteBox.style.color = '#888';
                     }
                     
-                    quoteBox.textContent = msg.quote.content;
+                    // 需求4：引用渲染逻辑
+                    if (msg.quote.msgType === 'image') {
+                        const qImg = document.createElement('img');
+                        qImg.src = msg.quote.imgSrc;
+                        qImg.style.width = '40px';
+                        qImg.style.height = '40px';
+                        qImg.style.objectFit = 'cover';
+                        qImg.style.borderRadius = '4px';
+                        quoteBox.appendChild(qImg);
+                        
+                        const qText = document.createElement('span');
+                        qText.textContent = '图片';
+                        quoteBox.appendChild(qText);
+                    } else {
+                        quoteBox.textContent = msg.quote.content;
+                    }
                     bubble.appendChild(quoteBox);
                 }
 
@@ -5390,8 +5421,18 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             };
 
             if (quotedMessage) {
+                // 需求4：构造引用数据
+                let quoteContent = quotedMessage.content;
+                if (quotedMessage.msgType === 'photo' || quotedMessage.msgType === 'gray_card') {
+                    quoteContent = '[照片]';
+                } else if (quotedMessage.msgType === 'sticker') {
+                    quoteContent = `[${quotedMessage.stickerName || '表情'}]`;
+                }
+
                 newMessage.quote = {
-                    content: quotedMessage.content
+                    content: quoteContent,
+                    msgType: quotedMessage.msgType,
+                    imgSrc: quotedMessage.msgType === 'image' ? quotedMessage.content : null
                 };
                 cancelQuote();
             }
@@ -7828,6 +7869,10 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         function closeStickerManagement() {
             document.getElementById('stickerManagementContainer').style.display = 'none';
             saveUIState();
+        }
+
+        function openStickerCategoryManagement() {
+            alert('分类管理功能开发中');
         }
 
         function openUsageManagement() {

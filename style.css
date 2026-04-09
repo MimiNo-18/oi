@@ -69,7 +69,6 @@
         body.has-phone-border .phone-container,
         body.has-phone-border #contactsContainer,
         body.has-phone-border #chatPageContainer,
-        body.has-phone-border #wechatContainer,
         body.has-phone-border #settingsContainer,
         body.has-phone-border #accountContainer,
         body.has-phone-border #accountInfoContainer,
@@ -123,10 +122,14 @@
 
         /* 边框模式下特定页面的背景色强制保持 */
         body.has-phone-border #contactsContainer,
-        body.has-phone-border #wechatContainer,
         body.has-phone-border #chatPageContainer,
         body.has-phone-border .phone-container {
             background-color: #fff !important;
+        }
+
+        /* 微信主容器背景应随内容自适应 */
+        body.has-phone-border #wechatContainer {
+            background-color: #fff;
         }
 
         /* 首页层级 */
@@ -891,7 +894,7 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff; /* 改为白色 */
+            background: #f7f7f7; /* 默认灰色，白底页面会自动覆盖 */
         }
 
         /* 微信通讯录特有样式 */

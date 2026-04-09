@@ -108,7 +108,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     const netName = contact ? contact.netName : '';
                     nameEl.textContent = remark || netName || (friend ? friend.name : '未知');
                 }
-                if (sigEl) sigEl.textContent = (contact ? contact.signature : '') || '';
+                const signature = (contact ? contact.signature : '') || '';
+                if (sigEl) {
+                    sigEl.textContent = signature;
+                    sigEl.style.display = (signature && signature !== '未设置' && signature.trim() !== '') ? 'block' : 'none';
+                }
                 
                 if (postBtn) {
                     postBtn.style.visibility = 'visible';
@@ -125,7 +129,11 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 const me = wechatUserInfo;
                 if (avatarImg) avatarImg.src = me.avatar || DEFAULT_AVATAR;
                 if (nameEl) nameEl.textContent = me.nickname || '未设置网名';
-                if (sigEl) sigEl.textContent = me.signature || '个性签名...';
+                const signature = me.signature || '';
+                if (sigEl) {
+                    sigEl.textContent = signature || '个性签名...';
+                    sigEl.style.display = (signature && signature !== '未设置' && signature !== '个性签名...' && signature.trim() !== '') ? 'block' : 'none';
+                }
                 
                 if (postBtn) {
                     postBtn.style.visibility = 'visible';
@@ -340,13 +348,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 } else {
                     item.style.backgroundImage = `url(${img.content})`;
                     item.style.backgroundSize = 'cover';
-                    // 图片识别结果展示：输出物体名称和置信度
-                    if (img.description) {
-                        const tag = document.createElement('div');
-                        tag.className = 'moment-recognition-tag';
-                        tag.textContent = img.description;
-                        item.appendChild(tag);
-                    }
                 }
                 item.onclick = () => {
                     if (confirm('是否删除这张图片？')) {
@@ -522,12 +523,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         if (img.type === 'text') {
                             imagesHtml += `<div class="moment-img" onclick="showMomentImageDetail('${img.content}')" style="display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; padding:5px; text-align:center;">${img.content}</div>`;
                         } else {
-                            // 朋友圈发布后也显示识别标签，满足“输出物体名称和置信度”的要求
-                            const recognitionTag = (img.description && img.description !== '正在识别...') ? `<div class="moment-recognition-tag">${img.description}</div>` : '';
                             imagesHtml += `
                                 <div style="position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background-color: #555;">
                                     <img src="${img.content}" class="moment-img" onclick="previewImage('${img.content}')" style="width: 100%; height: 100%; display: block; border-radius: 0;">
-                                    ${recognitionTag}
                                 </div>`;
                         }
                     });
@@ -565,11 +563,12 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         }).join('')}
                     </div>`;
                 }
+                const contentHtml = item.content ? `<div class="moment-text">${item.content}</div>` : '';
                 momentEl.innerHTML = `
                     <img src="${item.avatar || DEFAULT_AVATAR}" class="moment-avatar">
                     <div class="moment-content-box">
                         <div class="moment-nickname">${item.nickname}</div>
-                        <div class="moment-text">${item.content}</div>
+                        ${contentHtml}
                         ${imagesHtml}
                         <div class="moment-footer">
                             <div class="moment-time">${formatMomentTime(item.time)}</div>

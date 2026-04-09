@@ -4742,6 +4742,22 @@
     overflow: hidden;
 }
 
+.moment-recognition-tag {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 4px;
+    text-align: center;
+    word-break: break-all;
+    border-bottom-left-radius: inherit;
+    border-bottom-right-radius: inherit;
+    pointer-events: none;
+}
+
 .uploader-plus {
     font-size: 40px;
     color: #ccc;

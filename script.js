@@ -340,6 +340,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 } else {
                     item.style.backgroundImage = `url(${img.content})`;
                     item.style.backgroundSize = 'cover';
+                    // 图片识别结果展示：输出物体名称和置信度
+                    if (img.description) {
+                        const tag = document.createElement('div');
+                        tag.className = 'moment-recognition-tag';
+                        tag.textContent = img.description;
+                        item.appendChild(tag);
+                    }
                 }
                 item.onclick = () => {
                     if (confirm('是否删除这张图片？')) {
@@ -386,20 +393,26 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     const imgItem = {
                         type: 'image',
                         content: imgSrc,
-                        description: ''
+                        description: '正在识别...'
                     };
                     momentImages.push(imgItem);
                     renderEditImages();
                     updatePostBtnState();
 
-                    // 异步识别图片内容，用于后续联系人回复
+                    // 异步识别图片内容，用于前端输出物体名称和置信度，并提供给联系人回复
                     try {
                         const predictions = await recognizeImage(imgSrc);
                         if (predictions && predictions.length > 0) {
-                            imgItem.description = predictions[0].className;
+                            const top = predictions[0];
+                            imgItem.description = `${top.className} (${(top.probability * 100).toFixed(1)}%)`;
+                        } else {
+                            imgItem.description = '无法识别';
                         }
+                        renderEditImages(); // 识别完成后刷新显示标签
                     } catch (err) {
                         console.error("Moment image recognition error:", err);
+                        imgItem.description = '识别出错';
+                        renderEditImages();
                     }
                 };
                 reader.readAsDataURL(file);
@@ -509,7 +522,13 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         if (img.type === 'text') {
                             imagesHtml += `<div class="moment-img" onclick="showMomentImageDetail('${img.content}')" style="display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; padding:5px; text-align:center;">${img.content}</div>`;
                         } else {
-                            imagesHtml += `<img src="${img.content}" class="moment-img" onclick="previewImage('${img.content}')">`;
+                            // 朋友圈发布后也显示识别标签，满足“输出物体名称和置信度”的要求
+                            const recognitionTag = (img.description && img.description !== '正在识别...') ? `<div class="moment-recognition-tag">${img.description}</div>` : '';
+                            imagesHtml += `
+                                <div style="position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background-color: #555;">
+                                    <img src="${img.content}" class="moment-img" onclick="previewImage('${img.content}')" style="width: 100%; height: 100%; display: block; border-radius: 0;">
+                                    ${recognitionTag}
+                                </div>`;
                         }
                     });
                     imagesHtml += `</div>`;
@@ -8764,6 +8783,10 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             }
             
             setupLongPress();
+
+            // 预加载图片识别模型 (MobileNet)
+            loadMobileNet();
+
             try {
                 await dbPromise; // 等待 DB 初始化
                 await loadApiConfigs(); // 加载 API 配置

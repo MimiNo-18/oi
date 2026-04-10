@@ -2243,7 +2243,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             else {
                 let groupHtml = '';
                 filteredGroups.forEach(group => {
-                    groupHtml += `<div class="wechat-contact-item" onclick="alert('进入群聊：' + '${group.name}')"><div class="wechat-contact-avatar" style="background: #e1e1e1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">群</div><div class="wechat-contact-name">${group.name}</div></div>`;
+                    groupHtml += `<div class="wechat-contact-item" onclick="openGroupChat(${group.id})"><div class="wechat-contact-avatar" style="background: #e1e1e1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">群</div><div class="wechat-contact-name">${group.name}</div></div>`;
                 });
                 groupContainer.innerHTML = groupHtml;
             }
@@ -2281,27 +2281,348 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 发起群聊
+        let selectedGroupContacts = new Set();
         function createGroupChat() {
-            const groupName = prompt('请输入群聊名称:');
-            if (groupName && groupName.trim()) {
-                const newGroup = {
-                    id: Date.now(),
-                    name: groupName.trim(),
-                    members: []
-                };
-                groupList.push(newGroup);
-                saveGroupListToStorage();
-                
-                // 如果当前在通讯录页，刷新显示
-                const activeTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item.active .wechat-nav-label');
-                if (activeTab && activeTab.textContent === '通讯录') {
-                    renderWechatContacts();
-                }
-                alert('群聊创建成功！已自动保存到通讯录。');
+            // 弹出群聊选择联系人弹窗
+            document.getElementById('addMenu').classList.remove('active');
+            document.getElementById('groupChatModal').classList.add('active');
+            selectedGroupContacts.clear();
+            document.getElementById('groupChatSearchInput').value = '';
+            renderGroupChatContacts();
+        }
+
+        function closeGroupChatModal() {
+            document.getElementById('groupChatModal').classList.remove('active');
+        }
+
+        function renderGroupChatContacts(keyword = '') {
+            const container = document.getElementById('groupChatContactsList');
+            let filtered = chatList;
+            if (keyword) filtered = chatList.filter(f => getFriendDisplayName(f).toLowerCase().includes(keyword.toLowerCase()));
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无好友</div>';
+                return;
             }
-            // 关闭菜单
-            const menu = document.getElementById('addMenu');
-            if (menu) menu.classList.remove('active');
+
+            let html = '';
+            filtered.forEach(friend => {
+                const isSelected = selectedGroupContacts.has(friend.id);
+                html += `
+                    <div class="wechat-contact-item" onclick="toggleGroupContact(${friend.id})">
+                        <div class="contact-checkbox ${isSelected ? 'checked' : ''}" style="margin-right: 10px;"></div>
+                        <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar">
+                        <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function searchGroupChatContacts() {
+            const keyword = document.getElementById('groupChatSearchInput').value.trim();
+            renderGroupChatContacts(keyword);
+        }
+
+        function toggleGroupContact(id) {
+            if (selectedGroupContacts.has(id)) selectedGroupContacts.delete(id);
+            else selectedGroupContacts.add(id);
+            renderGroupChatContacts(document.getElementById('groupChatSearchInput').value.trim());
+        }
+
+        async function confirmCreateGroupChat() {
+            if (selectedGroupContacts.size === 0) {
+                alert('请选择联系人');
+                return;
+            }
+
+            const meName = wechatUserInfo.nickname || '我';
+            let names = [meName];
+            let members = [];
+            
+            // 按照选择顺序或固定顺序获取名字
+            selectedGroupContacts.forEach(id => {
+                const friend = chatList.find(f => f.id === id);
+                if (friend) {
+                    names.push(getFriendDisplayName(friend));
+                    members.push(id);
+                }
+            });
+
+            const groupName = names.join('、');
+            const newGroup = {
+                id: Date.now(),
+                name: groupName,
+                members: members,
+                time: formatTime(new Date()),
+                message: '大家可以开始聊天了'
+            };
+
+            groupList.unshift(newGroup);
+            await saveGroupListToStorage();
+            
+            closeGroupChatModal();
+            openGroupChat(newGroup.id);
+        }
+
+        function openGroupChat(groupId) {
+            const group = groupList.find(g => g.id === groupId);
+            if (!group) return;
+
+            currentChatFriendId = null; 
+            currentGroupChatId = groupId;
+
+            document.getElementById('wechatContainer').style.display = 'none';
+            document.getElementById('groupChatPage').style.display = 'flex';
+            document.getElementById('groupChatTitle').textContent = `${group.name}(${(group.members ? group.members.length : 0) + 1})`;
+            
+            const input = document.getElementById('groupChatInput');
+            if (input) {
+                input.value = '';
+                handleGroupChatInput(input);
+            }
+
+            // 隐藏所有面板
+            const morePanel = document.getElementById('groupChatMorePanel');
+            if (morePanel) morePanel.style.display = 'none';
+            const stickerPanel = document.getElementById('groupStickerPickerPanel');
+            if (stickerPanel) stickerPanel.classList.remove('active');
+            const inputBar = document.getElementById('groupChatInputBar');
+            if (inputBar) inputBar.style.paddingBottom = '30px';
+
+            renderGroupMessages();
+            updateTime();
+            saveUIState();
+        }
+
+        function closeGroupChat() {
+            document.getElementById('groupChatPage').style.display = 'none';
+            document.getElementById('wechatContainer').style.display = 'block';
+            currentGroupChatId = null;
+            saveUIState();
+        }
+
+        function toggleGroupStickerPicker(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const panel = document.getElementById('groupStickerPickerPanel');
+            const morePanel = document.getElementById('groupChatMorePanel');
+            const inputBar = document.getElementById('groupChatInputBar');
+            const isVisible = panel.classList.contains('active');
+            
+            if (!isVisible) {
+                if (morePanel) morePanel.style.display = 'none';
+                if (inputBar) inputBar.style.paddingBottom = '30px';
+                document.activeElement.blur();
+                renderGroupStickerGrid();
+                panel.classList.add('active');
+            } else {
+                panel.classList.remove('active');
+            }
+            
+            setTimeout(() => {
+                const container = document.getElementById('groupChatMessages');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 300);
+        }
+
+        function renderGroupStickerGrid() {
+            const grid = document.getElementById('groupChatStickerGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            const list = stickerList; // 默认使用全部表情
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="sticker-empty-tip">表情库为空</div>';
+                return;
+            }
+
+            list.forEach(sticker => {
+                const item = document.createElement('div');
+                item.className = 'chat-sticker-item';
+                item.onclick = () => sendGroupSticker(sticker);
+                item.innerHTML = `<img src="${sticker.src}" alt="${sticker.name}" class="chat-sticker-img">`;
+                grid.appendChild(item);
+            });
+        }
+
+        function sendGroupSticker(sticker) {
+            if (!currentGroupChatId) return;
+            const historyKey = 'group_' + currentGroupChatId;
+            if (!chatHistories[historyKey]) chatHistories[historyKey] = [];
+            
+            const newMessage = {
+                type: 'sent',
+                msgType: 'sticker',
+                content: sticker.src,
+                stickerName: sticker.name,
+                time: new Date().getTime()
+            };
+            
+            chatHistories[historyKey].push(newMessage);
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (group) {
+                group.message = `[${sticker.name}]`;
+                group.time = formatTime(new Date());
+            }
+
+            document.getElementById('groupStickerPickerPanel').classList.remove('active');
+            renderGroupMessages();
+            saveChatHistories();
+            saveGroupListToStorage();
+            renderChatList();
+        }
+
+        function toggleGroupChatMorePanel(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const panel = document.getElementById('groupChatMorePanel');
+            const stickerPanel = document.getElementById('groupStickerPickerPanel');
+            const inputBar = document.getElementById('groupChatInputBar');
+            const isVisible = panel.style.display === 'grid';
+            
+            if (!isVisible) {
+                if (stickerPanel) stickerPanel.classList.remove('active');
+                document.activeElement.blur();
+                panel.style.display = 'grid';
+                if (inputBar) inputBar.style.paddingBottom = '10px';
+            } else {
+                panel.style.display = 'none';
+                if (inputBar) inputBar.style.paddingBottom = '30px';
+            }
+            
+            setTimeout(() => {
+                const container = document.getElementById('groupChatMessages');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 300);
+        }
+
+        function handleGroupChatInput(textarea) {
+            const sendBtn = document.getElementById('groupChatSendBtn');
+            const addons = document.getElementById('groupChatAddons');
+            const aiMicBtn = document.getElementById('groupAiMicBtn');
+            
+            textarea.style.height = 'auto';
+            let scrollHeight = textarea.scrollHeight;
+            textarea.style.height = scrollHeight + 'px';
+
+            if (textarea.value.length > 0) {
+                sendBtn.style.display = 'block';
+                if (addons) addons.style.display = 'none';
+                if (aiMicBtn) aiMicBtn.style.display = 'none';
+            } else {
+                sendBtn.style.display = 'none';
+                if (addons) addons.style.display = 'flex';
+                if (aiMicBtn) aiMicBtn.style.display = 'flex';
+            }
+        }
+
+        let currentGroupChatId = null;
+        function renderGroupMessages() {
+            const container = document.getElementById('groupChatMessages');
+            const history = chatHistories['group_' + currentGroupChatId] || [];
+            const userAvatar = wechatUserInfo.avatar || DEFAULT_AVATAR;
+
+            container.innerHTML = '';
+            
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (group) {
+                const sysHint = document.createElement('div');
+                sysHint.className = 'msg-system-hint';
+                sysHint.textContent = '你邀请了' + (group.members ? group.members.length : 0) + '位朋友加入群聊';
+                container.appendChild(sysHint);
+            }
+
+            history.forEach((msg, index) => {
+                const row = document.createElement('div');
+                row.className = `msg-row ${msg.type}`;
+                
+                const avatar = document.createElement('img');
+                avatar.className = 'msg-avatar';
+                
+                let senderAvatar = userAvatar;
+                let senderName = wechatUserInfo.nickname || '我';
+
+                if (msg.type === 'received') {
+                    const friend = chatList.find(f => f.id === msg.senderId);
+                    senderAvatar = friend ? (friend.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
+                    senderName = friend ? getFriendDisplayName(friend) : '未知';
+                }
+
+                avatar.src = senderAvatar;
+
+                const bubble = document.createElement('div');
+                if (msg.msgType === 'sticker') {
+                    bubble.className = 'msg-bubble sticker-bubble';
+                } else {
+                    bubble.className = 'msg-bubble';
+                }
+                
+                const contentWrapper = document.createElement('div');
+                if (msg.type === 'received') {
+                    const nameLabel = document.createElement('div');
+                    nameLabel.style.cssText = 'font-size: 11px; color: #888; margin-bottom: 2px; margin-left: 2px;';
+                    nameLabel.textContent = senderName;
+                    contentWrapper.appendChild(nameLabel);
+                }
+                
+                if (msg.msgType === 'sticker') {
+                    const img = document.createElement('img');
+                    img.src = msg.content;
+                    img.className = 'msg-sticker-img';
+                    contentWrapper.appendChild(img);
+                } else {
+                    const textNode = document.createElement('div');
+                    textNode.textContent = msg.content;
+                    contentWrapper.appendChild(textNode);
+                }
+                
+                bubble.appendChild(contentWrapper);
+
+                if (msg.type === 'sent') {
+                    row.appendChild(bubble);
+                    row.appendChild(avatar);
+                } else {
+                    row.appendChild(avatar);
+                    row.appendChild(bubble);
+                }
+                container.appendChild(row);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendGroupMessage() {
+            const input = document.getElementById('groupChatInput');
+            const content = input.value.trim();
+            if (!content || !currentGroupChatId) return;
+
+            const historyKey = 'group_' + currentGroupChatId;
+            if (!chatHistories[historyKey]) chatHistories[historyKey] = [];
+            
+            const newMessage = {
+                type: 'sent',
+                content: content,
+                time: new Date().getTime()
+            };
+            
+            chatHistories[historyKey].push(newMessage);
+            
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (group) {
+                group.message = content;
+                group.time = formatTime(new Date());
+            }
+
+            input.value = '';
+            renderGroupMessages();
+            await saveChatHistories();
+            await saveGroupListToStorage();
+            renderChatList();
+            handleGroupChatInput(input);
         }
 
         // 打开微信页面

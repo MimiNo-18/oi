@@ -2517,15 +2517,143 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const addBtn = document.createElement('div');
             addBtn.className = 'group-member-item';
             addBtn.innerHTML = `<div class="group-member-btn">+</div>`;
-            addBtn.onclick = () => alert('添加成员功能开发中');
+            addBtn.onclick = () => openAddGroupMemberSelection();
             grid.appendChild(addBtn);
 
             // 移除按钮
             const removeBtn = document.createElement('div');
             removeBtn.className = 'group-member-item';
             removeBtn.innerHTML = `<div class="group-member-btn">-</div>`;
-            removeBtn.onclick = () => alert('删除成员功能开发中');
+            removeBtn.onclick = () => openRemoveGroupMemberSelection();
             grid.appendChild(removeBtn);
+        }
+
+        // 群成员管理逻辑
+        function openAddGroupMemberSelection() {
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+
+            selectedGroupContactIds.clear();
+            document.getElementById('selectionModalTitle').textContent = '选择联系人';
+            
+            renderAddMemberSelectionList(group);
+            
+            const confirmBtn = document.getElementById('selectionConfirmBtn');
+            const originalOnclick = confirmBtn.getAttribute('onclick');
+            confirmBtn.onclick = async () => {
+                if (selectedGroupContactIds.size > 0) {
+                    if (!group.memberIds) group.memberIds = [];
+                    group.memberIds.push(...Array.from(selectedGroupContactIds));
+                    await saveGroupListToStorage();
+                    
+                    const memberCount = group.memberIds.length + 1;
+                    document.getElementById('groupChatName').textContent = `${group.name}(${memberCount})`;
+                    document.getElementById('groupChatInfoTitle').textContent = `群聊信息(${memberCount})`;
+                    renderGroupMembers();
+                }
+                closeSelectionModal();
+                confirmBtn.setAttribute('onclick', originalOnclick);
+            };
+            
+            document.getElementById('contactSelectionModal').classList.add('active');
+        }
+
+        function renderAddMemberSelectionList(group) {
+            const container = document.getElementById('selectionContactsList');
+            container.innerHTML = '';
+            
+            const existingMemberIds = new Set(group.memberIds || []);
+            const availableContacts = contacts.filter(c => !existingMemberIds.has(c.id));
+
+            if (availableContacts.length === 0) {
+                container.innerHTML = '<div class="empty-state">没有可添加的联系人</div>';
+                return;
+            }
+
+            availableContacts.forEach(contact => {
+                const isChecked = selectedGroupContactIds.has(contact.id);
+                const item = document.createElement('div');
+                item.className = 'selection-contact-item';
+                item.onclick = () => {
+                    if (selectedGroupContactIds.has(contact.id)) {
+                        selectedGroupContactIds.delete(contact.id);
+                    } else {
+                        selectedGroupContactIds.add(contact.id);
+                    }
+                    renderAddMemberSelectionList(group);
+                };
+                item.innerHTML = `
+                    <div class="selection-checkbox ${isChecked ? 'checked' : ''}"></div>
+                    <img src="${contact.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" style="width:32px; height:32px;">
+                    <div class="wechat-contact-name">${contact.name}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openRemoveGroupMemberSelection() {
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+
+            if (!group.memberIds || group.memberIds.length === 0) {
+                alert('群里没有其他成员可以移除');
+                return;
+            }
+
+            selectedGroupContactIds.clear();
+            document.getElementById('selectionModalTitle').textContent = '删除成员';
+            
+            renderRemoveMemberSelectionList(group);
+            
+            const confirmBtn = document.getElementById('selectionConfirmBtn');
+            const originalOnclick = confirmBtn.getAttribute('onclick');
+            confirmBtn.onclick = async () => {
+                if (selectedGroupContactIds.size > 0) {
+                    group.memberIds = group.memberIds.filter(id => !selectedGroupContactIds.has(id));
+                    await saveGroupListToStorage();
+                    
+                    const memberCount = group.memberIds.length + 1;
+                    document.getElementById('groupChatName').textContent = `${group.name}(${memberCount})`;
+                    document.getElementById('groupChatInfoTitle').textContent = `群聊信息(${memberCount})`;
+                    renderGroupMembers();
+                }
+                closeSelectionModal();
+                confirmBtn.setAttribute('onclick', originalOnclick);
+            };
+            
+            document.getElementById('contactSelectionModal').classList.add('active');
+        }
+
+        function renderRemoveMemberSelectionList(group) {
+            const container = document.getElementById('selectionContactsList');
+            container.innerHTML = '';
+            
+            const members = contacts.filter(c => group.memberIds.includes(c.id));
+
+            if (members.length === 0) {
+                container.innerHTML = '<div class="empty-state">群里没有其他成员</div>';
+                return;
+            }
+
+            members.forEach(contact => {
+                const isChecked = selectedGroupContactIds.has(contact.id);
+                const item = document.createElement('div');
+                item.className = 'selection-contact-item';
+                item.onclick = () => {
+                    if (selectedGroupContactIds.has(contact.id)) {
+                        selectedGroupContactIds.delete(contact.id);
+                    } else {
+                        selectedGroupContactIds.add(contact.id);
+                    }
+                    renderRemoveMemberSelectionList(group);
+                };
+                item.innerHTML = `
+                    <div class="selection-checkbox ${isChecked ? 'checked' : ''}"></div>
+                    <img src="${contact.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar" style="width:32px; height:32px;">
+                    <div class="wechat-contact-name">${contact.name}</div>
+                `;
+                container.appendChild(item);
+            });
         }
 
         function toggleAllMembers() {

@@ -381,6 +381,8 @@
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
+        #groupChatPageContainer,
+        #groupChatInfoContainer,
         #wechatAccountSwitchContainer {
             padding-top: 49px !important;
         }

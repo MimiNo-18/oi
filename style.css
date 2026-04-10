@@ -5437,3 +5437,72 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     transform-origin: center;
     transform-box: fill-box; /* 确保 SVG 在其自身中心旋转 */
 }
+
+/* 群聊相关样式 */
+.group-member-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.group-member-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    background: #eee;
+    object-fit: cover;
+}
+
+.group-member-name {
+    font-size: 11px;
+    color: #888;
+    max-width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-member-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 24px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.group-member-btn:active {
+    background: #f7f7f7;
+}
+
+.selection-contact-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f7f7f7;
+    cursor: pointer;
+}
+
+.selection-contact-item:active {
+    background: #f7f7f7;
+}
+
+.group-info-divider {
+    height: 8px;
+    background: #f7f7f7;
+    width: 100%;
+}
+
+.group-chat-nav-subtitle {
+    font-size: 10px;
+    color: #666;
+    font-weight: normal;
+}

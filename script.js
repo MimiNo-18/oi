@@ -454,7 +454,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             await saveMoments();
             
             if (!editingMomentId && postedId) {
-                setTimeout(() => triggerAutoMomentsFeedback(postedId), 2000);
+                // 需求1：朋友圈页面用户发朋友圈之后立刻回复用户
+                triggerAutoMomentsFeedback(postedId);
             }
 
             momentImages = [];
@@ -769,7 +770,8 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             const shuffled = [...chatList].sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, count);
             selected.forEach((friend, index) => {
-                const delay = Math.random() * 15000 + 2000;
+                // 需求1：立刻回复用户（进一步缩短延迟以满足“立刻”要求，同时保持少量随机性模拟真实感）
+                const delay = Math.random() * 1000 + 200;
                 setTimeout(() => callAIForMoment(momentId, friend, 'auto_feedback'), delay);
             });
         }
@@ -1070,23 +1072,23 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 moment.comments.push(newComment);
                 await saveMoments();
 
-                // 需求4：在AI的朋友圈下面评论AI会自动回复
+                // 需求1：用户回复联系人的评论立刻回复用户
                 if (!moment.isMine && moment.friendId) {
                     const friend = chatList.find(f => f.id === moment.friendId);
                     if (friend) {
-                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000 + Math.random() * 2000);
+                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 200 + Math.random() * 500);
                     }
                 }
 
                 if (currentReplyTo && currentReplyTo !== myNickname) {
                     const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
                     if (friend) {
-                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000);
+                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 200);
                     } else {
                         const contact = contacts.find(c => (c.remark || c.netName || c.name) === currentReplyTo);
                         if (contact) {
                             const tempFriend = { id: 0, contactId: contact.id, name: contact.name };
-                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 1000);
+                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 200);
                         }
                     }
                 }
@@ -2451,6 +2453,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             groupList.push(newGroup);
             await saveGroupListToStorage();
             
+            // 需求3：添加群聊之后群聊出现在微信的消息页面
+            renderChatList();
+            
             closeCreateGroupModal();
             openGroupChat(newGroup.id);
         }
@@ -2609,6 +2614,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
             if (!config || !config.url || !config.key) return;
 
+            // 需求1：获取联系人的记忆和世界书信息（如果该联系人也在好友列表中）
+            const friend = chatList.find(f => f.contactId === targetContactId);
+            const settings = friend ? getChatSettings(friend.id) : {};
+            const manualMemory = settings.manualMemory || "";
+            const boundWorldBookIds = settings.boundWorldBookIds || [];
+
             // 获取群聊上下文
             const history = groupHistories[currentGroupChatId] || [];
             const aiHistory = history.slice(-10);
@@ -2631,12 +2642,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 【群聊名称】：${group.name}
 【你的群友】：用户、${otherNames || '暂无其他成员'}
 【你的人设】：${contact.design || '一个普通的微信好友'}。
-【任务】：作为真实的群成员，根据当前的群聊氛围和上下文进行回复。
+${manualMemory ? `【你的记忆】：${manualMemory}` : ''}`;
+
+            // 注入世界书信息
+            if (worldBooks && worldBooks.length > 0 && boundWorldBookIds.length > 0) {
+                let worldBookPrompt = "";
+                worldBooks.forEach(book => {
+                    if (boundWorldBookIds.includes(book.id)) {
+                        const activeItems = book.items.filter(item => item.enabled);
+                        if (activeItems.length > 0) {
+                            worldBookPrompt += `\n【世界书：${book.name}】\n相关条目：\n`;
+                            activeItems.forEach(item => {
+                                worldBookPrompt += `- ${item.name}：${item.content}\n`;
+                            });
+                        }
+                    }
+                });
+                if (worldBookPrompt) systemPrompt += `\n\n【世界背景】：${worldBookPrompt}`;
+            }
+
+            systemPrompt += `\n\n【任务】：作为真实的群成员，根据当前的群聊氛围和上下文进行回复。
 【指令】：
 1. 你的回复要符合你的人设。
 2. 保持口语化，不要有AI腔。
 3. 你的回复对象可以是用户，也可以是其他成员。
-4. 如果是接在其他成员后面说话，要有互动感。
+4. 适当使用表情包，格式为 [表情: 表情名]。
 5. 直接返回回复内容，不要带任何前缀或解释。`;
 
             try {
@@ -4029,9 +4059,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function renderFriendContactsList(searchKeyword = '') {
             const listContainer = document.getElementById('friendContactsList');
             
-            let filteredContacts = contacts;
+            // 需求4：已经添加的联系人点击添加朋友不会显示在上面
+            const addedContactIds = new Set(chatList.map(f => f.contactId));
+            let filteredContacts = contacts.filter(c => !addedContactIds.has(c.id));
+            
             if (searchKeyword) {
-                filteredContacts = contacts.filter(c => 
+                filteredContacts = filteredContacts.filter(c => 
                     c.name.toLowerCase().includes(searchKeyword) || 
                     (c.phone && c.phone.includes(searchKeyword))
                 );
@@ -5866,6 +5899,15 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 const avatar = document.createElement('img');
                 avatar.className = 'msg-avatar';
                 avatar.src = msg.type === 'sent' ? userAvatar : friendAvatar;
+                
+                // 需求1：点击联系人回复立刻回复用户
+                if (msg.type === 'received') {
+                    avatar.style.cursor = 'pointer';
+                    avatar.onclick = (e) => {
+                        e.stopPropagation();
+                        callAI();
+                    };
+                }
                 
                 const bubble = document.createElement('div');
                 if (msg.isMergedForward) {

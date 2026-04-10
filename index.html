@@ -1358,15 +1358,23 @@
                 </div>
                 <div style="flex: 1; background: #fff; border-radius: 4px; min-height: 36px; max-height: 85px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; overflow: hidden;">
                     <textarea id="groupChatInput" style="width: 100%; border: none; outline: none; font-size: 16px; resize: none; font-family: inherit; line-height: 1.4; max-height: 73px; overflow-y: auto;" rows="1" placeholder="" oninput="handleGroupChatInput(this)"></textarea>
+                    <div id="groupAiMicBtn" style="display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; flex-shrink: 0;" onclick="handleGroupMicClick()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 8px; margin-bottom: 5px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px; cursor: pointer;">
+                <div style="display: flex; gap: 8px; margin-bottom: 5px;" id="groupChatAddons">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px; cursor: pointer;" onclick="toggleStickerPicker(event)">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
                         <line x1="9" y1="9" x2="9.01" y2="9"/>
                         <line x1="15" y1="9" x2="15.01" y2="9"/>
                     </svg>
-                    <div style="width: 28px; height: 28px; border: 1.5px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <div style="width: 28px; height: 28px; border: 1.5px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="toggleChatMorePanel(event)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
                             <line x1="12" y1="5" x2="12" y2="19"/>
                             <line x1="5" y1="12" x2="19" y2="12"/>

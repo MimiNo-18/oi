@@ -831,7 +831,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         temperature: 0.8
                     })
                 });
-                const data = await response.json();
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (parseErr) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     const resContent = data.choices[0].message.content.trim();
                     if (type === 'reply_to_user') {
@@ -1767,6 +1791,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let wechatVisible = false;
         let chatList = [];
         let groupList = [];
+        let groupHistories = {};
 
         async function updateApp() {
             if (confirm('确定要检查并更新到最新版本吗？')) {
@@ -2131,8 +2156,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 let modelsUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
                 if (baseUrl.includes('openai.azure.com')) { alert('Azure OpenAI 暂不支持自动搜索模型'); return; }
                 const response = await fetch(modelsUrl, { method: 'GET', headers: { 'Authorization': `Bearer ${key}` } });
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (pE) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
                 const select = document.getElementById('modelSelect');
                 select.innerHTML = '<option value="">请选择模型</option>';
                 if (data.data && Array.isArray(data.data)) {
@@ -2280,6 +2328,34 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
+        // 保存群聊记录
+        async function saveGroupHistories() {
+            try {
+                await dbPut('settings', { key: 'wechat_group_histories', value: groupHistories });
+            } catch (e) {
+                safeLocalStorageSet('wechat_group_histories', JSON.stringify(groupHistories), true);
+            }
+        }
+
+        // 加载群聊记录
+        async function loadGroupHistories() {
+            try {
+                const data = await dbGet('settings', 'wechat_group_histories');
+                if (data) {
+                    groupHistories = data.value;
+                } else {
+                    const saved = localStorage.getItem('wechat_group_histories');
+                    if (saved) {
+                        groupHistories = JSON.parse(saved);
+                        await saveGroupHistories();
+                    }
+                }
+            } catch (e) {
+                const saved = localStorage.getItem('wechat_group_histories');
+                if (saved) groupHistories = JSON.parse(saved);
+            }
+        }
+
         // 发起群聊相关变量
         let selectedGroupContactIds = new Set();
         let currentGroupChatId = null;
@@ -2391,8 +2467,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const memberCount = (group.memberIds ? group.memberIds.length : 0) + 1; // 包含自己
             document.getElementById('groupChatName').textContent = `${group.name}(${memberCount})`;
             
-            document.getElementById('groupChatMessages').innerHTML = '';
-            document.getElementById('groupChatInput').value = '';
+            renderGroupMessages();
+            
+            const input = document.getElementById('groupChatInput');
+            input.value = '';
+            handleGroupChatInput(input);
             
             updateTime();
             updateBattery();
@@ -2408,36 +2487,239 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         function handleGroupChatInput(textarea) {
             const sendBtn = document.getElementById('groupChatSendBtn');
+            const addons = document.getElementById('groupChatAddons');
+            const micBtn = document.getElementById('groupAiMicBtn');
+            
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
             
             if (textarea.value.trim().length > 0) {
                 sendBtn.style.display = 'block';
+                addons.style.display = 'none';
+                if (micBtn) micBtn.style.display = 'none';
             } else {
                 sendBtn.style.display = 'none';
+                addons.style.display = 'flex';
+                if (micBtn) micBtn.style.display = 'flex';
             }
         }
 
-        function sendGroupChatMessage() {
+        async function renderGroupMessages() {
+            const container = document.getElementById('groupChatMessages');
+            const history = groupHistories[currentGroupChatId] || [];
+            const userAvatar = wechatUserInfo.avatar || DEFAULT_AVATAR;
+
+            container.innerHTML = '';
+            
+            history.forEach((msg, index) => {
+                const row = document.createElement('div');
+                row.className = `msg-row ${msg.type === 'sent' ? 'sent' : 'received'}`;
+                
+                if (msg.type === 'sent') {
+                    row.innerHTML = `
+                        <div class="msg-bubble">${msg.content}</div>
+                        <img src="${userAvatar}" class="msg-avatar">
+                    `;
+                } else {
+                    const contact = contacts.find(c => c.id === msg.contactId);
+                    const avatar = contact ? (contact.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
+                    const name = contact ? contact.name : '未知';
+                    
+                    row.innerHTML = `
+                        <img src="${avatar}" class="msg-avatar" onclick="handleGroupAvatarClick(${msg.contactId})">
+                        <div style="display: flex; flex-direction: column;">
+                            <div style="font-size: 11px; color: #888; margin-left: 10px; margin-bottom: 2px;">${name}</div>
+                            <div class="msg-bubble received" style="margin-top: 0;">${msg.content}</div>
+                        </div>
+                    `;
+                }
+                container.appendChild(row);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleGroupAvatarClick(contactId) {
+            // 需求 2: 点击群聊内的联系人会根据人设回复用户
+            callGroupAI(contactId);
+        }
+
+        async function handleGroupMicClick() {
+            const input = document.getElementById('groupChatInput');
+            if (input.value.trim().length > 0) {
+                await sendGroupChatMessage();
+                // 发送完用户消息后，随机挑一个群成员回复
+                const group = groupList.find(g => g.id === currentGroupChatId);
+                if (group && group.memberIds && group.memberIds.length > 0) {
+                    const randomMemberId = group.memberIds[Math.floor(Math.random() * group.memberIds.length)];
+                    await callGroupAI(randomMemberId);
+                }
+            } else {
+                // 如果没输入文字，点击麦克风也随机挑一个回复
+                const group = groupList.find(g => g.id === currentGroupChatId);
+                if (group && group.memberIds && group.memberIds.length > 0) {
+                    const randomMemberId = group.memberIds[Math.floor(Math.random() * group.memberIds.length)];
+                    await callGroupAI(randomMemberId);
+                }
+            }
+        }
+
+        async function sendGroupChatMessage() {
             const input = document.getElementById('groupChatInput');
             const content = input.value.trim();
             if (!content || !currentGroupChatId) return;
 
-            const container = document.getElementById('groupChatMessages');
-            const userAvatar = wechatUserInfo.avatar || DEFAULT_AVATAR;
+            if (!groupHistories[currentGroupChatId]) groupHistories[currentGroupChatId] = [];
             
-            const row = document.createElement('div');
-            row.className = 'msg-row sent';
-            row.innerHTML = `
-                <div class="msg-bubble">${content}</div>
-                <img src="${userAvatar}" class="msg-avatar">
-            `;
-            container.appendChild(row);
+            const newMessage = {
+                type: 'sent',
+                content: content,
+                time: Date.now()
+            };
             
+            groupHistories[currentGroupChatId].push(newMessage);
+            
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (group) {
+                group.lastMessage = content;
+                group.lastTime = formatTime(new Date());
+            }
+
             input.value = '';
             input.style.height = 'auto';
             document.getElementById('groupChatSendBtn').style.display = 'none';
-            container.scrollTop = container.scrollHeight;
+            handleGroupChatInput(input);
+            
+            await renderGroupMessages();
+            await saveGroupHistories();
+            saveGroupListToStorage();
+            renderChatList();
+        }
+
+        async function callGroupAI(targetContactId, isMutual = false) {
+            if (!currentGroupChatId) return;
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+
+            const contact = contacts.find(c => c.id === targetContactId);
+            if (!contact) return;
+
+            const configId = localStorage.getItem('current_api_config_id') || 'default';
+            const configs = await dbGetAll('api_configs');
+            const config = configs.find(c => c.id === configId);
+
+            if (!config || !config.url || !config.key) return;
+
+            // 获取群聊上下文
+            const history = groupHistories[currentGroupChatId] || [];
+            const aiHistory = history.slice(-10);
+            
+            let contextStr = "";
+            aiHistory.forEach(h => {
+                let name = "用户";
+                if (h.type !== 'sent') {
+                    const c = contacts.find(con => con.id === h.contactId);
+                    name = c ? c.name : "其他成员";
+                }
+                contextStr += `${name}: ${h.content}\n`;
+            });
+
+            // 参与回复的成员列表（除了当前发起的）
+            const otherMembers = contacts.filter(c => group.memberIds.includes(c.id) && c.id !== targetContactId);
+            const otherNames = otherMembers.map(m => m.name).join('、');
+
+            let systemPrompt = `你现在的身份是群聊中的一员：${contact.name}。
+【群聊名称】：${group.name}
+【你的群友】：用户、${otherNames || '暂无其他成员'}
+【你的人设】：${contact.design || '一个普通的微信好友'}。
+【任务】：作为真实的群成员，根据当前的群聊氛围和上下文进行回复。
+【指令】：
+1. 你的回复要符合你的人设。
+2. 保持口语化，不要有AI腔。
+3. 你的回复对象可以是用户，也可以是其他成员。
+4. 如果是接在其他成员后面说话，要有互动感。
+5. 直接返回回复内容，不要带任何前缀或解释。`;
+
+            try {
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) apiUrl += '/chat/completions';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: `当前群聊对话历史：\n${contextStr}\n\n请回复：` }
+                        ],
+                        temperature: 0.8
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (pE) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const aiContent = data.choices[0].message.content.trim();
+                    if (aiContent) {
+                        const newMsg = {
+                            type: 'received',
+                            contactId: targetContactId,
+                            content: aiContent,
+                            time: Date.now()
+                        };
+                        
+                        groupHistories[currentGroupChatId].push(newMsg);
+                        group.lastMessage = `${contact.name}: ${aiContent}`;
+                        group.lastTime = formatTime(new Date());
+                        
+                        await renderGroupMessages();
+                        await saveGroupHistories();
+                        saveGroupListToStorage();
+                        renderChatList();
+
+                        // 需求 2: 也会互相回复（互相回复的概率设置）
+                        if (!isMutual && Math.random() > 0.4) {
+                            setTimeout(() => triggerMutualReply(targetContactId), 1500 + Math.random() * 2000);
+                        }
+                    }
+                }
+            } catch (e) { console.error("Group AI Error:", e); }
+        }
+
+        function triggerMutualReply(lastSpeakerId) {
+            if (!currentGroupChatId) return;
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+
+            // 找出除了刚刚说话的那个人之外的其他成员
+            const candidates = group.memberIds.filter(id => id !== lastSpeakerId);
+            if (candidates.length === 0) return;
+
+            const randomMemberId = candidates[Math.floor(Math.random() * candidates.length)];
+            callGroupAI(randomMemberId, true); // isMutual 设为 true 防止无限套娃
         }
 
         // 群聊信息页面逻辑
@@ -3890,35 +4172,53 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function renderChatList(searchKeyword = '') {
             const container = document.getElementById('chatList');
             
-            let filteredList = chatList;
+            // 顶部分类筛选
+            let filteredFriends = chatList;
+            if (currentSelectedCategory !== '默认') {
+                const category = topCategories.find(c => c.name === currentSelectedCategory);
+                if (category) {
+                    filteredFriends = chatList.filter(chat => category.contactIds.includes(chat.contactId));
+                }
+            }
+
+            // 合并好友和群聊
+            let combinedList = [
+                ...filteredFriends.map(f => ({ ...f, isGroup: false })),
+                ...groupList.map(g => ({ ...g, isGroup: true, message: g.lastMessage || '请开始聊天', time: g.lastTime || '' }))
+            ];
+            
             if (searchKeyword) {
-                filteredList = chatList.filter(friend => {
-                    const nameMatch = getFriendDisplayName(friend).toLowerCase().includes(searchKeyword);
-                    const msgMatch = friend.message.toLowerCase().includes(searchKeyword);
-                    return nameMatch || msgMatch;
+                combinedList = combinedList.filter(item => {
+                    const name = item.isGroup ? item.name : getFriendDisplayName(item);
+                    const msg = item.message || '';
+                    return name.toLowerCase().includes(searchKeyword) || msg.toLowerCase().includes(searchKeyword);
                 });
             }
 
-            if (filteredList.length === 0) {
-                container.innerHTML = searchKeyword ? '<div class="empty-state">未找到匹配的聊天</div>' : '<div class="empty-state">请添加朋友开始聊天</div>';
+            if (combinedList.length === 0) {
+                container.innerHTML = searchKeyword ? '<div class="empty-state">未找到匹配的聊天</div>' : '<div class="empty-state">请添加朋友或加入群聊开始聊天</div>';
                 return;
             }
 
-            const pinned = filteredList.filter(f => f.isPinned);
-            const others = filteredList.filter(f => !f.isPinned);
+            // 排序：置顶优先，其次按时间
+            const pinned = combinedList.filter(item => item.isPinned);
+            const others = combinedList.filter(item => !item.isPinned);
 
             let html = '';
 
             // 渲染置顶列表
-            pinned.forEach((friend, index) => {
-                // 如果是最后一个置顶项，且后面还有非置顶项，则添加间距类
-                const isLastPinned = (index === pinned.length - 1 && others.length > 0);
-                html += renderChatItem(friend, true, isLastPinned);
+            pinned.forEach((item) => {
+                html += renderChatItem(item, true);
             });
 
+            // 如果有置顶项且有普通项，插入物理灰色间隔
+            if (pinned.length > 0 && others.length > 0) {
+                html += '<div class="chat-list-physical-gap"></div>';
+            }
+
             // 渲染普通列表
-            others.forEach(friend => {
-                html += renderChatItem(friend, false);
+            others.forEach(item => {
+                html += renderChatItem(item, false);
             });
 
             container.innerHTML = html;
@@ -3927,31 +4227,64 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             addSwipeListeners();
         }
 
-        function renderChatItem(friend, isPinned) {
+        function renderChatItem(item, isPinned) {
             let html = `<div class="chat-item-wrapper">`;
+            
+            const displayName = item.isGroup ? item.name : getFriendDisplayName(item);
+            const avatar = item.isGroup ? (item.avatar || DEFAULT_AVATAR) : (item.avatar || DEFAULT_AVATAR);
+            const onClick = item.isGroup ? `openGroupChat(${item.id})` : `openChat(${item.id})`;
+            const deleteFunc = item.isGroup ? `deleteGroupChat(${item.id}, event)` : `deleteChat(${item.id}, event)`;
+            const pinFunc = item.isGroup ? `toggleGroupPin(${item.id}, event)` : `togglePin(${item.id}, event)`;
             
             // 聊天内容层
             html += `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
-                             data-id="${friend.id}" 
-                             onclick="openChat(${friend.id})">`;
-            html += `<img src="${friend.avatar || ''}" class="chat-avatar" alt="头像">`;
+                             data-id="${item.id}" 
+                             onclick="${onClick}">`;
+            
+            if (item.isGroup) {
+                html += `<div class="chat-avatar" style="background: #e1e1e1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px; overflow: hidden;"><img src="${avatar}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+            } else {
+                html += `<img src="${avatar}" class="chat-avatar" alt="头像">`;
+            }
+
             html += '<div class="chat-content">';
             html += '<div class="chat-header">';
-            html += `<span class="chat-name">${getFriendDisplayName(friend)}</span>`;
-            html += `<span class="chat-time">${friend.time}</span>`;
+            html += `<span class="chat-name">${displayName}</span>`;
+            html += `<span class="chat-time">${item.time || ''}</span>`;
             html += '</div>';
-            html += `<div class="chat-message">${friend.message}</div>`;
+            html += `<div class="chat-message">${item.message || ''}</div>`;
             html += '</div>';
             html += '</div>'; // end chat-item
 
             // 操作按钮层
             html += `<div class="chat-actions">
-                        <div class="chat-action-btn pin" onclick="togglePin(${friend.id}, event)">${isPinned ? '取消置顶' : '置顶'}</div>
-                        <div class="chat-action-btn delete" onclick="deleteChat(${friend.id}, event)">删除</div>
+                        <div class="chat-action-btn pin" onclick="${pinFunc}">${isPinned ? '取消置顶' : '置顶'}</div>
+                        <div class="chat-action-btn delete" onclick="${deleteFunc}">删除</div>
                      </div>`;
             
             html += `</div>`; // end chat-item-wrapper
             return html;
+        }
+
+        // 删除群聊
+        function deleteGroupChat(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm('确定要退出并删除该群聊吗？')) {
+                groupList = groupList.filter(g => g.id !== id);
+                saveGroupListToStorage();
+                renderChatList();
+            }
+        }
+
+        // 切换群聊置顶状态
+        function toggleGroupPin(id, event) {
+            if (event) event.stopPropagation();
+            const group = groupList.find(g => g.id === id);
+            if (group) {
+                group.isPinned = !group.isPinned;
+                saveGroupListToStorage();
+                renderChatList();
+            }
         }
 
         // 删除聊天
@@ -4641,11 +4974,35 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                                 { role: "system", content: "你是一个翻译专家。请将用户提供的文本翻译成系统语言（中文）。如果文本中包含emoji表情、特殊符号或图形，请在翻译结果中原封不动地保留它们在相应的位置。只返回翻译后的内容，不要有任何解释。" },
                                 { role: "user", content: content }
                             ],
-                            temperature: 0.3
-                        })
-                    });
+                        temperature: 0.3
+                    })
+                });
 
-                    const data = await response.json();
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (pE) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
                     if (data.choices && data.choices[0] && data.choices[0].message) {
                         msg.translation = data.choices[0].message.content.trim();
                         saveChatHistories();
@@ -5866,7 +6223,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     })
                 });
 
-                const data = await response.json();
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (pE) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     const summary = data.choices[0].message.content.trim();
                     
@@ -5892,7 +6273,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
             const friend = chatList.find(f => f.id === friendId);
             if (!friend) return;
-            const contact = contacts.find(c => c.id === friend.contactId);
+            const contact = contacts.find(c => c.id === (friend ? friend.contactId : null));
             if (!contact) return;
 
             const isCurrentChat = (friendId === currentChatFriendId);
@@ -6091,8 +6472,16 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error ? errorData.error.message : response.statusText);
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            const errorData = JSON.parse(text);
+                            errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
                 }
 
                 const contentType = response.headers.get('content-type');
@@ -6150,7 +6539,17 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                     }
                 } else {
                     // 处理非流式输出（即 fallback 情况）
-                    const data = await response.json();
+                    const contentType = response.headers.get("content-type");
+                    const text = await response.text();
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("服务器未返回有效的JSON数据");
+                    }
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error("服务器返回了无效的JSON数据");
+                    }
                     if (!data.choices || !data.choices[0]) throw new Error('API 返回数据格式错误');
                     const aiResponse = data.choices[0].message.content;
                     
@@ -6451,7 +6850,32 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                         temperature: 0.8
                     })
                 });
-                const data = await response.json();
+
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const contentType = response.headers.get("content-type");
+                        const text = await response.text();
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(text);
+                                errorMsg = errorData.error ? (errorData.error.message || errorData.error) : (errorData.message || errorMsg);
+                            } catch (pE) {}
+                        }
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const contentType = response.headers.get("content-type");
+                const text = await response.text();
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("服务器未返回有效的JSON数据");
+                }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("服务器返回了无效的JSON数据");
+                }
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     const resContent = data.choices[0].message.content.trim();
                     
@@ -9177,6 +9601,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             await loadChatListFromStorage();
             await loadGroupListFromStorage();
             await loadChatHistories();
+            await loadGroupHistories();
             loadWechatUserInfo();
             loadRealNameInfo();
             loadTopCategories();

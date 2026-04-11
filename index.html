@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="phone-container">
+    <div class="phone-container" id="phone-container">
         <!-- 头像区 -->
         <div class="avatar-section">
             <div class="avatar-item">
@@ -229,7 +229,7 @@
     </div>
 
     <!-- 聊天详情页面 -->
-    <div id="chatPageContainer" style="display: none; width: 100%; top: 0; bottom: 0; background: #ffffff; flex-direction: column; position: fixed; left: 0; z-index: 150;">
+    <div id="chatPageContainer" class="full-page-container" style="display: none;">
         <!-- 导航栏 -->
         <div class="wechat-nav-bar" id="chatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
             <div class="wechat-nav-left" onclick="closeChat()" id="chatNavLeft">
@@ -1100,7 +1100,7 @@
     </div>
 
     <!-- 微信显示设置页面 -->
-    <div id="wechatDisplaySettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 215;">
+    <div id="wechatDisplaySettingsContainer" style="display: none;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeWechatDisplaySettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1133,92 +1133,78 @@
             </div>
             <div class="me-divider"></div>
             <div class="me-rounded-box">
-                <div class="setting-item" onclick="updateGroupName()">
-                    <div class="setting-label">群聊名称</div>
-                    <div class="setting-value"><span id="groupInfoNameText"></span> <span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('群二维码功能开发中')">
-                    <div class="setting-label">群二维码</div>
-                    <div class="setting-value">🖼️ <span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('群公告功能开发中')">
-                    <div class="setting-label">群公告</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('群管理功能开发中')">
-                    <div class="setting-label">群管理</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('备注功能开发中')">
-                    <div class="setting-label">备注</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
+                <div class="me-menu-item" onclick="alert('字体设置功能开发中')">
+                    <div class="me-menu-label">字体大小</div>
+                    <div class="info-content">
+                        <span class="info-text">标准</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
                 </div>
             </div>
-
             <div class="me-divider"></div>
-
             <div class="me-rounded-box">
-                <div class="setting-item" onclick="alert('查找聊天记录功能开发中')">
-                    <div class="setting-label">查找聊天记录</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
+                <div class="me-menu-item" onclick="alert('深色模式设置功能开发中')">
+                    <div class="me-menu-label">深色模式</div>
+                    <div class="info-content">
+                        <span class="info-text">跟随系统</span>
+                        <span class="me-arrow">〉</span>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="me-divider"></div>
-
-            <div class="me-rounded-box">
-                <div class="setting-item">
-                    <div class="setting-label">消息免打扰</div>
-                    <label class="switch">
-                        <input type="checkbox" id="groupInfoMuteToggle">
-                        <span class="slider"></span>
-                    </label>
+    <!-- 微信存储空间页面 -->
+    <div id="wechatStorageContainer" class="full-page-container" style="display: none;">
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
+            <div class="wechat-nav-left" onclick="closeWechatStorage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div class="wechat-nav-title">存储空间</div>
+            <div class="wechat-nav-right"></div>
+        </div>
+        <div class="wechat-content-area" style="background: #fff; padding: 0;">
+            <div id="storageScanning" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 50px;">
+                <div class="scanning-circle"></div>
+                <div style="margin-top: 20px; color: #999;">正在计算存储空间...</div>
+            </div>
+            <div id="storageDetail" style="display: none;">
+                <div class="storage-usage-card">
+                    <div class="storage-total-title">已用空间</div>
+                    <div id="totalStorageSize" class="storage-total-size">0 MB</div>
+                    <div class="storage-bar-container" id="storageBar">
+                        <!-- 动态条 -->
+                    </div>
+                    <div class="storage-legend">
+                        <div class="legend-item"><span class="legend-dot" style="background: #07c160;"></span>聊天记录 <span id="size-chat"></span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #ff9800;"></span>资源文件 <span id="size-resources"></span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #2196f3;"></span>App 程序 <span id="size-app"></span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background: #9e9e9e;"></span>其他 <span id="size-others"></span></div>
+                    </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-label">置顶群聊</div>
-                    <label class="switch">
-                        <input type="checkbox" id="groupInfoStickyToggle">
-                        <span class="slider"></span>
-                    </label>
+                
+                <div class="storage-list-group">
+                    <div class="storage-item">
+                        <div class="storage-item-info">
+                            <div class="storage-item-label">缓存</div>
+                            <div class="storage-item-desc">不影响功能，可安全清理</div>
+                        </div>
+                        <div class="storage-item-size">12.5 MB</div>
+                    </div>
+                </div>
+
+                <div class="storage-footer">
+                    <button class="storage-btn clear-cache" onclick="clearWechatCache()">清理缓存</button>
+                    <button class="storage-btn delete-data" onclick="deleteWechatData()">卸载微信并删除数据</button>
                 </div>
             </div>
-
-            <div class="me-divider"></div>
-
-            <div class="me-rounded-box">
-                <div class="setting-item" onclick="alert('群昵称功能开发中')">
-                    <div class="setting-label">群昵称</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-            </div>
-
-            <div class="me-divider"></div>
-
-            <div class="me-rounded-box">
-                <div class="setting-item" onclick="alert('设置聊天背景功能开发中')">
-                    <div class="setting-label">设置聊天背景</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('清空聊天记录功能开发中')">
-                    <div class="setting-label">清空聊天记录</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-                <div class="setting-item" onclick="alert('保存聊天记录功能开发中')">
-                    <div class="setting-label">保存聊天记录</div>
-                    <div class="setting-value"><span class="icon-arrow">〉</span></div>
-                </div>
-            </div>
-
-            <div class="me-divider"></div>
-
-            <div class="me-rounded-box">
-                <div class="setting-item action-btn red" onclick="quitGroupChat()">退出群聊</div>
-                <div class="setting-item action-btn red" onclick="dissolveGroupChat()">解散群聊</div>
-            </div>
-
+        </div>
+    </div>
 
     <!-- 微信顶部分组管理页面 (更名为“更多”) -->
-    <div id="categoryManagementContainer">
+    <div id="categoryManagementContainer" style="display: none;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" id="categoryBackBtn" onclick="closeCategoryManagement()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2218,7 +2204,7 @@
     </div>
 
     <!-- 手动输入记忆页面 -->
-    <div id="manualMemoryContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 300;">
+    <div id="manualMemoryContainer" class="full-page-container" style="display: none;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
             <div class="wechat-nav-left" onclick="closeManualMemory()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2234,7 +2220,7 @@
     </div>
 
     <!-- 实名信息页面 -->
-    <div id="realNameContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 350;">
+    <div id="realNameContainer" class="full-page-container" style="display: none;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: 1px solid #eee;">
             <div class="wechat-nav-left" onclick="closeRealNamePage()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -2283,7 +2269,7 @@
     </div>
 
     <!-- 世界书应用容器 -->
-    <div id="worldBookContainer" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5000;">
+    <div id="worldBookContainer" style="display: none;">
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeWorldBook()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -2313,7 +2299,7 @@
     </div>
 
     <!-- 世界书编辑页面 -->
-    <div id="worldBookEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5100;">
+    <div id="worldBookEditPage" style="display: none;">
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeWorldBookEdit()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -2343,7 +2329,7 @@
     </div>
 
     <!-- 条目编辑页面 -->
-    <div id="bookItemEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5200;">
+    <div id="bookItemEditPage" style="display: none;">
         <div class="wechat-nav-bar">
             <div class="wechat-nav-left" onclick="closeBookItemEdit()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -2453,7 +2439,7 @@
             <div style="display: flex; align-items: center; justify-content: center; flex: 1;">
                 <div class="wechat-nav-title" id="groupChatTitle" style="font-size: 16px; font-weight: 600; color: #000;">群聊名称(0)</div>
             </div>
-            <div class="wechat-nav-right">
+            <div class="wechat-nav-right" onclick="openGroupInfo(currentGroupChatId)">
                 <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px;">
                     <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
                     <circle cx="12" cy="12" r="1.5" fill="currentColor"/>

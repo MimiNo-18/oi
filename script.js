@@ -2284,19 +2284,24 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let selectedGroupContacts = new Set();
         function createGroupChat() {
             // 弹出群聊选择联系人弹窗
-            document.getElementById('addMenu').classList.remove('active');
-            document.getElementById('groupChatModal').classList.add('active');
+            const addMenu = document.getElementById('addMenu');
+            const groupChatModal = document.getElementById('groupChatModal');
+            if (addMenu) addMenu.classList.remove('active');
+            if (groupChatModal) groupChatModal.classList.add('active');
             selectedGroupContacts.clear();
-            document.getElementById('groupChatSearchInput').value = '';
+            const searchInput = document.getElementById('groupChatSearchInput');
+            if (searchInput) searchInput.value = '';
             renderGroupChatContacts();
         }
 
         function closeGroupChatModal() {
-            document.getElementById('groupChatModal').classList.remove('active');
+            const modal = document.getElementById('groupChatModal');
+            if (modal) modal.classList.remove('active');
         }
 
         function renderGroupChatContacts(keyword = '') {
             const container = document.getElementById('groupChatContactsList');
+            if (!container) return;
             let filtered = chatList;
             if (keyword) filtered = chatList.filter(f => getFriendDisplayName(f).toLowerCase().includes(keyword.toLowerCase()));
             
@@ -2307,9 +2312,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
             let html = '';
             filtered.forEach(friend => {
-                const isSelected = selectedGroupContacts.has(friend.id);
+                const isSelected = Array.from(selectedGroupContacts).some(id => String(id) === String(friend.id));
                 html += `
-                    <div class="wechat-contact-item" onclick="toggleGroupContact(${friend.id})">
+                    <div class="wechat-contact-item" onclick="toggleGroupContact('${friend.id}')">
                         <div class="contact-checkbox ${isSelected ? 'checked' : ''}" style="margin-right: 10px;"></div>
                         <img src="${friend.avatar || DEFAULT_AVATAR}" class="wechat-contact-avatar">
                         <div class="wechat-contact-name">${getFriendDisplayName(friend)}</div>
@@ -2325,9 +2330,17 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function toggleGroupContact(id) {
-            if (selectedGroupContacts.has(id)) selectedGroupContacts.delete(id);
-            else selectedGroupContacts.add(id);
-            renderGroupChatContacts(document.getElementById('groupChatSearchInput').value.trim());
+            let found = false;
+            for (let existingId of selectedGroupContacts) {
+                if (String(existingId) === String(id)) {
+                    selectedGroupContacts.delete(existingId);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) selectedGroupContacts.add(id);
+            const searchInput = document.getElementById('groupChatSearchInput');
+            renderGroupChatContacts(searchInput ? searchInput.value.trim() : '');
         }
 
         async function confirmCreateGroupChat() {
@@ -2342,10 +2355,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             
             // 按照选择顺序或固定顺序获取名字
             selectedGroupContacts.forEach(id => {
-                const friend = chatList.find(f => f.id === id);
+                const friend = chatList.find(f => String(f.id) === String(id));
                 if (friend) {
                     names.push(getFriendDisplayName(friend));
-                    members.push(id);
+                    members.push(friend.id);
                 }
             });
 
@@ -2367,11 +2380,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function openGroupChat(groupId) {
-            const group = groupList.find(g => g.id === groupId);
+            const group = groupList.find(g => String(g.id) === String(groupId));
             if (!group) return;
 
             currentChatFriendId = null; 
-            currentGroupChatId = groupId;
+            currentGroupChatId = group.id;
 
             document.getElementById('wechatContainer').style.display = 'none';
             document.getElementById('groupChatPage').style.display = 'flex';
@@ -3868,10 +3881,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         // 渲染添加好友的联系人列表
         function renderFriendContactsList(searchKeyword = '') {
             const listContainer = document.getElementById('friendContactsList');
+            if (!listContainer) return;
             
-            let filteredContacts = contacts;
+            // 过滤掉已经添加的联系人 (Issue 3: 已经添加的联系人点击添加朋友不会在列表上显示)
+            const addedContactIds = new Set(chatList.filter(f => f.contactId !== undefined).map(f => String(f.contactId)));
+            let filteredContacts = contacts.filter(c => !addedContactIds.has(String(c.id)));
+
             if (searchKeyword) {
-                filteredContacts = contacts.filter(c => 
+                filteredContacts = filteredContacts.filter(c => 
                     c.name.toLowerCase().includes(searchKeyword) || 
                     (c.phone && c.phone.includes(searchKeyword))
                 );
@@ -4052,7 +4069,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function renderChatItem(item, isPinned) {
             let html = `<div class="chat-item-wrapper">`;
             const isGroup = item.members !== undefined;
-            const clickAction = isGroup ? `openGroupChat(${item.id})` : `openChat(${item.id})`;
+            // Issue 2: 确保点击群聊项立刻进入群聊页面，使用引号包裹 ID 防止长整型精度丢失或类型不匹配
+            const clickAction = isGroup ? `openGroupChat('${item.id}')` : `openChat('${item.id}')`;
             const avatar = isGroup ? 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Crect width="24" height="24"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="8"%3E群%3C/text%3E%3C/svg%3E' : (item.avatar || DEFAULT_AVATAR);
             const name = isGroup ? item.name : getFriendDisplayName(item);
             
@@ -4906,11 +4924,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 打开聊天
         function openChat(friendId) {
-            const friend = chatList.find(f => f.id === friendId);
+            const friend = chatList.find(f => String(f.id) === String(friendId));
             if (!friend) return;
 
-            const contact = contacts.find(c => c.id === friend.contactId);
-            currentChatFriendId = friendId;
+            const contact = contacts.find(c => String(c.id) === String(friend.contactId));
+            currentChatFriendId = friend.id;
             document.getElementById('wechatContainer').style.display = 'none';
             document.getElementById('chatPageContainer').style.display = 'flex';
             document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);

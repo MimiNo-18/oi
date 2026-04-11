@@ -1074,6 +1074,66 @@
             color: #999;
         }
 
+        /* 群成员头像网格样式 */
+        .group-member-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px 10px;
+            padding: 10px 0;
+        }
+
+        .group-member-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .group-member-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .group-member-name {
+            font-size: 11px;
+            color: #888;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .group-member-action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        /* 群信息菜单样式 */
+        .group-info-menu .wechat-settings-item {
+            padding: 14px 16px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-info-menu .me-menu-label {
+            font-size: 16px;
+            color: #000;
+        }
+
         .wechat-chat-list {
             padding: 10px 0 80px 0;
             background: #ffffff !important;

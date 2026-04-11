@@ -2355,7 +2355,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 name: groupName,
                 members: members,
                 time: formatTime(new Date()),
-                message: '大家可以开始聊天了'
+                message: '大家可以开始聊天了',
+                isPinned: false
             };
 
             groupList.unshift(newGroup);
@@ -2376,6 +2377,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('groupChatPage').style.display = 'flex';
             document.getElementById('groupChatTitle').textContent = `${group.name}(${(group.members ? group.members.length : 0) + 1})`;
             
+            // 设置三个点进入群聊信息页
+            const navRight = document.querySelector('#groupChatPage .wechat-nav-right');
+            if (navRight) {
+                navRight.onclick = () => openGroupInfo(groupId);
+            }
+
             const input = document.getElementById('groupChatInput');
             if (input) {
                 input.value = '';
@@ -2400,6 +2407,166 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('wechatContainer').style.display = 'block';
             currentGroupChatId = null;
             saveUIState();
+        }
+
+        // 群聊信息页面逻辑
+        function openGroupInfo(groupId) {
+            const group = groupList.find(g => g.id === groupId);
+            if (!group) return;
+
+            currentGroupChatId = groupId;
+
+            document.getElementById('groupChatInfoPage').style.display = 'flex';
+            document.getElementById('groupInfoMemberCount').textContent = `(${(group.members ? group.members.length : 0) + 1})`;
+            document.getElementById('groupInfoNameText').textContent = group.name;
+
+            // 初始化设置开关状态
+            const muteToggle = document.getElementById('groupInfoMuteToggle');
+            const stickyToggle = document.getElementById('groupInfoStickyToggle');
+            
+            if (muteToggle) {
+                muteToggle.checked = group.isMuted || false;
+                muteToggle.onchange = (e) => {
+                    group.isMuted = e.target.checked;
+                    saveGroupListToStorage();
+                };
+            }
+
+            if (stickyToggle) {
+                stickyToggle.checked = group.isPinned || false;
+                stickyToggle.onchange = (e) => {
+                    group.isPinned = e.target.checked;
+                    saveGroupListToStorage();
+                    renderChatList();
+                };
+            }
+
+            renderGroupInfoMembers(group);
+            updateTime();
+            saveUIState();
+        }
+
+        function closeGroupInfo() {
+            document.getElementById('groupChatInfoPage').style.display = 'none';
+            saveUIState();
+        }
+
+        function renderGroupInfoMembers(group, showAll = false) {
+            const grid = document.getElementById('groupInfoMemberGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const meName = wechatUserInfo.nickname || '我';
+            const meAvatar = wechatUserInfo.avatar || DEFAULT_AVATAR;
+
+            // 成员列表：我 + 其他成员
+            let allMembers = [
+                { id: 'me', name: meName, avatar: meAvatar }
+            ];
+
+            if (group.members) {
+                group.members.forEach(mId => {
+                    const friend = chatList.find(f => f.id === mId);
+                    if (friend) {
+                        allMembers.push({
+                            id: friend.id,
+                            name: getFriendDisplayName(friend),
+                            avatar: friend.avatar || DEFAULT_AVATAR
+                        });
+                    }
+                });
+            }
+
+            // 展示逻辑：默认一排五个展示四排（共20个位置）。最后两个位置一个是加号一个是减号。
+            // 实际展示成员数上限 = 20 - 2 = 18个（在非展开模式下）。
+            let displayList;
+            if (showAll) {
+                displayList = allMembers;
+            } else {
+                displayList = allMembers.slice(0, 18);
+            }
+
+            displayList.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'group-member-item';
+                item.innerHTML = `
+                    <img src="${m.avatar}" class="member-avatar">
+                    <div class="member-name">${m.name}</div>
+                `;
+                grid.appendChild(item);
+            });
+
+            // 始终添加加号和减号（如果展示全部，则跟在最后；否则占第19和20个位置）
+            const addBtn = document.createElement('div');
+            addBtn.className = 'group-member-item';
+            addBtn.onclick = () => alert('邀请新成员功能开发中');
+            addBtn.innerHTML = `
+                <div class="member-avatar action">+</div>
+                <div class="member-name"></div>
+            `;
+            grid.appendChild(addBtn);
+
+            const minusBtn = document.createElement('div');
+            minusBtn.className = 'group-member-item';
+            minusBtn.onclick = () => alert('移除群成员功能开发中');
+            minusBtn.innerHTML = `
+                <div class="member-avatar action">-</div>
+                <div class="member-name"></div>
+            `;
+            grid.appendChild(minusBtn);
+
+            // 如果不展示全部且总人数超过18人，显示更多按钮
+            const moreBtn = document.getElementById('groupInfoMoreBtn');
+            if (moreBtn) {
+                if (!showAll && allMembers.length > 18) {
+                    moreBtn.style.display = 'flex';
+                } else {
+                    moreBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleAllGroupMembers() {
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+            renderGroupInfoMembers(group, true);
+        }
+
+        function updateGroupName() {
+            const group = groupList.find(g => g.id === currentGroupChatId);
+            if (!group) return;
+
+            const newName = prompt('修改群聊名称', group.name);
+            if (newName && newName.trim()) {
+                group.name = newName.trim();
+                document.getElementById('groupInfoNameText').textContent = group.name;
+                const titleEl = document.getElementById('groupChatTitle');
+                if (titleEl) {
+                    titleEl.textContent = `${group.name}(${(group.members ? group.members.length : 0) + 1})`;
+                }
+                saveGroupListToStorage();
+                renderChatList();
+            }
+        }
+
+        function quitGroupChat() {
+            if (confirm('确定要退出群聊吗？')) {
+                groupList = groupList.filter(g => g.id !== currentGroupChatId);
+                saveGroupListToStorage();
+                closeGroupInfo();
+                closeGroupChat();
+                renderChatList();
+            }
+        }
+
+        function dissolveGroupChat() {
+            if (confirm('确定要解散群聊吗？此操作将移除所有成员。')) {
+                groupList = groupList.filter(g => g.id !== currentGroupChatId);
+                saveGroupListToStorage();
+                closeGroupInfo();
+                closeGroupChat();
+                renderChatList();
+            }
         }
 
         function toggleGroupStickerPicker(e) {
@@ -3882,27 +4049,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             addSwipeListeners();
         }
 
-        function renderChatItem(friend, isPinned) {
+        function renderChatItem(item, isPinned) {
             let html = `<div class="chat-item-wrapper">`;
+            const isGroup = item.members !== undefined;
+            const clickAction = isGroup ? `openGroupChat(${item.id})` : `openChat(${item.id})`;
+            const avatar = isGroup ? 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Crect width="24" height="24"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="8"%3E群%3C/text%3E%3C/svg%3E' : (item.avatar || DEFAULT_AVATAR);
+            const name = isGroup ? item.name : getFriendDisplayName(item);
             
             // 聊天内容层
             html += `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
-                             data-id="${friend.id}" 
-                             onclick="openChat(${friend.id})">`;
-            html += `<img src="${friend.avatar || ''}" class="chat-avatar" alt="头像">`;
+                             data-id="${item.id}" 
+                             onclick="${clickAction}">`;
+            html += `<img src="${avatar}" class="chat-avatar" alt="头像">`;
             html += '<div class="chat-content">';
             html += '<div class="chat-header">';
-            html += `<span class="chat-name">${getFriendDisplayName(friend)}</span>`;
-            html += `<span class="chat-time">${friend.time}</span>`;
+            html += `<span class="chat-name">${name}</span>`;
+            html += `<span class="chat-time">${item.time}</span>`;
             html += '</div>';
-            html += `<div class="chat-message">${friend.message}</div>`;
+            html += `<div class="chat-message">${item.message}</div>`;
             html += '</div>';
             html += '</div>'; // end chat-item
 
             // 操作按钮层
             html += `<div class="chat-actions">
-                        <div class="chat-action-btn pin" onclick="togglePin(${friend.id}, event)">${isPinned ? '取消置顶' : '置顶'}</div>
-                        <div class="chat-action-btn delete" onclick="deleteChat(${friend.id}, event)">删除</div>
+                        <div class="chat-action-btn pin" onclick="togglePin(${item.id}, event, ${isGroup})">${isPinned ? '取消置顶' : '置顶'}</div>
+                        <div class="chat-action-btn delete" onclick="deleteChat(${item.id}, event, ${isGroup})">删除</div>
                      </div>`;
             
             html += `</div>`; // end chat-item-wrapper
@@ -3910,11 +4081,16 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 删除聊天
-        function deleteChat(id, event) {
+        function deleteChat(id, event, isGroup) {
             if (event) event.stopPropagation();
             if (confirm('确定要删除该聊天吗？')) {
-                chatList = chatList.filter(c => c.id !== id);
-                saveChatListToStorage();
+                if (isGroup) {
+                    groupList = groupList.filter(g => g.id !== id);
+                    saveGroupListToStorage();
+                } else {
+                    chatList = chatList.filter(c => c.id !== id);
+                    saveChatListToStorage();
+                }
                 renderChatList();
             }
         }
@@ -3986,14 +4162,22 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 切换置顶状态
-        function togglePin(id, event) {
+        function togglePin(id, event, isGroup) {
             if (event) event.stopPropagation();
-            const friend = chatList.find(f => f.id === id);
-            if (friend) {
-                friend.isPinned = !friend.isPinned;
-                saveChatListToStorage();
-                renderChatList();
+            if (isGroup) {
+                const group = groupList.find(g => g.id === id);
+                if (group) {
+                    group.isPinned = !group.isPinned;
+                    saveGroupListToStorage();
+                }
+            } else {
+                const friend = chatList.find(f => f.id === id);
+                if (friend) {
+                    friend.isPinned = !friend.isPinned;
+                    saveChatListToStorage();
+                }
             }
+            renderChatList();
         }
 
         // 聊天相关变量
@@ -7795,9 +7979,12 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         window.renderChatList = function(searchKeyword = '') {
             const container = document.getElementById('chatList');
             
-            let filteredList = chatList;
+            // 合并好友聊天和群聊
+            let combinedList = [...chatList, ...groupList];
             
-            // 顶部分类筛选
+            let filteredList = combinedList;
+            
+            // 顶部分类筛选 (群聊目前不参与联系人分类，只在“默认”显示)
             if (currentSelectedCategory !== '默认') {
                 const category = topCategories.find(c => c.name === currentSelectedCategory);
                 if (category) {
@@ -7806,9 +7993,11 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             }
 
             if (searchKeyword) {
-                filteredList = filteredList.filter(friend => {
-                    const nameMatch = getFriendDisplayName(friend).toLowerCase().includes(searchKeyword);
-                    const msgMatch = friend.message.toLowerCase().includes(searchKeyword);
+                filteredList = filteredList.filter(item => {
+                    const isGroup = item.members !== undefined;
+                    const name = isGroup ? item.name : getFriendDisplayName(item);
+                    const nameMatch = name.toLowerCase().includes(searchKeyword);
+                    const msgMatch = item.message.toLowerCase().includes(searchKeyword);
                     return nameMatch || msgMatch;
                 });
             }
@@ -7824,8 +8013,8 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             let html = '';
             
             // 渲染置顶列表
-            pinned.forEach((friend, index) => {
-                html += renderChatItem(friend, true);
+            pinned.forEach((item, index) => {
+                html += renderChatItem(item, true);
             });
 
             // 如果有置顶项且有普通项，插入物理灰色间隔
@@ -7834,8 +8023,8 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             }
 
             // 渲染普通列表
-            others.forEach(friend => {
-                html += renderChatItem(friend, false);
+            others.forEach(item => {
+                html += renderChatItem(item, false);
             });
 
             container.innerHTML = html;

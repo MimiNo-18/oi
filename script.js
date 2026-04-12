@@ -3386,7 +3386,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('wechatMeAvatar').src = wechatUserInfo.avatar;
         }
 
-        function openPersonalInfo() {
+        let personalInfoSource = 'me';
+        function openPersonalInfo(source = 'me') {
+            personalInfoSource = source;
             showContainer('personalInfoContainer');
             document.body.classList.add('personal-info-active');
             
@@ -3416,10 +3418,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closePersonalInfo() {
+            if (personalInfoSource === 'settings') {
+                openWechatSettings();
+            } else {
+                showContainer('wechatContainer');
+                const meTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item:last-child');
+                if (meTab) switchWechatTab('me', meTab);
+            }
             document.body.classList.remove('personal-info-active');
-            openWechat();
-            const meTab = document.querySelector('.wechat-nav-item:last-child');
-            if (meTab) switchWechatTab('me', meTab);
             saveUIState();
         }
 
@@ -3605,7 +3611,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closeWechatSettings() {
-            document.getElementById('wechatSettingsContainer').style.display = 'none';
+            showContainer('wechatContainer');
+            const meTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item:last-child');
+            if (meTab) switchWechatTab('me', meTab);
             saveUIState();
         }
 

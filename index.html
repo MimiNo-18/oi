@@ -231,9 +231,9 @@
     <!-- 聊天详情页面 -->
     <div id="chatPageContainer" class="full-page-container" style="display: none;">
         <!-- 导航栏 -->
-        <div class="wechat-nav-bar" id="chatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
+        <div class="wechat-nav-bar" id="chatNavBar" style="background: #f7f7f7; box-shadow: none; border-bottom: 1px solid #dbdbdb;">
             <div class="wechat-nav-left" onclick="closeChat()" id="chatNavLeft">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
@@ -2432,18 +2432,22 @@
     </div>
 
     <!-- 群聊详情页面 -->
-    <div id="groupChatPage" style="display: none; width: 100%; top: 0; bottom: 0; background: #ffffff; flex-direction: column; position: fixed; left: 0; z-index: 400;">
+    <div id="groupChatPage" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 400;">
         <!-- 导航栏 -->
-        <div class="wechat-nav-bar" id="groupChatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
-            <div class="wechat-nav-left" onclick="closeGroupChat()" style="font-size: 24px; color: #000; font-weight: 300;"><</div>
-            <div style="display: flex; align-items: center; justify-content: center; flex: 1;">
-                <div class="wechat-nav-title" id="groupChatTitle" style="font-size: 16px; font-weight: 600; color: #000;">群聊名称(0)</div>
+        <div class="wechat-nav-bar" id="groupChatNavBar" style="background: #f7f7f7; box-shadow: none; border-bottom: 0.5px solid #dbdbdb;">
+            <div class="wechat-nav-left" onclick="closeGroupChat()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+                <div class="wechat-nav-title" id="groupChatTitle" style="font-size: 17px; font-weight: 600; color: #000;">群聊名称(0)</div>
             </div>
             <div class="wechat-nav-right" onclick="openGroupInfo(currentGroupChatId)">
                 <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px;">
-                    <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-                    <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    <circle cx="20" cy="12" r="2" fill="currentColor"/>
                 </svg>
             </div>
         </div>
@@ -2738,18 +2742,27 @@
     </div>
 
     <!-- 群聊信息页面 -->
-    <div id="groupChatInfoPage" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 450; flex-direction: column;">
-        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: 1px solid #eee;">
-            <div class="wechat-nav-left" onclick="closeGroupInfo()" style="font-size: 24px; color: #000; font-weight: 300;"><</div>
-            <div class="wechat-nav-title">群聊信息<span id="groupInfoMemberCount">(0)</span></div>
-            <div class="wechat-nav-right">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #000;">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    <div id="groupChatInfoPage" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 450;">
+        <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: 0.5px solid #dbdbdb;">
+            <div class="wechat-nav-left" onclick="closeGroupInfo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+                <div class="wechat-nav-title" style="font-size: 17px; font-weight: 600; color: #000;">聊天信息<span id="groupInfoMemberCount">(0)</span></div>
+            </div>
+            <div class="wechat-nav-right"></div>
         </div>
         <div class="wechat-content-area" style="background: #f7f7f7;">
+            <!-- 群头像展示区 -->
+            <div style="background: #fff; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; border-bottom: 1px solid #f0f0f0;">
+                <div id="groupInfoNameTextDisplay" style="font-size: 18px; font-weight: 600; color: #333;">群聊名称</div>
+                <div class="chat-info-avatar-box" style="margin-bottom: 0;">
+                    <img id="groupInfoAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Crect width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='8'%3E群%3C/text%3E%3C/svg%3E" onclick="alert('修改群头像功能开发中')" class="chat-info-avatar">
+                </div>
+            </div>
+            <div style="height: 8px; background: #f7f7f7;"></div>
             <!-- 群成员头像网格 -->
             <div class="group-member-section" style="background: #fff; padding: 20px 15px 10px;">
                 <div id="groupInfoMemberGrid" class="group-member-grid">
@@ -2767,6 +2780,14 @@
                     <div class="wechat-settings-item" onclick="updateGroupName()">
                         <div class="me-menu-label">群聊名称</div>
                         <div class="chat-info-value"><span id="groupInfoNameText" style="color: #888;"></span> <span class="me-arrow">〉</span></div>
+                    </div>
+                    <div class="wechat-settings-divider"></div>
+                    <div class="wechat-settings-item" onclick="alert('群头像功能开发中')">
+                        <div class="me-menu-label">群头像</div>
+                        <div class="chat-info-value">
+                            <div style="width: 40px; height: 40px; background: #e1e1e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 10px;">群</div>
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
                     <div class="wechat-settings-divider"></div>
                     <div class="wechat-settings-item" onclick="alert('群二维码功能开发中')">

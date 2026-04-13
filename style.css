@@ -919,9 +919,9 @@
 
         /* 统一导航栏样式 */
         .wechat-nav-bar {
-            background-color: #f7f7f7 !important;
-            height: 48px !important;
-            padding: 0 16px !important;
+            background-color: #f7f7f7;
+            height: 48px;
+            padding: 0 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -963,8 +963,31 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff !important; /* 改为白色，确保消息和通讯录页底部空白为纯白色 */
+            background: #ffffff; /* 默认为白色 */
         }
+
+/* 微信设置页面背景强制为灰色 */
+#wechatSettingsContainer {
+    background-color: #f7f7f7 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#wechatSettingsContainer .wechat-content-area {
+    background-color: #f7f7f7 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 需求 1: 确保设置页面底部退出登录后的空白页面保持纯灰色 */
+#wechatSettingsContainer .wechat-content-area::after {
+    content: "";
+    flex: 1;
+    display: block;
+    min-height: 800px; /* 增加高度以彻底覆盖底部 */
+    background-color: #f7f7f7 !important;
+}
 
         /* 微信通讯录特有样式 */
         .wechat-contacts-header-btn {
@@ -2788,12 +2811,16 @@
         #servicePageContainer, #groupChatPage, #groupChatInfoPage,
         #contactDetailPage {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100vh;
             background: #f7f7f7 !important;
             flex-direction: column;
             overflow-y: auto;
             scroll-behavior: smooth;
+            z-index: 1000;
         }
 
         .settings-header {
@@ -3706,8 +3733,7 @@
             display: none;
             position: fixed;
             top: 0;
-            left: 0;
-            right: 0;
+            left: 0;right: 0;
             bottom: 0;
             background: #f7f7f7;
             flex-direction: column;
@@ -5387,20 +5413,24 @@
 }
 
 /* 微信设置页面新布局样式 */
+/* 需求2: 按键样式改为圆角矩形包裹的 */
 .wechat-settings-group {
-    margin: 0 12px;
+    margin: 12px 16px;
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border: 0.5px solid #eee;
 }
 
 .wechat-settings-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 16px;
+    padding: 16px 20px;
     background: #fff;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .wechat-settings-item:active {
@@ -5408,13 +5438,13 @@
 }
 
 .wechat-settings-divider {
-    height: 1px;
-    background: #f7f7f7; /* 纯灰色横线 */
-    margin: 0 16px;
+    height: 0.5px;
+    background: #eee;
+    margin: 0 20px;
 }
 
 .wechat-settings-spacer {
-    height: 12px;
+    height: 8px;
     background: #f7f7f7; /* 灰色长条 */
 }
 
@@ -5595,6 +5625,14 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     background: #f2f2f2;
 }
 
+/* 需求 4: 修复朋友圈白屏问题，确保容器层级和背景正确 */
+#momentsContainer {
+    z-index: 10500 !important; /* 提升层级，防止被遮挡 */
+    background-color: #f7f7f7 !important;
+    display: none; /* 由 JS 控制显示 */
+    flex-direction: column;
+}
+
 /* 灰色的正方形圆角卡片样式 */
 .message-gray-card {
     width: 120px;
@@ -5634,8 +5672,8 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 /* 联系人详情页布局调整 */
 #contactDetailPage {
     background-color: #f7f7f7 !important;
-    z-index: 200; /* 保持在微信之上 */
-    overflow: hidden !important; /* 禁止主容器滑动 */
+    z-index: 10500; /* 提升层级，确保在最上方 */
+    overflow: hidden !important;
     display: flex;
     flex-direction: column;
 }
@@ -5643,8 +5681,7 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 #contactDetailPage .contact-detail-content {
     background-color: #f7f7f7;
     flex: 1;
-    overflow-y: hidden !important; /* 需求3：禁止向上滑动 */
-    overscroll-behavior-y: contain;
+    overflow-y: auto !important; /* 允许内容滚动，但通过脚本控制行为 */
 }
 
 #contactDetailPage .profile-basic-info,
@@ -5653,9 +5690,25 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
     background-color: #fff;
 }
 
+/* 需求3: 修复个人主页导航栏图标不见的问题 */
 #contactDetailPage .wechat-nav-bar {
+    height: 108px !important; /* 恢复高度以适应状态栏 */
+    display: flex !important;
+    align-items: flex-end !important;
+    padding: 0 16px 12px !important;
     background-color: #fff !important;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid #f5f5f5 !important;
+    position: sticky;
+    top: 0;
+    z-index: 10600 !important; /* 确保在状态栏之上或至少同层 */
+}
+
+/* 确保详情页导航栏内的 SVG 图标可见且大小正确 */
+#contactDetailPage .wechat-nav-bar svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
+    color: #000 !important;
 }
 
 /* 确保下方空白页面为纯灰色 */

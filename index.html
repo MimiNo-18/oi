@@ -593,66 +593,67 @@
             <div class="add-menu-item" onclick="createGroupChat()">发起群聊</div>
             <div class="add-menu-item" onclick="alert('扫一扫功能开发中')">扫一扫</div>
         </div>
+    </div>
 
-        <!-- 朋友圈容器 -->
-        <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f7f7f7; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
-            <!-- 朋友圈操作弹窗 (点赞/评论) -->
-            <div id="momentActionPopup" class="moment-action-popup">
-                <div id="momentLikeBtn" class="moment-action-item">点赞</div>
-                <div class="moment-action-divider">|</div>
-                <div id="momentCommentBtn" class="moment-action-item">评论</div>
-                <div class="moment-action-divider">|</div>
-                <div id="momentContactReplyBtn" class="moment-action-item">联系人回复</div>
+    <!-- 朋友圈容器 -->
+    <div id="momentsContainer" onclick="hideMomentPopups()">
+        <!-- 朋友圈操作弹窗 (点赞/评论) -->
+        <div id="momentActionPopup" class="moment-action-popup">
+            <div id="momentLikeBtn" class="moment-action-item">点赞</div>
+            <div class="moment-action-divider">|</div>
+            <div id="momentCommentBtn" class="moment-action-item">评论</div>
+            <div class="moment-action-divider">|</div>
+            <div id="momentContactReplyBtn" class="moment-action-item">联系人回复</div>
+        </div>
+
+        <!-- 朋友圈长按菜单 -->
+        <div id="momentContextMenu" class="msg-context-menu" style="width: 240px;">
+            <div id="momentMenuEdit" class="msg-context-item" style="width: 33.3%;">编辑</div>
+            <div id="momentMenuDelete" class="msg-context-item" style="width: 33.3%;">删除</div>
+            <div id="momentMenuRepost" class="msg-context-item" style="width: 33.3%;">重发</div>
+        </div>
+
+        <!-- 朋友圈顶部透明导航栏 (初始) -->
+        <div id="momentsHeader" class="moments-header" style="color: #000;">
+            <div class="moments-header-left" onclick="closeMoments()" style="cursor: pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><path d="M15 18l-6-6 6-6"/></svg>
             </div>
-
-            <!-- 朋友圈长按菜单 -->
-            <div id="momentContextMenu" class="msg-context-menu" style="width: 240px;">
-                <div id="momentMenuEdit" class="msg-context-item" style="width: 33.3%;">编辑</div>
-                <div id="momentMenuDelete" class="msg-context-item" style="width: 33.3%;">删除</div>
-                <div id="momentMenuRepost" class="msg-context-item" style="width: 33.3%;">重发</div>
-            </div>
-
-            <!-- 朋友圈顶部透明导航栏 (初始) -->
-            <div id="momentsHeader" class="moments-header" style="color: #000;">
-                <div class="moments-header-left" onclick="closeMoments()" style="cursor: pointer;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><path d="M15 18l-6-6 6-6"/></svg>
-                </div>
-                <div class="moments-header-title">朋友圈</div>
-                <div class="moments-header-right" onclick="openMomentsEdit()" style="cursor: pointer;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                        <circle cx="12" cy="13" r="4"></circle>
-                    </svg>
-                </div>
-            </div>
-
-            <div id="momentsScrollArea" style="flex: 1; overflow-y: auto;" onscroll="handleMomentsScroll(this)">
-                <!-- 朋友圈个人背景区 -->
-            <div class="moments-profile" onclick="changeMomentsBg()">
-                <img src="" class="moments-bg-img" id="momentsBg">
-                <div class="moments-user-info" onclick="event.stopPropagation()">
-                        <div id="momentsUsername" class="moments-user-name">未设置网名</div>
-                        <img id="momentsAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="moments-user-avatar" style="background-color: #d0d0d0;">
-                    </div>
-                    <div id="momentsSignature" class="moments-signature">个性签名...</div>
-                </div>
-
-                <!-- 朋友圈列表内容 -->
-                <div id="momentsList" class="moments-list">
-                    <!-- 动态生成 -->
-                </div>
-            </div>
-
-            <!-- 朋友圈评论输入框 -->
-            <div id="momentCommentInputBar" class="moment-comment-input-bar">
-                <div class="moment-comment-icons">
-                    <span class="moment-comment-icon">☺</span>
-                    <span class="moment-comment-icon" onclick="selectMomentCommentImage()">🖼️</span>
-                </div>
-                <textarea id="momentCommentInput" class="moment-comment-textarea" placeholder="评论" oninput="updateMomentCommentSendBtn()"></textarea>
-                <button id="momentCommentSendBtn" class="moment-comment-send-btn" onclick="sendMomentComment()">发送</button>
+            <div class="moments-header-title">朋友圈</div>
+            <div class="moments-header-right" onclick="openMomentsEdit()" style="cursor: pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
             </div>
         </div>
+
+        <div id="momentsScrollArea" style="flex: 1; overflow-y: auto;" onscroll="handleMomentsScroll(this)">
+            <!-- 朋友圈个人背景区 -->
+        <div class="moments-profile" onclick="changeMomentsBg()">
+            <img src="" class="moments-bg-img" id="momentsBg">
+            <div class="moments-user-info" onclick="event.stopPropagation()">
+                    <div id="momentsUsername" class="moments-user-name">未设置网名</div>
+                    <img id="momentsAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="moments-user-avatar" style="background-color: #d0d0d0;">
+                </div>
+                <div id="momentsSignature" class="moments-signature">个性签名...</div>
+            </div>
+
+            <!-- 朋友圈列表内容 -->
+            <div id="momentsList" class="moments-list">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 朋友圈评论输入框 -->
+        <div id="momentCommentInputBar" class="moment-comment-input-bar">
+            <div class="moment-comment-icons">
+                <span class="moment-comment-icon">☺</span>
+                <span class="moment-comment-icon" onclick="selectMomentCommentImage()">🖼️</span>
+            </div>
+            <textarea id="momentCommentInput" class="moment-comment-textarea" placeholder="评论" oninput="updateMomentCommentSendBtn()"></textarea>
+            <button id="momentCommentSendBtn" class="moment-comment-send-btn" onclick="sendMomentComment()">发送</button>
+        </div>
+    </div>
 
     <!-- 朋友圈评论操作模态框 (删除/复制) -->
     <div class="modal" id="commentActionModal">
@@ -669,67 +670,66 @@
 
     <!-- 朋友圈文字修改模态框 -->
     <div class="modal" id="momentEditModal">
-            <div class="modal-content">
-                <div class="modal-title">编辑朋友圈</div>
-                <textarea id="momentEditTextInput" class="modal-input" style="height: 120px; resize: none; font-family: inherit;"></textarea>
-                <div class="modal-buttons">
-                    <button class="modal-btn cancel" type="button" onclick="document.getElementById('momentEditModal').classList.remove('active')">取消</button>
-                    <button class="modal-btn confirm" type="button" onclick="confirmMomentEdit()">保存</button>
+        <div class="modal-content">
+            <div class="modal-title">编辑朋友圈</div>
+            <textarea id="momentEditTextInput" class="modal-input" style="height: 120px; resize: none; font-family: inherit;"></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="document.getElementById('momentEditModal').classList.remove('active')">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="confirmMomentEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 朋友圈编辑发布页面 -->
+    <div id="momentsEditPage" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 120; flex-direction: column;">
+        <div class="moments-edit-nav">
+            <div class="moments-edit-cancel" onclick="closeMomentsEdit()">取消</div>
+            <button class="moments-post-btn" id="momentsPostBtn" onclick="postMoment()">发布</button>
+        </div>
+        <div class="moments-edit-content">
+            <textarea id="momentTextInput" class="moment-text-area" placeholder="这一刻的想法..."></textarea>
+            <div class="moment-edit-images-container" id="momentEditImagesContainer">
+                <div class="moment-image-uploader" onclick="selectMomentImage()">
+                    <div class="uploader-plus">+</div>
+                </div>
+            </div>
+            <div class="moment-edit-options">
+                <div class="moment-option-item">
+                    <div class="option-label">所在位置</div>
+                    <div class="option-right">〉</div>
+                </div>
+                <div class="moment-option-item">
+                    <div class="option-label">提醒谁看</div>
+                    <div class="option-right">〉</div>
+                </div>
+                <div class="moment-option-item">
+                    <div class="option-label">谁可以看</div>
+                    <div class="option-right">公开 〉</div>
                 </div>
             </div>
         </div>
+        <input type="file" id="momentImageInput" accept="image/*" style="display:none" onchange="handleMomentImageSelect(event)">
+    </div>
 
-        <!-- 朋友圈编辑发布页面 -->
-        <div id="momentsEditPage" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 120; flex-direction: column;">
-            <div class="moments-edit-nav">
-                <div class="moments-edit-cancel" onclick="closeMomentsEdit()">取消</div>
-                <button class="moments-post-btn" id="momentsPostBtn" onclick="postMoment()">发布</button>
+    <!-- 添加好友模态框 - 从联系人选择 -->
+    <div class="modal" id="addFriendModal">
+        <div class="modal-content">
+            <div class="modal-title">选择联系人</div>
+            <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
+            <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
+                <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="wechat-search-input" placeholder="Search" id="friendSearchInput" oninput="searchFriendContacts()">
             </div>
-            <div class="moments-edit-content">
-                <textarea id="momentTextInput" class="moment-text-area" placeholder="这一刻的想法..."></textarea>
-                <div class="moment-edit-images-container" id="momentEditImagesContainer">
-                    <div class="moment-image-uploader" onclick="selectMomentImage()">
-                        <div class="uploader-plus">+</div>
-                    </div>
-                </div>
-                <div class="moment-edit-options">
-                    <div class="moment-option-item">
-                        <div class="option-label">所在位置</div>
-                        <div class="option-right">〉</div>
-                    </div>
-                    <div class="moment-option-item">
-                        <div class="option-label">提醒谁看</div>
-                        <div class="option-right">〉</div>
-                    </div>
-                    <div class="moment-option-item">
-                        <div class="option-label">谁可以看</div>
-                        <div class="option-right">公开 〉</div>
-                    </div>
-                </div>
             </div>
-            <input type="file" id="momentImageInput" accept="image/*" style="display:none" onchange="handleMomentImageSelect(event)">
-        </div>
-
-        <!-- 添加好友模态框 - 从联系人选择 -->
-        <div class="modal" id="addFriendModal">
-            <div class="modal-content">
-                <div class="modal-title">选择联系人</div>
-                <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
-                <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
-                    <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" class="wechat-search-input" placeholder="Search" id="friendSearchInput" oninput="searchFriendContacts()">
-                </div>
-                </div>
-                <div id="friendContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
-                    <!-- 联系人列表将在这里动态生成 -->
-                </div>
-                <div class="modal-buttons">
-                    <button class="modal-btn cancel" type="button" onclick="closeWechatModal()">取消</button>
-                    <button class="modal-btn confirm" type="button" onclick="addFriendFromContact()">添加</button>
-                </div>
+            <div id="friendContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+                <!-- 联系人列表将在这里动态生成 -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" type="button" onclick="closeWechatModal()">取消</button>
+                <button class="modal-btn confirm" type="button" onclick="addFriendFromContact()">添加</button>
             </div>
         </div>
     </div>
@@ -2617,21 +2617,21 @@
     </div>
 
     <!-- 联系人详情页面 (WeChat Profile) -->
-    <div id="contactDetailPage" class="full-page-container" style="display: none; z-index: 200; flex-direction: column;">
-        <div class="wechat-nav-bar">
+    <div id="contactDetailPage" class="full-page-container" style="display: none; flex-direction: column;">
+        <div class="wechat-nav-bar" style="color: #000;">
             <div class="wechat-nav-left" onclick="closeContactDetail()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </div>
             <div class="wechat-nav-title"></div>
-        <div class="wechat-nav-right" onclick="openContactDetailMenu()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
-                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-                <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
-            </svg>
-        </div>
+            <div class="wechat-nav-right" onclick="openContactDetailMenu()">
+                <svg viewBox="0 0 24 24" fill="#000">
+                    <circle cx="5" cy="12" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="19" cy="12" r="2"/>
+                </svg>
+            </div>
         </div>
         <div class="contact-detail-content" style="flex: 1; overflow-y: auto;">
             <!-- 头部基本信息 -->

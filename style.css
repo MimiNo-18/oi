@@ -126,9 +126,8 @@
         body.has-phone-border #icon2Page,
         body.has-phone-border #fontPage { z-index: 10200 !important; }
 
-        /* 三级页面层级 (实名信息等) */
+        /* 三级页面层级 (实名认证等) */
         body.has-phone-border #realNameContainer,
-        body.has-phone-border #worldBookContainer,
         body.has-phone-border #worldBookEditPage,
         body.has-phone-border #bookItemEditPage { z-index: 10500 !important; }
 
@@ -201,6 +200,7 @@
             border-radius: 30px;
         }
 
+
         /* 确保弹窗在边框模式下也在边框内且不超出 */
         body.has-phone-border .modal {
             z-index: 30000 !important;
@@ -210,6 +210,7 @@
         body.has-phone-border .modal.active {
             display: flex !important;
         }
+
 
         /* 状态栏 */
         .status-bar {
@@ -243,7 +244,7 @@
             overflow: hidden;
         }
 
-        /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
+        /* 统一页面顶部间距：状态栏高度44px */
         .phone-container,
         #worldBookContainer,
         #settingsContainer,
@@ -687,11 +688,6 @@
         .security-primary-btn,
         .settings-full-btn.export {
             background: #000 !important;
-            color: #fff !important;
-        }
-
-        .add-contact-nav-right {
-            background: #8e8e93 !important;
             color: #fff !important;
         }
 

@@ -40,7 +40,7 @@
             overflow: hidden;
         }
 
-        /* 物理边框层 - 放置在较底层，依靠 z-index 确保内容在其上 */
+        /* 物理边框层 - 放置在最顶层包裹所有内容 */
         .phone-border-frame {
             display: none;
             position: fixed;
@@ -52,13 +52,13 @@
             border: 12px solid #1a1a1a;
             border-radius: 60px;
             pointer-events: none;
-            z-index: 5000; /* 降低层级，确保内容容器 z-index 大于它 */
+            z-index: 99999; /* 确保在最顶层 */
             box-sizing: border-box;
             box-shadow: 
                 0 0 0 2px #333,
                 0 0 0 4px #111,
                 0 20px 50px rgba(0,0,0,0.6),
-                0 0 0 100vmax #ffffff; /* 遮挡边框外内容，内容 z-index 需大于 5000 才能看到 */
+                0 0 0 100vmax #ffffff; /* 遮挡边框外内容，确保视觉包裹 */
         }
 
         body.has-phone-border .phone-border-frame {
@@ -67,7 +67,6 @@
 
         /* 所有页面容器在边框开启时统一在边框内 */
         body.has-phone-border .phone-container,
-        body.has-phone-border #wechatContainer,
         body.has-phone-border #contactsContainer,
         body.has-phone-border #chatPageContainer,
         body.has-phone-border #settingsContainer,
@@ -98,11 +97,7 @@
         body.has-phone-border #momentsEditPage,
         body.has-phone-border #wechatAccountSwitchContainer,
         body.has-phone-border #servicePageContainer,
-        body.has-phone-border #groupChatPage,
-        body.has-phone-border #groupChatInfoPage,
-        body.has-phone-border #contactDetailPage,
         body.has-phone-border .forward-type-modal,
-        body.has-phone-border #groupChatModal,
         body.has-phone-border .modal {
             width: 375px !important;
             height: 812px !important;
@@ -145,10 +140,9 @@
         body.has-phone-border #settingsContainer,
         body.has-phone-border #contactsContainer,
         body.has-phone-border #themeContainer,
-        body.has-phone-border #worldBookContainer,
         body.has-phone-border #mineContainer { z-index: 10100 !important; }
 
-        /* 二级页面层级 (聊天、微信设置、账号、壁纸/字体等主题子页) */
+        /* 二级页面层级 (聊天、微信设置、账号等) */
         body.has-phone-border #chatPageContainer,
         body.has-phone-border #accountContainer,
         body.has-phone-border #accountInfoContainer,
@@ -157,15 +151,10 @@
         body.has-phone-border #apiConfigContainer,
         body.has-phone-border #chatInfoContainer,
         body.has-phone-border #addContactContainer,
-        body.has-phone-border #wechatFavoritesContainer,
-        body.has-phone-border #groupChatPage,
-        body.has-phone-border #wechatSettingsContainer,
-        body.has-phone-border #wallpaperPage,
-        body.has-phone-border #iconPage,
-        body.has-phone-border #icon2Page,
-        body.has-phone-border #fontPage { z-index: 10200 !important; }
+        body.has-phone-border #wechatFavoritesContainer { z-index: 10200 !important; }
 
         /* 三级页面层级 (个人资料、显示设置、存储空间等) */
+        body.has-phone-border #wechatSettingsContainer,
         body.has-phone-border #personalInfoContainer,
         body.has-phone-border #wechatDisplaySettingsContainer,
         body.has-phone-border #wechatStorageContainer,
@@ -181,9 +170,7 @@
         body.has-phone-border #servicePageContainer,
         body.has-phone-border #momentsContainer,
         body.has-phone-border #momentsEditPage,
-        body.has-phone-border #groupChatInfoPage,
-        body.has-phone-border #contactDetailPage,
-        body.has-phone-border #wechatAccountSwitchContainer { z-index: 10500 !important; }
+        body.has-phone-border #wechatAccountSwitchContainer { z-index: 10300 !important; }
 
         /* 服务页面特殊处理：保持灰色背景并确保在边框内 */
         body.has-phone-border #servicePageContainer {
@@ -222,7 +209,7 @@
             left: 50%;
             background: #1a1a1a;
             pointer-events: none;
-            z-index: 5001; /* 确保按键在边框之上，但低于内容 */
+            z-index: 20001; /* 确保按键在页面之上 */
         }
 
         body.has-phone-border::before {
@@ -253,7 +240,7 @@
             border-bottom-right-radius: 18px;
             transform: translateX(-50%) scale(0.8);
             transform-origin: top center; /* 确保缩放后顶部依然对齐内容区边缘 */
-            z-index: 20000; /* 刘海应在所有内容之上 */
+            z-index: 20002;
             display: block !important;
         }
 
@@ -394,10 +381,8 @@
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
-        #groupChatPage,
-        #groupChatInfoPage,
         #wechatAccountSwitchContainer {
-            padding-top: 44px !important; /* 状态栏高度对齐 */
+            padding-top: 49px !important;
         }
 
         /* 朋友圈和联系人详情页面背景图从顶部状态栏开始 */
@@ -902,62 +887,9 @@
             display: none;
             width: 100%;
             height: 100vh;
-            background: #f2f2f2 !important; /* 统一微信背景色 */
+            background: #ffffff !important; /* 强制纯白色背景 */
             flex-direction: column;
             overflow: hidden;
-        }
-
-#groupChatPage, #groupChatInfoPage, #personalInfoContainer, #chatPageContainer {
-            background-color: #f7f7f7 !important;
-        }
-
-        #groupChatInfoPage {
-            display: none;
-            flex-direction: column;
-            background-color: #f7f7f7 !important;
-        }
-
-        /* 统一导航栏样式 */
-        .wechat-nav-bar {
-            background-color: #f7f7f7 !important;
-            height: 48px !important;
-            padding: 0 16px !important;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 0.5px solid #ddd;
-            box-sizing: border-box;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .wechat-nav-title {
-            font-size: 17px;
-            font-weight: 600;
-            flex: 1;
-            text-align: center;
-            color: #000;
-        }
-
-        .wechat-nav-left, .wechat-nav-right {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .wechat-nav-left {
-            justify-content: flex-start;
-        }
-
-        .wechat-nav-left svg, .wechat-nav-right svg {
-            width: 24px;
-            height: 24px;
-            color: #000;
         }
 
         .wechat-content-area {
@@ -1040,6 +972,31 @@
             flex-shrink: 0;
         }
 
+        .wechat-nav-bar {
+            background: #ffffff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #f5f5f5; /* 极淡的分隔线 */
+        }
+
+        .wechat-nav-left, .wechat-nav-right {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .wechat-nav-left svg, .wechat-nav-right svg {
+            width: 24px;
+            height: 24px;
+        }
 
         .wechat-nav-title {
             font-size: 18px;
@@ -1111,89 +1068,6 @@
 
         .wechat-search-input::placeholder {
             color: #999;
-        }
-
-/* 群成员头像网格样式 */
-.group-member-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 需求3: 一排五个头像 */
-    gap: 15px 0;
-    padding: 20px 15px; /* 增加上下边距 */
-    width: 100%;
-    background: #fff;
-    max-width: 100%;
-    overflow: hidden !important; /* 需求3: 不能左右滑动 */
-    box-sizing: border-box;
-}
-
-.group-member-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    width: 100%;
-}
-
-.member-avatar {
-    width: 48px !important; /* 需求3: 头像进一步缩小 */
-    height: 48px !important;
-    border-radius: 8px;
-    object-fit: cover;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.member-avatar.action {
-    border: 1px dashed #ccc;
-    background: #fff;
-    color: #b2b2b2;
-    font-size: 36px; /* 需求3: 调整加减号大小 */
-    font-weight: 200;
-    line-height: 1;
-}
-
-        .member-name {
-            font-size: 11px;
-            color: #888;
-            width: 50px;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* 群信息菜单样式 */
-        .group-info-menu .wechat-settings-item {
-            padding: 14px 16px;
-            background: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-.group-info-menu .me-menu-label {
-            font-size: 16px;
-            color: #000;
-        }
-
-        /* 需求4: 群聊信息群聊名称下方的头像 */
-        .group-info-big-avatar-box {
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 0 20px;
-        }
-
-        .group-info-big-avatar {
-            width: 64px;
-            height: 64px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #eee;
         }
 
         .wechat-chat-list {
@@ -2012,7 +1886,7 @@
             display: none;
             width: 100%;
             min-height: 100vh;
-            background: #f7f7f7;
+            background: #fff;
             flex-direction: column;
         }
 
@@ -2080,24 +1954,16 @@
         }
 
         /* 个人资料页面样式 */
-#personalInfoContainer {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #f7f7f7; /* 整体改为灰色背景 */
-    z-index: 220;
-    flex-direction: column;
-}
-
-        #personalInfoContainer .wechat-content-area {
-            background: #f7f7f7 !important;
-            height: 100%;
-            display: flex;
+        #personalInfoContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #f7f7f7;
             flex-direction: column;
-            min-height: calc(100vh - 44px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 220; /* 提升层级，确保在设置页面之上 */
         }
 
         .security-group {
@@ -2387,7 +2253,7 @@
             display: none;
             width: 100%;
             min-height: 100vh;
-            background: #f7f7f7;
+            background: #f8f8f8;
             flex-direction: column;
         }
 
@@ -2777,20 +2643,11 @@
         }
 
         /* 设置页面样式 */
-        #settingsContainer, #accountContainer, #displaySettingsContainer, 
-        #wechatSettingsContainer, #wechatDisplaySettingsContainer, 
-        #wechatStorageContainer, #categoryManagementContainer,
-        #chatInfoContainer, #addContactContainer, #wechatFavoritesContainer,
-        #stickerLibraryContainer, #stickerManagementContainer,
-        #mergedChatDetailContainer, #realNameContainer, #manualMemoryContainer,
-        #worldBookContainer, #worldBookEditPage, #bookItemEditPage,
-        #momentsContainer, #momentsEditPage, #wechatAccountSwitchContainer,
-        #servicePageContainer, #groupChatPage, #groupChatInfoPage,
-        #contactDetailPage {
+        #settingsContainer, #accountContainer, #displaySettingsContainer {
             display: none;
             width: 100%;
             height: 100vh;
-            background: #f7f7f7 !important;
+            background: #f7f7f7 !important; /* 改为纯灰色 */
             flex-direction: column;
             overflow-y: auto;
             scroll-behavior: smooth;
@@ -3382,9 +3239,33 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* 微信分类管理页面样式已整合到上方统一设置 */
+        /* 微信分类管理页面样式 */
+        #categoryManagementContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: #ffffff;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 240;
+        }
 
-        /* 微信收藏页面样式已整合到上方统一设置 */
+        /* 微信收藏页面样式 */
+        #wechatFavoritesContainer {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f7f7f7;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 250;
+        }
 
         .favorites-search-bar {
             background: #f7f7f7;
@@ -3601,106 +3482,6 @@
             font-size: 12px;
         }
 
-/* 群聊联系人多选框 */
-        .contact-checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #ddd;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-
-        .contact-checkbox.checked {
-            background: #000;
-            border-color: #000;
-        }
-
-        .contact-checkbox.checked::after {
-            content: '✓';
-            color: #fff;
-            font-size: 12px;
-        }
-
-/* 群聊弹窗样式优化 */
-#groupChatModal .modal-content {
-    width: 80%;
-    max-width: 320px;
-    height: 60%;
-    max-height: 500px;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-    overflow: hidden;
-}
-
-#groupChatModal .modal-title {
-    text-align: center;
-    margin-bottom: 15px;
-    padding: 0 20px;
-}
-
-#groupChatModal .wechat-search-bar {
-    padding: 0 16px 10px;
-    position: static;
-}
-
-#groupChatContactsList {
-    flex: 1;
-    overflow-y: auto !important;
-    border-top: 1px solid #f2f2f2;
-}
-
-#groupChatModal .modal-buttons {
-    padding: 15px 20px 0;
-    border-top: 1px solid #f2f2f2;
-}
-
-/* 群聊页面样式 */
-#groupChatPage {
-    display: none;
-    flex-direction: column;
-    background: #f7f7f7;
-    z-index: 10300;
-}
-
-#groupChatMessages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    background: #f7f7f7;
-}
-
-#groupChatInputBar {
-    background: #f7f7f7;
-    border-top: 1px solid #dbdbdb;
-    padding: 10px 10px 30px;
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    position: relative;
-    z-index: 1001;
-}
-
-#groupChatInput {
-    flex: 1;
-    background: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 16px;
-    max-height: 4.5em;
-    overflow-y: auto;
-    line-height: 1.5;
-    resize: none;
-    outline: none;
-}
-
         /* 聊天信息页面样式 */
         #chatInfoContainer {
             display: none;
@@ -3885,7 +3666,7 @@
             background: #000;
             border-bottom-left-radius: 18px;
             border-bottom-right-radius: 18px;
-            z-index: 20000;
+            z-index: 99999;
         }
         body.has-notch .notch {
             display: block;
@@ -5261,18 +5042,18 @@
     text-align: center;
 }
 
-        /* 微信切换账号页面样式 */
-        #wechatAccountSwitchContainer {
-            display: none;
-            width: 100%;
-            min-height: 100vh;
-            background: #f7f7f7 !important;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 10600;
-        }
+/* 微信切换账号页面样式 */
+#wechatAccountSwitchContainer {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    background: #f7f7f7 !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 215;
+}
 
 .account-switch-content {
     flex: 1;
@@ -5419,34 +5200,13 @@
 }
 
 /* 个人资料页面适配 */
-        #personalInfoContainer {
-            background: #f7f7f7 !important;
-        }
+#personalInfoContainer {
+    background: #f7f7f7 !important;
+}
 
-        #personalInfoContainer .wechat-nav-bar {
-            background: #f7f7f7 !important;
-            border-bottom: 0.5px solid #dbdbdb !important;
-        }
-
-        /* 确保个性签名下方空白部分为灰色 */
-        #personalInfoContainer .wechat-content-area {
-            background-color: #f7f7f7 !important;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100% !important; /* 填充高度 */
-            min-height: 0 !important;
-        }
-
-        #personalInfoContainer .security-group:last-child {
-            margin-bottom: 0;
-        }
-
-        /* 使用 min-height: 100vh 确保背景色覆盖到底部 */
-        #personalInfoContainer {
-            background-color: #f7f7f7 !important;
-            min-height: 100vh;
-        }
+#personalInfoContainer .wechat-nav-bar {
+    background: #f7f7f7 !important;
+}
 
         /* 分类管理页面适配 */
         body.has-phone-border #categoryManagementContainer,

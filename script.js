@@ -59,7 +59,6 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
             // 统一 ID 类型为数字，防止比较失败
             currentMomentsFriendId = friendId ? Number(friendId) : null;
-            pushPageToHistory('momentsContainer');
             const container = document.getElementById('momentsContainer');
             container.style.display = 'flex';
             document.body.classList.add('moments-active');
@@ -190,8 +189,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
         }
 
         function closeMoments() {
+            document.getElementById('momentsContainer').style.display = 'none';
             document.body.classList.remove('moments-active');
-            goBack();
+            saveUIState();
         }
 
         function handleMomentsScroll(el) {
@@ -2307,11 +2307,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         // 打开微信页面
         function openWechat() {
             wechatVisible = true;
-
-            pageHistory = []; // 清空历史记录
             document.querySelector('.phone-container').style.display = 'none';
             document.getElementById('wechatContainer').style.display = 'flex';
-            pushPageToHistory('wechatContainer'); // 将微信主容器加入历史记录
             updateTime();
             updateBattery();
             
@@ -2809,49 +2806,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             closeDeleteContactModal();
         }
 
-        // 页面历史管理
-        let pageHistory = [];
-        
-        // 统一的页面打开函数 - 将页面状态推入历史栈
-        function pushPageToHistory(pageId) {
-            // 检查该页面是否已经在栈顶，避免重复
-            if (pageHistory.length === 0 || pageHistory[pageHistory.length - 1] !== pageId) {
-                pageHistory.push(pageId);
-            }
-        }
-        
-        // 统一的返回上一页函数
-        function goBack() {
-            if (pageHistory.length > 0) {
-                const currentPage = pageHistory.pop();
-                // 隐藏当前页面
-                if (currentPage) {
-                    const el = document.getElementById(currentPage);
-                    if (el) el.style.display = 'none';
-                }
-                
-                // 如果还有历史记录，显示上一个页面
-                if (pageHistory.length > 0) {
-                    const prevPage = pageHistory[pageHistory.length - 1];
-                    const el = document.getElementById(prevPage);
-                    if (el) el.style.display = 'flex';
-                } else {
-                    // 如果没有历史记录了，回到主屏幕
-                    wechatVisible = false;
-                    document.getElementById('wechatContainer').style.display = 'none';
-                    document.querySelector('.phone-container').style.display = 'flex';
-                }
-                
-                saveUIState();
-            } else {
-                // 如果没有历史记录，回到主屏幕
-                wechatVisible = false;
-                document.getElementById('wechatContainer').style.display = 'none';
-                document.querySelector('.phone-container').style.display = 'flex';
-                saveUIState();
-            }
-        }
-        
         // 微信个人资料相关
         let wechatUserInfo = {
             avatar: DEFAULT_AVATAR,
@@ -2908,7 +2862,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function openPersonalInfo() {
-            pushPageToHistory('personalInfoContainer');
             document.getElementById('personalInfoContainer').style.display = 'flex';
             document.getElementById('editWechatAvatar').src = wechatUserInfo.avatar;
             document.getElementById('editWechatNickname').textContent = wechatUserInfo.nickname;
@@ -2926,11 +2879,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closePersonalInfo() {
-            goBack();
+            document.getElementById('personalInfoContainer').style.display = 'none';
+            renderWechatMePage();
+            saveUIState();
         }
 
         function openServicePage() {
-            pushPageToHistory('servicePageContainer');
             document.getElementById('servicePageContainer').style.display = 'flex';
             document.body.classList.add('service-page-active');
             updateTime();
@@ -2938,13 +2892,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closeServicePage() {
+            document.getElementById('servicePageContainer').style.display = 'none';
             document.body.classList.remove('service-page-active');
-            goBack();
+            saveUIState();
         }
 
         // 微信存储空间相关
         function openWechatStorage() {
-            pushPageToHistory('wechatStorageContainer');
             document.getElementById('wechatStorageContainer').style.display = 'flex';
             document.getElementById('storageScanning').style.display = 'flex';
             document.getElementById('storageDetail').style.display = 'none';
@@ -2959,7 +2913,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closeWechatStorage() {
-            goBack();
+            document.getElementById('wechatStorageContainer').style.display = 'none';
+            saveUIState();
         }
 
         async function calculateStorage() {
@@ -3103,25 +3058,25 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 微信设置页面相关函数
         function openWechatSettings() {
-            pushPageToHistory('wechatSettingsContainer');
             document.getElementById('wechatSettingsContainer').style.display = 'flex';
             updateTime();
             saveUIState();
         }
 
         function closeWechatSettings() {
-            goBack();
+            document.getElementById('wechatSettingsContainer').style.display = 'none';
+            saveUIState();
         }
 
         function openWechatDisplaySettings() {
-            pushPageToHistory('wechatDisplaySettingsContainer');
             document.getElementById('wechatDisplaySettingsContainer').style.display = 'flex';
             updateTime();
             saveUIState();
         }
 
         function closeWechatDisplaySettings() {
-            goBack();
+            document.getElementById('wechatDisplaySettingsContainer').style.display = 'none';
+            saveUIState();
         }
 
         // 微信账号与安全相关函数
@@ -3387,7 +3342,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 返回主页
-
+        function goBack() {
+            wechatVisible = false;
+            document.getElementById('wechatContainer').style.display = 'none';
+            document.querySelector('.phone-container').style.display = 'flex';
+            saveUIState();
+        }
 
         // 切换添加菜单
         function toggleAddMenu(event) {
@@ -7333,7 +7293,6 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function openCategoryManagement() {
-            pushPageToHistory('categoryManagementContainer');
             document.getElementById('categoryManagementContainer').style.display = 'flex';
             document.body.classList.add('category-management-active');
             showCategoryMenu();
@@ -7367,10 +7326,11 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function closeCategoryManagement() {
+            document.getElementById('categoryManagementContainer').style.display = 'none';
             document.body.classList.remove('category-management-active');
             renderTopTagBar();
             renderChatList();
-            goBack();
+            saveUIState();
         }
 
         function renderCategoryManagementList() {
@@ -7595,7 +7555,6 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function openWechatFavorites() {
-            pushPageToHistory('wechatFavoritesContainer');
             document.getElementById('wechatFavoritesContainer').style.display = 'flex';
             favSelectMode = false;
             selectedFavIds.clear();
@@ -7606,7 +7565,8 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function closeWechatFavorites() {
-            goBack();
+            document.getElementById('wechatFavoritesContainer').style.display = 'none';
+            saveUIState();
         }
 
         function renderFavoritesList(keyword = '') {
@@ -7888,7 +7848,6 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function openStickerLibrary() {
-            pushPageToHistory('stickerLibraryContainer');
             document.getElementById('stickerLibraryContainer').style.display = 'flex';
             loadStickers();
             renderStickerGrid();
@@ -7897,18 +7856,19 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function closeStickerLibrary() {
-            goBack();
+            document.getElementById('stickerLibraryContainer').style.display = 'none';
+            saveUIState();
         }
 
         function openStickerManagement() {
-            pushPageToHistory('stickerManagementContainer');
             document.getElementById('stickerManagementContainer').style.display = 'flex';
             updateTime();
             saveUIState();
         }
 
         function closeStickerManagement() {
-            goBack();
+            document.getElementById('stickerManagementContainer').style.display = 'none';
+            saveUIState();
         }
 
         function openStickerCategoryManagement() {

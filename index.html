@@ -152,7 +152,7 @@
     <!-- 联系人容器 -->
     <div id="contactsContainer" style="display: none;">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeContacts()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -233,7 +233,7 @@
     <div id="chatPageContainer" style="display: none; width: 100%; top: 0; bottom: 0; background: #ffffff; flex-direction: column; position: fixed; left: 0; z-index: 150;">
         <!-- 导航栏 -->
         <div class="wechat-nav-bar" id="chatNavBar" style="background: #ffffff; box-shadow: none; border-bottom: 1px solid #f0f0f0;">
-            <div class="wechat-nav-left" onclick="closeChat()" id="chatNavLeft">
+            <div class="wechat-nav-left" onclick="universalBack()" id="chatNavLeft">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -389,7 +389,7 @@
     <div id="wechatContainer">
         <!-- 顶部导航栏 -->
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="goBack()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -597,7 +597,6 @@
 
         <!-- 朋友圈容器 -->
         <div id="momentsContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f7f7f7; z-index: 110; flex-direction: column; overflow: hidden;" onclick="hideMomentPopups()">
-            <!-- 朋友圈操作弹窗 (点赞/评论) -->
             <div id="momentActionPopup" class="moment-action-popup">
                 <div id="momentLikeBtn" class="moment-action-item">点赞</div>
                 <div class="moment-action-divider">|</div>
@@ -615,7 +614,7 @@
 
             <!-- 朋友圈顶部透明导航栏 (初始) -->
             <div id="momentsHeader" class="moments-header" style="color: #000;">
-                <div class="moments-header-left" onclick="closeMoments()" style="cursor: pointer;">
+                <div class="moments-header-left" onclick="universalBack()" style="cursor: pointer;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><path d="M15 18l-6-6 6-6"/></svg>
                 </div>
                 <div class="moments-header-title">朋友圈</div>
@@ -733,6 +732,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- 发起群聊模态框 -->
+        <div class="modal" id="groupChatModal">
+            <div class="modal-content">
+                <div class="modal-title">发起群聊</div>
+                <input type="text" class="modal-input" id="groupChatNameInput" placeholder="请输入群聊名称">
+                <div class="wechat-search-bar" style="padding: 0 0 12px 0;">
+                    <div class="wechat-search-input-wrapper" style="border: 1px solid #E5E5E5;">
+                        <svg class="wechat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" class="wechat-search-input" placeholder="搜索联系人" id="groupChatSearchInput" oninput="searchGroupChatContacts()">
+                    </div>
+                </div>
+                <div id="groupChatContactsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+                    <!-- 联系人列表将在这里动态生成 -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn cancel" type="button" onclick="closeGroupChatModal()">取消</button>
+                    <button class="modal-btn confirm" type="button" onclick="confirmCreateGroupChat()">确定</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 添加/编辑联系人模态框 -->
@@ -796,7 +819,7 @@
     <!-- 表情库页面 -->
     <div id="stickerLibraryContainer">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeStickerLibrary()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -836,7 +859,7 @@
     <!-- 表情库管理页面 -->
     <div id="stickerManagementContainer">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeStickerManagement()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -938,7 +961,7 @@
     <!-- 服务页面 -->
     <div id="servicePageContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 250;">
         <div class="service-nav-bar">
-            <div class="service-nav-left" onclick="closeServicePage()">
+            <div class="service-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1018,7 +1041,7 @@
     <!-- 微信设置页面 -->
     <div id="wechatSettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 210;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeWechatSettings()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1103,7 +1126,7 @@
     <!-- 微信显示设置页面 -->
     <div id="wechatDisplaySettingsContainer" style="display: none; width: 100%; min-height: 100vh; background: #f7f7f7; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 215;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeWechatDisplaySettings()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1146,7 +1169,7 @@
     <!-- 微信存储空间页面 -->
     <div id="wechatStorageContainer">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeWechatStorage()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1221,7 +1244,7 @@
     <!-- 微信顶部分组管理页面 (更名为“更多”) -->
     <div id="categoryManagementContainer">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" id="categoryBackBtn" onclick="closeCategoryManagement()">
+            <div class="wechat-nav-left" id="categoryBackBtn" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1303,7 +1326,7 @@
     <!-- 聊天信息页面 -->
     <div id="chatInfoContainer">
         <div class="chat-info-header">
-            <div class="chat-info-back" onclick="closeChatInfo()">
+            <div class="chat-info-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1469,7 +1492,7 @@
     <!-- 微信收藏页面 -->
     <div id="wechatFavoritesContainer">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeWechatFavorites()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1507,7 +1530,7 @@
     <!-- 微信个人资料页面 -->
     <div id="personalInfoContainer">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closePersonalInfo()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1591,7 +1614,7 @@
     <div id="addContactContainer">
         <!-- 导航栏 -->
         <div class="add-contact-nav">
-            <div class="add-contact-nav-left" onclick="closeAddContactPage()">
+            <div class="add-contact-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1707,7 +1730,7 @@
     <div id="mineContainer">
         <!-- 顶部标题栏 -->
         <div class="theme-header">
-            <div class="theme-back" onclick="closeMinePage()">
+            <div class="theme-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1735,7 +1758,7 @@
     <!-- 设置容器 -->
     <div id="settingsContainer">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeSettings()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1798,7 +1821,7 @@
     <!-- 显示设置容器 -->
     <div id="displaySettingsContainer">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeDisplaySettings()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1854,7 +1877,7 @@
     <!-- 电量提醒设置容器 -->
     <div id="batterySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeBatterySettings()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1907,7 +1930,7 @@
     <!-- 账号容器 -->
     <div id="accountContainer">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeAccount()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -1944,7 +1967,7 @@
     <!-- 账号信息容器 -->
     <div id="accountInfoContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeAccountInfo()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2032,7 +2055,7 @@
     <!-- API配置容器 -->
     <div id="apiConfigContainer">
         <div class="settings-header">
-            <div class="settings-back" onclick="closeApiConfig()">
+            <div class="settings-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2096,7 +2119,7 @@
     <div id="themeContainer">
         <!-- 顶部标题栏 -->
         <div class="theme-header">
-            <div class="theme-back" onclick="closeThemePage()">
+            <div class="theme-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2205,7 +2228,7 @@
     <!-- 合并转发详情页 -->
     <div id="mergedChatDetailContainer">
         <div class="merged-detail-header">
-            <div class="merged-detail-back" onclick="closeMergedChatDetail()">
+            <div class="merged-detail-back" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2221,7 +2244,7 @@
     <!-- 手动输入记忆页面 -->
     <div id="manualMemoryContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 300;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeManualMemory()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2237,7 +2260,7 @@
     <!-- 实名信息页面 -->
     <div id="realNameContainer" class="full-page-container" style="display: none; background: #f7f7f7; z-index: 350;">
         <div class="wechat-nav-bar" style="background: #f7f7f7; border-bottom: 1px solid #eee;">
-            <div class="wechat-nav-left" onclick="closeRealNamePage()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -2286,7 +2309,7 @@
     <!-- 世界书应用容器 -->
     <div id="worldBookContainer" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5000;">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeWorldBook()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             </div>
             <div class="wechat-nav-title">世界书</div>
@@ -2316,7 +2339,7 @@
     <!-- 世界书编辑页面 -->
     <div id="worldBookEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5100;">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeWorldBookEdit()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             </div>
             <div class="wechat-nav-right" onclick="showAddBookItemModal()">
@@ -2346,7 +2369,7 @@
     <!-- 条目编辑页面 -->
     <div id="bookItemEditPage" style="display: none; width: 100%; height: 100vh; background: #fff; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 5200;">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeBookItemEdit()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             </div>
             <div class="wechat-nav-title" id="editItemTitle">条目名称</div>
@@ -2429,7 +2452,7 @@
     <!-- 微信切换账号页面 -->
     <div id="wechatAccountSwitchContainer" style="display: none;">
         <div class="wechat-nav-bar" style="background: #fff; border-bottom: none;">
-            <div class="wechat-nav-left" onclick="closeWechatAccountSwitch()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                     <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="#333" />
                 </svg>
@@ -2490,7 +2513,7 @@
     <!-- 联系人详情页面 (WeChat Profile) -->
     <div id="contactDetailPage" class="full-page-container" style="display: none; z-index: 200; flex-direction: column;">
         <div class="wechat-nav-bar">
-            <div class="wechat-nav-left" onclick="closeContactDetail()">
+            <div class="wechat-nav-left" onclick="universalBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>

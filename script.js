@@ -1786,6 +1786,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function openSettings() {
+            document.body.classList.add('gray-header-active');
             document.querySelector('.phone-container').style.display = 'none';
             document.getElementById('settingsContainer').style.display = 'flex';
             updateTime();
@@ -1794,12 +1795,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closeSettings() {
+            document.body.classList.remove('gray-header-active');
             document.getElementById('settingsContainer').style.display = 'none';
             document.querySelector('.phone-container').style.display = 'flex';
             saveUIState();
         }
 
         function openAccount() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('settingsContainer').style.display = 'none';
             document.getElementById('accountContainer').style.display = 'flex';
             updateTime();
@@ -1885,6 +1888,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let currentConfigId = 'default';
 
         function openApiConfig() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('settingsContainer').style.display = 'none';
             document.getElementById('apiConfigContainer').style.display = 'flex';
             updateTime();
@@ -1900,6 +1904,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function openDisplaySettings() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('settingsContainer').style.display = 'none';
             document.getElementById('displaySettingsContainer').style.display = 'flex';
             updateTime();
@@ -2862,6 +2867,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function openPersonalInfo() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('personalInfoContainer').style.display = 'flex';
             document.getElementById('editWechatAvatar').src = wechatUserInfo.avatar;
             document.getElementById('editWechatNickname').textContent = wechatUserInfo.nickname;
@@ -2879,6 +2885,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closePersonalInfo() {
+            document.body.classList.remove('gray-header-active');
             document.getElementById('personalInfoContainer').style.display = 'none';
             renderWechatMePage();
             saveUIState();
@@ -3058,12 +3065,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 微信设置页面相关函数
         function openWechatSettings() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('wechatSettingsContainer').style.display = 'flex';
             updateTime();
             saveUIState();
         }
 
         function closeWechatSettings() {
+            document.body.classList.remove('gray-header-active');
             document.getElementById('wechatSettingsContainer').style.display = 'none';
             saveUIState();
         }
@@ -3081,6 +3090,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 微信账号与安全相关函数
         function openWechatAccountSwitch() {
+            document.body.classList.add('gray-header-active');
             const container = document.getElementById('wechatAccountSwitchContainer');
             if (!container) {
                 console.error('Account switch container not found');
@@ -3118,7 +3128,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             
             // 返回设置页面
             const settingsContainer = document.getElementById('wechatSettingsContainer');
-            if (settingsContainer) settingsContainer.style.display = 'flex';
+            if (settingsContainer) {
+                settingsContainer.style.display = 'flex';
+                document.body.classList.add('gray-header-active');
+            } else {
+                document.body.classList.remove('gray-header-active');
+            }
             
             saveUIState();
         }
@@ -6310,6 +6325,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
 
         // 主题页面相关函数
         function openThemePage() {
+            document.body.classList.add('gray-header-active');
             document.querySelector('.phone-container').style.display = 'none';
             document.getElementById('themeContainer').style.display = 'flex';
             showThemeMainMenu();
@@ -6319,6 +6335,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function closeThemePage() {
+            document.body.classList.remove('gray-header-active');
             document.getElementById('themeContainer').style.display = 'none';
             document.querySelector('.phone-container').style.display = 'flex';
             saveUIState();
@@ -8414,6 +8431,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function openWorldBook() {
+            document.body.classList.add('gray-header-active');
             document.getElementById('worldBookContainer').style.display = 'flex';
             document.querySelector('.phone-container').style.display = 'none';
             renderWorldBookList();
@@ -8422,6 +8440,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         function closeWorldBook() {
+            document.body.classList.remove('gray-header-active');
             document.getElementById('worldBookContainer').style.display = 'none';
             document.querySelector('.phone-container').style.display = 'flex';
             saveUIState();

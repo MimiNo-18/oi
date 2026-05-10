@@ -4,7 +4,7 @@
     display: none;
     width: 100%;
     height: 100vh;
-    background: #ffffff !important;
+    background: #f7f7f7 !important;
     flex-direction: column;
     overflow: hidden;
 }
@@ -12,6 +12,11 @@
 .wechat-content-area {
     flex: 1;
     overflow-y: auto;
+    background: #f7f7f7 !important;
+}
+
+/* 消息列表和通讯录需要白色背景 */
+#chatList, #wechatContactsPage {
     background: #ffffff !important;
 }
 

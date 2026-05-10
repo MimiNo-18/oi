@@ -129,7 +129,13 @@
 
         /* 微信主容器背景应随内容自适应 */
         body.has-phone-border #wechatContainer {
-            background-color: #fff;
+            background-color: #f7f7f7 !important;
+        }
+
+        /* 确保设置和个人资料页在边框模式下也是灰色 */
+        body.has-phone-border #wechatSettingsContainer,
+        body.has-phone-border #personalInfoContainer {
+            background-color: #f7f7f7 !important;
         }
 
         /* 首页层级 */
@@ -887,7 +893,7 @@
             display: none;
             width: 100%;
             height: 100vh;
-            background: #ffffff !important; /* 强制纯白色背景 */
+            background: #f7f7f7 !important; /* 统一为灰色 */
             flex-direction: column;
             overflow: hidden;
         }
@@ -895,7 +901,7 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff !important; /* 改为白色，确保消息和通讯录页底部空白为纯白色 */
+            background: #f7f7f7 !important; /* 统一为灰色 */
         }
 
         /* 微信通讯录特有样式 */
@@ -2217,7 +2223,7 @@
         }
 
         .me-rounded-box {
-            margin: 0 12px;
+            margin: 10px 12px;
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
@@ -2643,7 +2649,7 @@
         }
 
         /* 设置页面样式 */
-        #settingsContainer, #accountContainer, #displaySettingsContainer {
+        #settingsContainer, #accountContainer, #displaySettingsContainer, #wechatSettingsContainer, #personalInfoContainer {
             display: none;
             width: 100%;
             height: 100vh;
@@ -5167,13 +5173,13 @@
     background: #fff !important;
 }
 
-/* 微信设置页面新布局样式 */
-.wechat-settings-group {
-    margin: 0 12px;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-}
+        /* 微信设置页面新布局样式 */
+        .wechat-settings-group {
+            margin: 10px 12px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
 
 .wechat-settings-item {
     display: flex;

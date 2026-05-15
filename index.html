@@ -1742,56 +1742,58 @@
             </div>
             <div class="settings-title">设置</div>
         </div>
-        <div class="settings-group">
-            <div class="settings-item" onclick="openAccount()">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-account">🔑</div>
-                    <span class="settings-item-label">账号</span>
+        <div class="settings-scroll-area">
+            <div class="settings-group">
+                <div class="settings-item" onclick="openAccount()">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-account">🔑</div>
+                        <span class="settings-item-label">账号</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item" onclick="openDisplaySettings()">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-display">📱</div>
-                    <span class="settings-item-label">显示</span>
+                <div class="settings-item" onclick="openDisplaySettings()">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-display">📱</div>
+                        <span class="settings-item-label">显示</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item" onclick="openApiConfig()">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-api">⚙️</div>
-                    <span class="settings-item-label">API配置</span>
+                <div class="settings-item" onclick="openApiConfig()">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-api">⚙️</div>
+                        <span class="settings-item-label">API配置</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item" onclick="alert('安全设置功能开发中')">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-security">🛡️</div>
-                    <span class="settings-item-label">安全</span>
+                <div class="settings-item" onclick="alert('安全设置功能开发中')">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-security">🛡️</div>
+                        <span class="settings-item-label">安全</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item" onclick="alert('关于MimiPhone')">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-about">ℹ️</div>
-                    <span class="settings-item-label">关于</span>
+                <div class="settings-item" onclick="alert('关于MimiPhone')">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-about">ℹ️</div>
+                        <span class="settings-item-label">关于</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item" onclick="updateApp()">
-                <div class="settings-item-content">
-                    <div class="settings-item-icon" id="set-icon-update">🔄</div>
-                    <span class="settings-item-label">更新</span>
+                <div class="settings-item" onclick="updateApp()">
+                    <div class="settings-item-content">
+                        <div class="settings-item-icon" id="set-icon-update">🔄</div>
+                        <span class="settings-item-label">更新</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
             </div>
-        </div>
 
-        <div class="settings-btn-group">
-            <button class="settings-full-btn export" onclick="exportSystemData()">导出系统数据</button>
-            <button class="settings-full-btn import" onclick="document.getElementById('systemImportInput').click()">导入系统数据</button>
-            <button class="settings-full-btn delete" onclick="deleteSystemData()">删除系统数据</button>
-            <input type="file" id="systemImportInput" accept=".json" style="display: none;" onchange="importSystemData(event)">
+            <div class="settings-btn-group">
+                <button class="settings-full-btn export" onclick="exportSystemData()">导出系统数据</button>
+                <button class="settings-full-btn import" onclick="document.getElementById('systemImportInput').click()">导入系统数据</button>
+                <button class="settings-full-btn delete" onclick="deleteSystemData()">删除系统数据</button>
+                <input type="file" id="systemImportInput" accept=".json" style="display: none;" onchange="importSystemData(event)">
+            </div>
         </div>
     </div>
 
@@ -1805,54 +1807,56 @@
             </div>
             <div class="settings-title">显示</div>
         </div>
-        <div class="settings-group">
-            <div class="settings-item">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">全屏模式</span>
+        <div class="settings-scroll-area">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">全屏模式</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="fullscreenToggle" onchange="toggleFullscreen(this.checked)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="fullscreenToggle" onchange="toggleFullscreen(this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="settings-item">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">手机边框</span>
+                <div class="settings-item">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">手机边框</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="borderToggle" onchange="togglePhoneBorder(this.checked)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="borderToggle" onchange="togglePhoneBorder(this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="settings-item">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">刘海屏</span>
+                <div class="settings-item">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">刘海屏</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notchToggle" onchange="toggleNotch(this.checked)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="notchToggle" onchange="toggleNotch(this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="settings-item" onclick="openBatterySettings()">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">电量提醒</span>
+                <div class="settings-item" onclick="openBatterySettings()">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">电量提醒</span>
+                    </div>
+                    <span class="settings-item-arrow">〉</span>
                 </div>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="settings-item">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">关闭顶部状态栏</span>
+                <div class="settings-item">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">关闭顶部状态栏</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="statusBarToggle" onchange="toggleStatusBar(this.checked)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="statusBarToggle" onchange="toggleStatusBar(this.checked)">
-                    <span class="slider"></span>
-                </label>
             </div>
         </div>
     </div>
 
     <!-- 电量提醒设置容器 -->
-    <div id="batterySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+    <div id="batterySettingsContainer">
         <div class="settings-header">
             <div class="settings-back" onclick="closeBatterySettings()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -1861,45 +1865,47 @@
             </div>
             <div class="settings-title">电量提醒</div>
         </div>
-        <div class="settings-group">
-            <div class="settings-item">
-                <div class="settings-item-content">
-                    <span class="settings-item-label">充电提醒</span>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="batteryAlertToggle" onchange="toggleBatteryAlert(this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="battery-config-area" id="batteryConfigArea" style="padding: 10px 20px;">
-                <div style="margin-bottom: 20px;">
-                    <div id="batteryAlertLabel" style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
-                    <div id="batteryTextLine" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                        <input type="text" id="batteryAlertText" placeholder="请输入提醒文案" 
-                               style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #888;"
-                               oninput="saveBatterySettings()" disabled>
+        <div class="settings-scroll-area">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="settings-item-content">
+                        <span class="settings-item-label">充电提醒</span>
                     </div>
+                    <label class="switch">
+                        <input type="checkbox" id="batteryAlertToggle" onchange="toggleBatteryAlert(this.checked)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-
-                <div style="margin-bottom: 20px;">
-                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒弹窗CSS美化</div>
-                    <textarea id="batteryAlertCss" placeholder="请输入弹窗自定义CSS..." 
-                              style="width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 14px; font-family: monospace; outline: none; resize: vertical;"
-                              oninput="saveBatterySettings()"></textarea>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <div style="font-size: 14px; color: #666; margin-bottom: 12px;">内置弹窗美化模板</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #000; color: #000;" onclick="applyBatteryTemplate('ios')">iOS 风格</button>
-                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #FF3B30; color: #FF3B30;" onclick="applyBatteryTemplate('neon')">霓虹风格</button>
-                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #07C160; color: #07C160;" onclick="applyBatteryTemplate('minimal')">极简风格</button>
-                        <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #8E8E93; color: #8E8E93;" onclick="applyBatteryTemplate('dark')">暗黑风格</button>
+                
+                <div class="battery-config-area" id="batteryConfigArea" style="padding: 10px 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <div id="batteryAlertLabel" style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒文案设置</div>
+                        <div id="batteryTextLine" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                            <input type="text" id="batteryAlertText" placeholder="请输入提醒文案" 
+                                   style="width: 100%; border: none; background: transparent; outline: none; font-size: 16px; color: #888;"
+                                   oninput="saveBatterySettings()" disabled>
+                        </div>
                     </div>
-                </div>
 
-                <button class="theme-action-btn" style="width: 100%;" onclick="previewBatteryAlert()">预览效果</button>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">提醒弹窗CSS美化</div>
+                        <textarea id="batteryAlertCss" placeholder="请输入弹窗自定义CSS..." 
+                                  style="width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 14px; font-family: monospace; outline: none; resize: vertical;"
+                                  oninput="saveBatterySettings()"></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 12px;">内置弹窗美化模板</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #000; color: #000;" onclick="applyBatteryTemplate('ios')">iOS 风格</button>
+                            <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #FF3B30; color: #FF3B30;" onclick="applyBatteryTemplate('neon')">霓虹风格</button>
+                            <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #07C160; color: #07C160;" onclick="applyBatteryTemplate('minimal')">极简风格</button>
+                            <button class="theme-bottom-btn" style="background: #fff; border: 1px solid #8E8E93; color: #8E8E93;" onclick="applyBatteryTemplate('dark')">暗黑风格</button>
+                        </div>
+                    </div>
+
+                    <button class="theme-action-btn" style="width: 100%;" onclick="previewBatteryAlert()">预览效果</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1914,35 +1920,37 @@
             </div>
             <div class="settings-title">Mimi账号</div>
         </div>
-        <div class="account-avatar-section">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="account-avatar" id="accountAvatarImg" onclick="changeImage('accountAvatarImg')" alt="账号头像">
-            <div class="account-info-text" id="txt-account-nickname" onclick="editText(this, '昵称')">请输入昵称</div>
-            <div class="account-info-text" id="txt-account-phone" onclick="editText(this, '手机号')">请输入手机号</div>
-        </div>
-        <div class="settings-group" style="margin-top: 0;">
-            <div class="settings-item" onclick="openAccountInfo()">
-                <span class="settings-item-label">账号信息</span>
-                <span class="settings-item-arrow">〉</span>
+        <div class="settings-scroll-area">
+            <div class="account-avatar-section">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%23fff'/%3E%3Cpath d='M12 14c-4 0-6 2-6 2v1h12v-1s-2-2-6-2z' fill='%23fff'/%3E%3C/svg%3E" class="account-avatar" id="accountAvatarImg" onclick="changeImage('accountAvatarImg')" alt="账号头像">
+                <div class="account-info-text" id="txt-account-nickname" onclick="editText(this, '昵称')">请输入昵称</div>
+                <div class="account-info-text" id="txt-account-phone" onclick="editText(this, '手机号')">请输入手机号</div>
             </div>
-            <div class="settings-item" onclick="alert('账号管理功能开发中')">
-                <span class="settings-item-label">账号管理</span>
-                <span class="settings-item-arrow">〉</span>
+            <div class="settings-group" style="margin-top: 0;">
+                <div class="settings-item" onclick="openAccountInfo()">
+                    <span class="settings-item-label">账号信息</span>
+                    <span class="settings-item-arrow">〉</span>
+                </div>
+                <div class="settings-item" onclick="alert('账号管理功能开发中')">
+                    <span class="settings-item-label">账号管理</span>
+                    <span class="settings-item-arrow">〉</span>
+                </div>
             </div>
-        </div>
-        <div class="account-action-group">
-            <div class="account-action-item" onclick="saveAccountInfo()">
-                <span class="account-action-label">保存账号</span>
-                <span class="settings-item-arrow">〉</span>
-            </div>
-            <div class="account-action-item" onclick="alert('退出账号成功')">
-                <span class="account-action-label danger">退出账号</span>
-                <span class="settings-item-arrow">〉</span>
+            <div class="account-action-group">
+                <div class="account-action-item" onclick="saveAccountInfo()">
+                    <span class="account-action-label">保存账号</span>
+                    <span class="settings-item-arrow">〉</span>
+                </div>
+                <div class="account-action-item" onclick="alert('退出账号成功')">
+                    <span class="account-action-label danger">退出账号</span>
+                    <span class="settings-item-arrow">〉</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 账号信息容器 -->
-    <div id="accountInfoContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+    <div id="accountInfoContainer">
         <div class="settings-header">
             <div class="settings-back" onclick="closeAccountInfo()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
@@ -1952,77 +1960,79 @@
             <div class="settings-title">账号信息</div>
         </div>
         
-        <div class="settings-group" style="padding-top: 10px;">
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="changeImage('accountAvatarImg')">
-                    <div class="me-menu-label">头像</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
-                        <span class="me-arrow">〉</span>
+        <div class="settings-scroll-area">
+            <div class="settings-group" style="padding-top: 10px;">
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="changeImage('accountAvatarImg')">
+                        <div class="me-menu-label">头像</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="" id="accountInfoAvatarPreview" class="account-info-avatar-preview" alt="">
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="me-divider"></div>
+                <div class="me-divider"></div>
 
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-nickname'), '昵称')">
-                    <div class="me-menu-label">昵称</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="info-nickname" style="color: #888; font-size: 15px;"></span>
-                        <span class="me-arrow">〉</span>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-nickname'), '昵称')">
+                        <div class="me-menu-label">昵称</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="info-nickname" style="color: #888; font-size: 15px;"></span>
+                            <span class="me-arrow">〉</span>
+                        </div>
+                    </div>
+                    <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-phone'), '手机号')">
+                        <div class="me-menu-label">手机号</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="info-phone" style="color: #888; font-size: 15px;"></span>
+                            <span class="me-arrow">〉</span>
+                        </div>
+                    </div>
+                    <div class="me-menu-item">
+                        <div class="me-menu-label">邮箱</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #888; font-size: 15px;">未绑定</span>
+                            <span class="me-arrow">〉</span>
+                        </div>
+                    </div>
+                    <div class="me-menu-item">
+                        <div class="me-menu-label">Mimi号</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="info-mimi-id" style="color: #888; font-size: 15px;"></span>
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
                 </div>
-                <div class="me-menu-item" onclick="editText(document.getElementById('txt-account-phone'), '手机号')">
-                    <div class="me-menu-label">手机号</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="info-phone" style="color: #888; font-size: 15px;"></span>
-                        <span class="me-arrow">〉</span>
-                    </div>
-                </div>
-                <div class="me-menu-item">
-                    <div class="me-menu-label">邮箱</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #888; font-size: 15px;">未绑定</span>
-                        <span class="me-arrow">〉</span>
-                    </div>
-                </div>
-                <div class="me-menu-item">
-                    <div class="me-menu-label">Mimi号</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="info-mimi-id" style="color: #888; font-size: 15px;"></span>
-                        <span class="me-arrow">〉</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="me-divider"></div>
+                <div class="me-divider"></div>
 
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="openRealNamePage()">
-                    <div class="me-menu-label">实名信息</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="real-name-status" style="color: #888; font-size: 15px;">未实名</span>
-                        <span class="me-arrow">〉</span>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="openRealNamePage()">
+                        <div class="me-menu-label">实名信息</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="real-name-status" style="color: #888; font-size: 15px;">未实名</span>
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="me-divider"></div>
+                <div class="me-divider"></div>
 
-            <div class="me-rounded-box">
-                <div class="me-menu-item" onclick="editAccountInfo('country', '注册国家')">
-                    <div class="me-menu-label">注册国家</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="info-country" style="color: #888; font-size: 15px;">中国</span>
-                        <span class="me-arrow">〉</span>
+                <div class="me-rounded-box">
+                    <div class="me-menu-item" onclick="editAccountInfo('country', '注册国家')">
+                        <div class="me-menu-label">注册国家</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="info-country" style="color: #888; font-size: 15px;">中国</span>
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
-                </div>
-                <div class="me-menu-item" onclick="editAccountInfo('location', '所在地')">
-                    <div class="me-menu-label">所在地</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="info-location" style="color: #888; font-size: 15px;">未设置</span>
-                        <span class="me-arrow">〉</span>
+                    <div class="me-menu-item" onclick="editAccountInfo('location', '所在地')">
+                        <div class="me-menu-label">所在地</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="info-location" style="color: #888; font-size: 15px;">未设置</span>
+                            <span class="me-arrow">〉</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2040,9 +2050,10 @@
             <div class="settings-title">API配置</div>
         </div>
         
-        <div class="api-config-content">
-            <!-- 配置选择区域 -->
-            <div class="config-select-row">
+        <div class="settings-scroll-area">
+            <div class="api-config-content">
+                <!-- 配置选择区域 -->
+                <div class="config-select-row">
                 <div class="config-dropdown-wrapper">
                     <select id="configSelect" onchange="handleConfigChange()">
                         <option value="default">默认配置</option>
@@ -2081,15 +2092,16 @@
                 </select>
             </div>
 
-            <div class="api-form-item">
-                <div class="label-row">
-                    <label class="api-label">温度配置</label>
-                    <span id="tempValue">1.0</span>
+                <div class="api-form-item">
+                    <div class="label-row">
+                        <label class="api-label">温度配置</label>
+                        <span id="tempValue">1.0</span>
+                    </div>
+                    <input type="range" class="api-slider" id="tempSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateTempValue(this.value)">
                 </div>
-                <input type="range" class="api-slider" id="tempSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateTempValue(this.value)">
-            </div>
 
-            <button class="theme-action-btn" onclick="saveCurrentApiConfig()" style="margin-top: 20px; width: 100%;">保存配置</button>
+                <button class="theme-action-btn" onclick="saveCurrentApiConfig()" style="margin-top: 20px; width: 100%;">保存配置</button>
+            </div>
         </div>
     </div>
 

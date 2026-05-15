@@ -129,7 +129,7 @@
 
         /* 微信主容器背景应随内容自适应 */
         body.has-phone-border #wechatContainer {
-            background-color: #ffffff !important;
+            background-color: #f7f7f7 !important;
         }
 
         /* 确保设置和个人资料页在边框模式下也是灰色 */
@@ -338,7 +338,7 @@
             top: 0;
             left: 0;
             right: 0;
-            background: transparent !important; /* 背景透明以露出导航栏颜色 */
+            background: transparent !important; /* 没有任何背景色 */
             pointer-events: none;
             height: 44px;
             flex-shrink: 0;
@@ -356,7 +356,8 @@
             overflow: hidden;
         }
 
-        /* 统一页面顶部间距：由导航栏的 padding-top 承载状态栏高度 */
+        /* 统一页面顶部间距：状态栏高度44px + 5px距离 = 49px */
+        .phone-container,
         #worldBookContainer,
         #settingsContainer,
         #accountContainer,
@@ -386,31 +387,22 @@
         #momentsEditPage,
         #batterySettingsContainer,
         #apiConfigContainer,
-        #wechatAccountSwitchContainer,
+        #wechatAccountSwitchContainer {
+            padding-top: 49px !important;
+        }
+
+        /* 朋友圈和联系人详情页面背景图从顶部状态栏开始 */
         #momentsContainer,
         #contactDetailPage {
             padding-top: 0 !important;
-        }
-
-        /* 导航栏统一适配状态栏高度 */
-        .phone-container,
-        .wechat-nav-bar,
-        .settings-header,
-        .theme-header,
-        .add-contact-nav,
-        .service-nav-bar,
-        .merged-detail-header,
-        .moments-header,
-        .chat-info-header {
-            padding-top: 44px !important; /* 状态栏高度 */
+            background-color: #f7f7f7 !important; /* 保持灰色背景 */
         }
 
         #contactDetailPage .wechat-nav-bar {
-            height: auto;
-            min-height: 88px;
+            height: 108px;
             display: flex;
             align-items: flex-end;
-            padding: 44px 16px 12px !important;
+            padding: 0 16px 12px;
             background-color: #fff !important;
             border-bottom: 1px solid #f5f5f5;
         }
@@ -424,12 +416,20 @@
             background-color: #f2f2f2 !important; /* 向上滑动时出现的灰色背景 */
         }
 
-        /* 状态栏在特定滚动状态下的背景处理 */
+        /* 朋友圈激活时状态栏强制透明 */
+        body.moments-active .status-bar {
+            background: transparent !important;
+            transition: background 0.2s ease;
+        }
+
         body.moments-active.moments-scrolled .status-bar {
+            background: #f2f2f2 !important; /* 向上滑动时出现的灰色背景 */
             pointer-events: auto;
         }
 
+        /* 联系人详情页激活时状态栏背景为白色 */
         body.contact-detail-active .status-bar {
+            background: #fff !important;
             pointer-events: auto;
         }
 
@@ -893,7 +893,7 @@
             display: none;
             width: 100%;
             height: 100vh;
-            background: #ffffff !important; /* 统一为白色 */
+            background: #f7f7f7 !important; /* 统一为灰色 */
             flex-direction: column;
             overflow: hidden;
         }
@@ -901,7 +901,7 @@
         .wechat-content-area {
             flex: 1;
             overflow-y: auto;
-            background: #ffffff !important; /* 统一为白色 */
+            background: #f7f7f7 !important; /* 统一为灰色 */
         }
 
         /* 微信通讯录特有样式 */
@@ -1026,7 +1026,7 @@
             gap: 10px;
             overflow-x: auto;
             position: sticky;
-            top: 138px; /* 88px nav + 50px search */
+            top: 118px; /* Adjust based on nav + search height */
             z-index: 98;
         }
 
@@ -1093,32 +1093,33 @@
             position: relative;
             overflow: hidden;
             background: #ffffff;
-            margin: 0;
-            border-radius: 0;
+            margin: 0 16px 16px;
+            border-radius: 16px;
         }
 
         .chat-item {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
+            padding: 16px;
             cursor: pointer;
             background: #ffffff;
             position: relative;
             z-index: 2;
             transition: all 0.2s ease;
-            border-radius: 0;
-            border: none;
-            border-bottom: 1px solid #f2f2f2;
-            box-shadow: none;
+            border-radius: 12px;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .chat-item:active {
             background: #f7f7f7;
+            transform: scale(0.99);
         }
 
         .chat-item.pinned {
             background: #f8f8f8;
-            border-bottom: 1px solid #e0e0e0;
+            border-color: #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .chat-actions {
@@ -1897,14 +1898,14 @@
 
         /* 微信内部的“我”页面样式 */
         #wechatMePage {
-            background: #ffffff;
+            background: #f7f7f7;
             min-height: 100%;
             padding-bottom: 20px;
         }
 
         /* 微信“发现”页面样式 */
         #wechatDiscoverPage {
-            background: #ffffff !important; /* 背景改为白色 */
+            background: #f7f7f7 !important; /* 背景改为灰色 */
             padding-bottom: 80px;
             min-height: 100%;
         }
@@ -2268,6 +2269,10 @@
             align-items: center;
             padding: 15px 20px;
             background: #f8f8f8;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
         }
 
         .theme-back {
@@ -2648,15 +2653,26 @@
         }
 
         /* 设置页面样式 */
-        #settingsContainer, #accountContainer, #displaySettingsContainer, #wechatSettingsContainer, #personalInfoContainer {
+        #settingsContainer, #accountContainer, #displaySettingsContainer, #wechatSettingsContainer, #personalInfoContainer, #batterySettingsContainer, #accountInfoContainer, #apiConfigContainer, #wechatAccountSwitchContainer, #wechatDisplaySettingsContainer, #wechatStorageContainer, #categoryManagementContainer {
             display: none;
             width: 100%;
             height: 100vh;
             background: #f7f7f7 !important; /* 改为纯灰色 */
             flex-direction: column;
+            overflow-x: hidden;
             overflow-y: auto;
             scroll-behavior: smooth;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
+
+        #settingsContainer { z-index: 200; }
+        #wechatSettingsContainer { z-index: 210; }
+        #wechatAccountSwitchContainer { z-index: 215; }
+        #personalInfoContainer { z-index: 220; }
+        #accountContainer, #displaySettingsContainer, #batterySettingsContainer, #apiConfigContainer { z-index: 300; }
+        #accountInfoContainer { z-index: 400; }
 
         .settings-header {
             background: #f7f7f7 !important; /* 改为纯灰色 */
@@ -2664,9 +2680,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative; /* 改为 relative，使其随页面滚动 */
+            position: sticky;
+            top: 0;
             width: 100%;
             z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .settings-scroll-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .settings-title {
@@ -5235,7 +5259,12 @@
     box-shadow: none !important;
 }
 
-/* 状态栏颜色同步已通过背景透明和导航栏 padding-top 统一实现 */
+/* 服务页面或分类管理页面激活时状态栏背景变灰 */
+body.service-page-active .status-bar,
+body.category-management-active .status-bar {
+    background: #f7f7f7 !important;
+    pointer-events: auto;
+}
 
 /* 确保分类管理列表在高度受限时可滚动 */
 body.has-phone-border #categoryManagementContainer .wechat-content-area {
@@ -5384,10 +5413,10 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 /* 置顶间隔样式 - 改为物理节点实现 */
 .chat-list-physical-gap {
     height: 8px;
-    background: #ffffff;
+    background: #f7f7f7;
     width: 100%;
-    border-top: 1px solid #f2f2f2;
-    border-bottom: 1px solid #f2f2f2;
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
     margin-bottom: 10px;
 }
 

@@ -4,7 +4,7 @@
     display: none;
     width: 100%;
     height: 100vh;
-    background: #f7f7f7 !important;
+    background: #ffffff !important;
     flex-direction: column;
     overflow: hidden;
 }
@@ -12,14 +12,211 @@
 .wechat-content-area {
     flex: 1;
     overflow-y: auto;
-    background: #f7f7f7 !important;
-}
-
-/* 消息列表和通讯录需要白色背景 */
-#chatList, #wechatContactsPage {
     background: #ffffff !important;
 }
 
+/* ========== 1. 状态栏（顶部显示时间区域）背景色 ========== */
+/* 微信四个 tab 主页面（消息/通讯录/发现/我）激活时，状态栏背景纯白 */
+body.wechat-main-active .status-bar,
+body.wechat-main-active.has-phone-border .status-bar {
+    background: #ffffff !important;
+    pointer-events: auto;
+}
+
+/* 发现/我页面激活时，状态栏需要与页面背景色一致（灰色） */
+body.wechat-discover-active .status-bar,
+body.wechat-discover-active.has-phone-border .status-bar,
+body.wechat-me-active .status-bar,
+body.wechat-me-active.has-phone-border .status-bar {
+    background: #f7f7f7 !important;
+    pointer-events: auto;
+}
+
+/* ========== 2. 微信内容区域空白部分背景为纯白色 ========== */
+#wechatContainer,
+#wechatContainer .wechat-content-area,
+#chatList,
+#wechatContactsPage {
+    background: #ffffff !important;
+}
+
+/* 发现页和"我"页面整体背景为灰色（让圆角矩形分组在灰色背景上突出） */
+#wechatDiscoverPage,
+#wechatMePage {
+    background: #f7f7f7 !important;
+}
+
+/* 当展示发现/我页面时，content-area 也用灰色，避免顶部出现白条 */
+body.wechat-discover-active #wechatContainer .wechat-content-area,
+body.wechat-me-active #wechatContainer .wechat-content-area {
+    background: #f7f7f7 !important;
+}
+
+/* 微信顶部导航栏（含搜索栏）也保持纯白 */
+#wechatContainer .wechat-nav-bar,
+#wechatContainer .wechat-search-bar {
+    background: #ffffff !important;
+}
+
+/* 底部 tab 导航栏背景纯白 */
+#wechatContainer .wechat-bottom-nav {
+    background: #ffffff !important;
+}
+
+/* ========== 3. 通讯录页面：仅"已添加的联系人/已添加的群聊"分组标题为灰色长条，其他区域纯白 ========== */
+#wechatContactsPage,
+#wechatContactsPage .wechat-contacts-header-btn,
+#wechatContactsPage #wechatAddedContactsList,
+#wechatContactsPage #wechatAddedGroupsList,
+#wechatContactsPage .wechat-contact-item {
+    background: #ffffff !important;
+}
+
+#wechatContactsPage .wechat-section-header {
+    background: rgb(247, 247, 247) !important;
+    color: rgb(136, 136, 136) !important;
+}
+
+/* ========== 4. 发现页面：分组保持白色圆角矩形（背景在上面已设为灰色） ========== */
+#wechatDiscoverPage .discover-group,
+#wechatDiscoverPage .discover-item {
+    background: #ffffff !important;
+}
+
+/* 发现页面分组之间的分隔条改为灰色（与页面灰色背景一致） */
+#wechatDiscoverPage > div[style*="#f0f0"] {
+    background: #f7f7f7 !important;
+}
+
+/* ========== 5. "我"页面：圆角矩形分组保持白色，分隔条用灰色 ========== */
+#wechatMePage .me-rounded-box,
+#wechatMePage .me-menu-group,
+#wechatMePage .me-header {
+    background: #ffffff !important;
+}
+
+#wechatMePage .me-divider {
+    background: #f7f7f7 !important;
+    height: 10px !important;
+}
+
+/* "我"页面顶部用户卡片为白色矩形，顶两边无空隙 */
+#wechatMePage .me-header {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+}
+
+/* "我"页面所有圆角分组样式统一 */
+#wechatMePage .me-menu-group,
+#wechatMePage .me-rounded-box {
+    margin: 0 12px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+/* ========== 6. 个人信息页面：内容用圆角矩形分组包裹（灰色背景区分） ======== */
+#personalInfoContainer {
+    background: #f7f7f7 !important;
+}
+
+#personalInfoContainer .wechat-content-area {
+    background: #f7f7f7 !important;
+}
+
+#personalInfoContainer .me-rounded-box {
+    margin: 0 12px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+
+#personalInfoContainer .me-divider {
+    background: transparent !important;
+    height: 10px !important;
+}
+
+#personalInfoContainer .info-item:last-child {
+    border-bottom: none !important;
+}
+
+/* ========== 7. 微信内的设置页面：内容用圆角矩形分组包裹，可上下滑动 ========== */
+#wechatSettingsContainer {
+    background: #f7f7f7 !important;
+    overflow-y: auto !important;
+}
+
+#wechatSettingsContainer .wechat-content-area {
+    overflow-y: auto !important;
+    padding-bottom: 40px !important;
+    background: #f7f7f7 !important;
+}
+
+#wechatSettingsContainer .wechat-settings-group {
+    margin: 0 12px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+#wechatSettingsContainer .wechat-settings-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+}
+
+#wechatSettingsContainer .wechat-settings-divider {
+    height: 1px !important;
+    background: #f0f0f0 !important;
+    margin: 0 16px !important;
+}
+
+/* 设置页面灰色间隔条 */
+#wechatSettingsContainer .wechat-settings-spacer {
+    background: #f7f7f7 !important;
+    height: 10px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* ========== 8. 修复手机边框模式下内容溢出边框圆角的问题 ========== */
+/* 微信容器使用 hidden 配合圆角，确保所有内部元素被圆角裁切 */
+body.has-phone-border #wechatContainer {
+    overflow: hidden !important;
+    border-radius: 48px !important;
+}
+
+body.has-phone-border #wechatContainer .wechat-content-area {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 微信底部导航条贴合容器底部并应用底部圆角，避免突出边框 */
+body.has-phone-border #wechatContainer .wechat-bottom-nav {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    border-bottom-left-radius: 48px !important;
+    border-bottom-right-radius: 48px !important;
+    overflow: hidden !important;
+}
+
+/* 状态栏圆角与边框内侧对齐，避免顶部白条溢出圆角 */
+body.has-phone-border .status-bar {
+    border-top-left-radius: 48px !important;
+    border-top-right-radius: 48px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* === 微信导航栏与搜索栏 ===== */
 .wechat-nav-bar {
     background: #ffffff;
     padding: 12px 16px;
@@ -29,7 +226,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid rgb(245, 245, 245);
 }
 
 .wechat-nav-left,
@@ -45,7 +242,7 @@
 .wechat-nav-title {
     font-size: 18px;
     font-weight: 600;
-    color: #000;
+    color: black;
 }
 
 .wechat-search-bar {
@@ -58,19 +255,19 @@
 }
 
 .wechat-search-input-wrapper {
-    background: #fff;
+    background: #ffffff;
     border-radius: 8px;
     padding: 8px 12px;
     display: flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid #eee;
+    border: 1px solid rgb(238, 238, 238);
 }
 
 .wechat-search-icon {
     width: 18px;
     height: 18px;
-    color: #999;
+    color: rgb(153, 153, 153);
 }
 
 .wechat-search-input {
@@ -79,24 +276,26 @@
     outline: none;
     font-size: 15px;
     flex: 1;
-    color: #000;
+    color: black;
 }
 
 .wechat-search-input::placeholder {
-    color: #999;
+    color: rgb(153, 153, 153);
 }
 
+/* ===== 微信聊天列表 ===== */
 .wechat-chat-list {
     padding: 10px 0 80px 0;
     background: #ffffff !important;
     overflow-x: hidden;
 }
 
+/* ===== 通讯录联系人项 ===== */
 .wechat-contact-item {
     display: flex;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #f2f2f2;
+    border-bottom: 1px solid rgb(242, 242, 242);
     cursor: pointer;
 }
 
@@ -104,19 +303,119 @@
     width: 40px;
     height: 40px;
     border-radius: 4px;
-    background: #eee;
+    background: rgb(238, 238, 238);
     margin-right: 12px;
     object-fit: cover;
 }
 
 .wechat-contact-name {
     font-size: 16px;
-    color: #000;
+    color: black;
 }
 
+/* ===== 微信底部导航 ===== */
 .wechat-bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+}
+
+/* ========== 9. 微信显示设置页面：圆角矩形包裹+灰色间隔+底部灰色 ========== */
+#wechatDisplaySettingsContainer .wechat-nav-bar {
+    background: #f7f7f7 !important;
+    border-bottom: none !important;
+}
+
+#wechatDisplaySettingsContainer .wechat-content-area {
+    background: #f7f7f7 !important;
+    flex: 1;
+}
+
+#wechatDisplaySettingsContainer .display-settings-group {
+    margin: 0 12px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#wechatDisplaySettingsContainer .display-settings-group .me-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-bottom: none;
+    cursor: pointer;
+}
+
+#wechatDisplaySettingsContainer .display-settings-spacer {
+    height: 10px;
+    background: #f7f7f7;
+}
+
+/* ========== 10. 更多页面：圆角矩形包裹+灰色间隔+底部灰色 ========== */
+#categoryManagementContainer #categoryMenuArea {
+    background: #f7f7f7 !important;
+}
+
+#categoryManagementContainer .more-settings-group {
+    margin: 0 12px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#categoryManagementContainer .more-settings-group .wechat-settings-item {
+    background: #ffffff;
+}
+
+#categoryManagementContainer .more-settings-spacer {
+    height: 10px;
+    background: #f7f7f7;
+}
+
+/* ========== 11. 存储空间页面：顶部状态栏纯白色 ========== */
+body.wechat-storage-active .status-bar,
+body.wechat-storage-active.has-phone-border .status-bar {
+    background: #ffffff !important;
+    pointer-events: auto;
+}
+
+#wechatStorageContainer .wechat-nav-bar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #f5f5f5 !important;
+}
+
+/* ========== 12. 切换账号页面：背景纯灰色+加号居中 ========== */
+#wechatAccountSwitchContainer {
+    background: #f7f7f7 !important;
+}
+
+#wechatAccountSwitchContainer .wechat-nav-bar {
+    background: #f7f7f7 !important;
+    border-bottom: none !important;
+}
+
+#wechatAccountSwitchContainer .account-switch-content {
+    background: #f7f7f7 !important;
+}
+
+#wechatAccountSwitchContainer .account-switch-card.add-account {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 25px 20px;
+}
+
+#wechatAccountSwitchContainer .account-switch-card.add-account .add-account-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+#wechatAccountSwitchContainer .account-switch-card.add-account .add-account-label {
+    margin-left: 0;
+    text-align: center;
 }

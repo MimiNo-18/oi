@@ -13,6 +13,9 @@ function switchWechatTab(tab, element) {
     document.querySelectorAll('.wechat-bottom-nav .wechat-nav-item').forEach(item => item.classList.remove('active'));
     element.classList.add('active');
 
+    // 4个主tab页激活时给body添加标记类，用于状态栏背景白色
+    document.body.classList.add('wechat-main-active');
+
     chatListEl.style.display = 'none';
     contactsPage.style.display = 'none';
     if (discoverPage) discoverPage.style.display = 'none';
@@ -67,6 +70,7 @@ function openWechat() {
     const wechatContainer = document.getElementById('wechatContainer');
     if (phoneContainer) phoneContainer.style.display = 'none';
     if (wechatContainer) wechatContainer.style.display = 'flex';
+    document.body.classList.add('wechat-main-active');
 
     if (typeof updateTime === 'function') updateTime();
     if (typeof updateBattery === 'function') updateBattery();

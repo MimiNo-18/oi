@@ -2900,6 +2900,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         // 微信存储空间相关
         function openWechatStorage() {
             document.getElementById('wechatStorageContainer').style.display = 'flex';
+            document.body.classList.add('wechat-storage-active');
             document.getElementById('storageScanning').style.display = 'flex';
             document.getElementById('storageDetail').style.display = 'none';
 
@@ -2914,6 +2915,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         function closeWechatStorage() {
             document.getElementById('wechatStorageContainer').style.display = 'none';
+            document.body.classList.remove('wechat-storage-active');
             saveUIState();
         }
 
@@ -4408,6 +4410,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             currentChatFriendId = friendId;
             document.getElementById('wechatContainer').style.display = 'none';
             document.getElementById('chatPageContainer').style.display = 'flex';
+            document.body.classList.remove('wechat-main-active');
             document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);
             document.getElementById('chatStatus').textContent = '';
             

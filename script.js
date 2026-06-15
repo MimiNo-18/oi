@@ -831,9 +831,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         temperature: 0.8
                     })
                 });
-                const data = await response.json();
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const resContent = data.choices[0].message.content.trim();
+                const data = await safeReadApiJson(response);
+                if (!response.ok) {
+                    throw new Error(buildApiErrorMessage(response, data));
+                }
+
+                const resContent = getApiReplyContent(data);
+                if (resContent) {
                     if (type === 'reply_to_user') {
                         if (resContent.toUpperCase() !== 'SKIP' && resContent !== '') {
                             const newComment = { nickname: nickname, content: resContent, time: Date.now(), replyTo: wechatUserInfo.nickname || '我' };
@@ -2243,7 +2247,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             else {
                 let groupHtml = '';
                 filteredGroups.forEach(group => {
-                    groupHtml += `<div class="wechat-contact-item" onclick="alert('进入群聊：' + '${group.name}')"><div class="wechat-contact-avatar" style="background: #e1e1e1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">群</div><div class="wechat-contact-name">${group.name}</div></div>`;
+                    const memberCount = (group.members ? group.members.length : 0) + 1; // +1 包括用户自己
+                    const groupChatItem = chatList.find(f => f.id === group.id && f.isGroup);
+                    const groupAvatar = groupChatItem && groupChatItem.avatar ? `<img src="${groupChatItem.avatar}" class="wechat-contact-avatar">` : `<div class="wechat-contact-avatar" style="background: #e1e1e1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">群</div>`;
+                    groupHtml += `<div class="wechat-contact-item" onclick="openGroupInfo(${group.id})">${groupAvatar}<div class="wechat-contact-name">${group.name}(${memberCount})</div></div>`;
                 });
                 groupContainer.innerHTML = groupHtml;
             }
@@ -2282,26 +2289,93 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 发起群聊
         function createGroupChat() {
-            const groupName = prompt('请输入群聊名称:');
-            if (groupName && groupName.trim()) {
-                const newGroup = {
-                    id: Date.now(),
-                    name: groupName.trim(),
-                    members: []
-                };
-                groupList.push(newGroup);
-                saveGroupListToStorage();
-                
-                // 如果当前在通讯录页，刷新显示
-                const activeTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item.active .wechat-nav-label');
-                if (activeTab && activeTab.textContent === '通讯录') {
-                    renderWechatContacts();
-                }
-                alert('群聊创建成功！已自动保存到通讯录。');
-            }
             // 关闭菜单
             const menu = document.getElementById('addMenu');
             if (menu) menu.classList.remove('active');
+
+            // 如果没有好友，提示
+            if (chatList.length === 0) {
+                alert('请先添加好友再创建群聊');
+                return;
+            }
+
+            // 创建成员选择弹窗
+            let overlay = document.createElement('div');
+            overlay.id = 'groupSelectOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            
+            let modal = document.createElement('div');
+            modal.style.cssText = 'background:#fff;border-radius:12px;width:80%;max-width:320px;max-height:70vh;display:flex;flex-direction:column;overflow:hidden;';
+            
+            modal.innerHTML = `
+                <div style="padding:12px 16px;border-bottom:1px solid #eee;font-size:15px;font-weight:bold;">选择群聊成员</div>
+                <div id="groupMemberList" style="flex:1;overflow-y:auto;padding:8px 0;">
+                    ${chatList.map(f => `
+                        <label style="display:flex;align-items:center;padding:8px 16px;gap:10px;cursor:pointer;">
+                            <input type="checkbox" value="${f.id}" style="width:18px;height:18px;">
+                            <img src="${f.avatar || ''}" style="width:36px;height:36px;border-radius:50%;background:#eee;">
+                            <span style="font-size:14px;">${getFriendDisplayName(f)}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;gap:10px;">
+                    <button id="groupSelectCancel" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:14px;">取消</button>
+                    <button id="groupSelectConfirm" style="flex:1;padding:8px;border:none;border-radius:6px;background:#07c160;color:#fff;font-size:14px;">确定</button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            document.getElementById('groupSelectCancel').onclick = function() {
+                document.body.removeChild(overlay);
+            };
+
+            document.getElementById('groupSelectConfirm').onclick = function() {
+                const checked = overlay.querySelectorAll('#groupMemberList input[type=checkbox]:checked');
+                const selectedIds = Array.from(checked).map(cb => parseInt(cb.value));
+                
+                if (selectedIds.length === 0) {
+                    alert('请至少选择一个成员');
+                    return;
+                }
+
+                const groupName = prompt('请输入群聊名称:');
+                if (groupName && groupName.trim()) {
+                    const memberCount = selectedIds.length + 1; // +1 包括用户自己
+                    const newGroup = {
+                        id: Date.now(),
+                        name: groupName.trim(),
+                        members: selectedIds
+                    };
+                    groupList.push(newGroup);
+                    saveGroupListToStorage();
+
+                    // 将群聊添加到消息列表(chatList)
+                    const groupChatItem = {
+                        id: newGroup.id,
+                        name: newGroup.name,
+                        isGroup: true,
+                        members: selectedIds,
+                        avatar: '',
+                        message: '群聊已创建',
+                        time: formatTime(new Date()),
+                        isPinned: false
+                    };
+                    chatList.push(groupChatItem);
+                    saveChatListToStorage();
+
+                    // 刷新当前页面
+                    const activeTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item.active .wechat-nav-label');
+                    if (activeTab && activeTab.textContent === '通讯录') {
+                        renderWechatContacts();
+                    } else if (activeTab && activeTab.textContent === '消息') {
+                        renderChatList();
+                    }
+                    alert('群聊创建成功！');
+                }
+                document.body.removeChild(overlay);
+            };
         }
 
         // 打开微信页面
@@ -3060,12 +3134,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 微信设置页面相关函数
         function openWechatSettings() {
+            document.body.classList.add('wechat-settings-active');
             document.getElementById('wechatSettingsContainer').style.display = 'flex';
             updateTime();
             saveUIState();
         }
 
         function closeWechatSettings() {
+            document.body.classList.remove('wechat-settings-active');
             document.getElementById('wechatSettingsContainer').style.display = 'none';
             saveUIState();
         }
@@ -3570,10 +3646,19 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             html += `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
                              data-id="${friend.id}" 
                              onclick="openChat(${friend.id})">`;
-            html += `<img src="${friend.avatar || ''}" class="chat-avatar" alt="头像">`;
+            if (friend.isGroup) {
+                if (friend.avatar) {
+                    html += `<img src="${friend.avatar}" class="chat-avatar" alt="群头像">`;
+                } else {
+                    html += `<div class="chat-avatar" style="background:#e1e1e1;display:flex;align-items:center;justify-content:center;color:#666;font-size:12px;width:44px;height:44px;border-radius:6px;">群</div>`;
+                }
+            } else {
+                html += `<img src="${friend.avatar || ''}" class="chat-avatar" alt="头像">`;
+            }
             html += '<div class="chat-content">';
             html += '<div class="chat-header">';
-            html += `<span class="chat-name">${getFriendDisplayName(friend)}</span>`;
+            const displayName = friend.isGroup ? friend.name : getFriendDisplayName(friend);
+            html += `<span class="chat-name">${displayName}</span>`;
             html += `<span class="chat-time">${friend.time}</span>`;
             html += '</div>';
             html += `<div class="chat-message">${friend.message}</div>`;
@@ -3895,11 +3980,141 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
+        // 群聊信息页面
+        function openGroupInfo(groupId) {
+            const group = groupList.find(g => g.id === groupId);
+            const groupChat = chatList.find(f => f.id === groupId && f.isGroup);
+            if (!group && !groupChat) return;
+
+            const name = group ? group.name : (groupChat ? groupChat.name : '未知群聊');
+            const members = group ? group.members : (groupChat ? groupChat.members : []);
+            const memberCount = (members ? members.length : 0) + 1;
+            const avatar = groupChat ? groupChat.avatar : '';
+
+            // 创建群聊信息页面
+            let overlay = document.createElement('div');
+            overlay.id = 'groupInfoOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:10000;display:flex;flex-direction:column;';
+
+            let avatarHtml = avatar 
+                ? `<img src="${avatar}" style="width:60px;height:60px;border-radius:10px;object-fit:cover;cursor:pointer;" id="groupInfoAvatarImg">`
+                : `<div style="width:60px;height:60px;border-radius:10px;background:#e1e1e1;display:flex;align-items:center;justify-content:center;color:#666;font-size:20px;cursor:pointer;" id="groupInfoAvatarImg">群</div>`;
+
+            let membersHtml = '';
+            if (members && members.length > 0) {
+                members.forEach(mId => {
+                    const memberChat = chatList.find(f => f.id === mId);
+                    if (memberChat) {
+                        membersHtml += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:50px;">
+                            <img src="${memberChat.avatar || ''}" style="width:40px;height:40px;border-radius:6px;background:#eee;object-fit:cover;">
+                            <span style="font-size:10px;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50px;">${getFriendDisplayName(memberChat)}</span>
+                        </div>`;
+                    }
+                });
+            }
+
+            overlay.innerHTML = `
+                <div style="display:flex;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid #eee;">
+                    <div onclick="document.body.removeChild(document.getElementById('groupInfoOverlay'))" style="cursor:pointer;padding:5px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><path d="M15 18l-6-6 6-6"/></svg>
+                    </div>
+                    <div style="flex:1;text-align:center;font-size:16px;font-weight:600;">群聊信息</div>
+                    <div style="width:24px;"></div>
+                </div>
+                <div style="flex:1;overflow-y:auto;padding:16px;">
+                    <div style="background:#fff;border-radius:12px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px;">
+                        ${avatarHtml}
+                        <div style="font-size:18px;font-weight:600;">${name}</div>
+                        <div style="font-size:13px;color:#999;">群聊人数：${memberCount}</div>
+                    </div>
+                    <div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;">
+                        <div style="font-size:14px;font-weight:500;margin-bottom:12px;">群成员 (${memberCount})</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:50px;">
+                                <img src="${wechatUserInfo.avatar || ''}" style="width:40px;height:40px;border-radius:6px;background:#eee;object-fit:cover;">
+                                <span style="font-size:10px;color:#666;">我</span>
+                            </div>
+                            ${membersHtml}
+                        </div>
+                    </div>
+                    <div style="background:#fff;border-radius:12px;overflow:hidden;">
+                        <div onclick="document.body.removeChild(document.getElementById('groupInfoOverlay'));openChat(${groupId})" style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:15px;cursor:pointer;">进入群聊</div>
+                        <div onclick="if(confirm('确定退出该群聊吗？')){chatList=chatList.filter(f=>f.id!==${groupId});groupList=groupList.filter(g=>g.id!==${groupId});saveChatListToStorage();saveGroupListToStorage();renderChatList();renderWechatContacts();document.body.removeChild(document.getElementById('groupInfoOverlay'));}" style="padding:14px 16px;font-size:15px;color:#fa5151;cursor:pointer;">退出群聊</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // 点击头像更换
+            const avatarEl = document.getElementById('groupInfoAvatarImg');
+            if (avatarEl) {
+                avatarEl.onclick = function() {
+                    currentImageId = 'groupInfoAvatarImg';
+                    const originalConfirmUrl = window.confirmUrl;
+                    const originalHandleFileSelect = window.handleFileSelect;
+
+                    window.confirmUrl = function() {
+                        const url = document.getElementById('urlInput').value.trim();
+                        if (url) {
+                            if (groupChat) {
+                                groupChat.avatar = url;
+                                saveChatListToStorage();
+                                renderChatList();
+                            }
+                            // 更新当前显示
+                            const imgEl = document.getElementById('groupInfoAvatarImg');
+                            if (imgEl.tagName === 'IMG') {
+                                imgEl.src = url;
+                            } else {
+                                imgEl.outerHTML = `<img src="${url}" style="width:60px;height:60px;border-radius:10px;object-fit:cover;cursor:pointer;" id="groupInfoAvatarImg">`;
+                            }
+                            closeModal();
+                        }
+                        window.confirmUrl = originalConfirmUrl;
+                    };
+
+                    window.handleFileSelect = function(event) {
+                        const file = event.target.files[0];
+                        if (file && file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const src = e.target.result;
+                                if (groupChat) {
+                                    groupChat.avatar = src;
+                                    saveChatListToStorage();
+                                    renderChatList();
+                                }
+                                const imgEl = document.getElementById('groupInfoAvatarImg');
+                                if (imgEl.tagName === 'IMG') {
+                                    imgEl.src = src;
+                                } else {
+                                    imgEl.outerHTML = `<img src="${src}" style="width:60px;height:60px;border-radius:10px;object-fit:cover;cursor:pointer;" id="groupInfoAvatarImg">`;
+                                }
+                                closeModal();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                        window.handleFileSelect = originalHandleFileSelect;
+                    };
+
+                    document.getElementById('urlInputContainer').style.display = 'none';
+                    document.getElementById('imageModal').classList.add('active');
+                };
+            }
+        }
+
         // 聊天信息页面逻辑
         function openChatInfo() {
             if (!currentChatFriendId) return;
             const friend = chatList.find(f => f.id === currentChatFriendId);
             if (!friend) return;
+
+            // 如果是群聊，打开群聊信息页面
+            if (friend.isGroup) {
+                openGroupInfo(friend.id);
+                return;
+            }
 
             document.getElementById('chatInfoContainer').style.display = 'flex';
             document.getElementById('chatInfoAvatar').src = friend.avatar || '';
@@ -4281,13 +4496,18 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         })
                     });
 
-                    const data = await response.json();
-                    if (data.choices && data.choices[0] && data.choices[0].message) {
-                        msg.translation = data.choices[0].message.content.trim();
+                    const data = await safeReadApiJson(response);
+                    if (!response.ok) {
+                        throw new Error(buildApiErrorMessage(response, data));
+                    }
+
+                    const translatedText = getApiReplyContent(data);
+                    if (translatedText) {
+                        msg.translation = translatedText;
                         saveChatHistories();
                         renderMessages();
                     } else {
-                        throw new Error('API 返回格式错误');
+                        throw new Error('API 没有返回有效翻译');
                     }
                 } catch (e) {
                     console.error("Translation Error:", e);
@@ -4411,7 +4631,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('wechatContainer').style.display = 'none';
             document.getElementById('chatPageContainer').style.display = 'flex';
             document.body.classList.remove('wechat-main-active');
-            document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);
+            // 群聊显示"群聊名称（群聊人数）"，单聊显示备注/网名
+            if (friend.isGroup) {
+                const memberCount = (friend.members ? friend.members.length : 0) + 1;
+                document.getElementById('chatPartnerName').textContent = `${friend.name}(${memberCount})`;
+            } else {
+                document.getElementById('chatPartnerName').textContent = getFriendDisplayName(friend);
+            }
             document.getElementById('chatStatus').textContent = '';
             
             // 加载聊天背景
@@ -5503,9 +5729,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     })
                 });
 
-                const data = await response.json();
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const summary = data.choices[0].message.content.trim();
+                const data = await safeReadApiJson(response);
+                if (!response.ok) {
+                    throw new Error(buildApiErrorMessage(response, data));
+                }
+
+                const summary = getApiReplyContent(data);
+                if (summary) {
                     
                     // 更新记忆
                     const oldMemory = settings.manualMemory || "";
@@ -5521,6 +5751,38 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             } catch (e) {
                 console.error("Auto-summary failed:", e);
             }
+        }
+
+        function getApiReplyContent(data) {
+            const content =
+                data?.choices?.[0]?.message?.content ??
+                data?.choices?.[0]?.text ??
+                data?.message?.content ??
+                data?.message ??
+                data?.reply ??
+                data?.content ??
+                "";
+
+            return typeof content === 'string' ? content.trim() : '';
+        }
+
+        async function safeReadApiJson(response) {
+            try {
+                return await response.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function buildApiErrorMessage(response, data) {
+            const apiMessage =
+                data?.error?.message ||
+                data?.message ||
+                data?.error ||
+                response?.statusText ||
+                'API 请求失败';
+
+            return `${apiMessage}`;
         }
 
         async function callAI(userMsg, isPersonaTrigger = false, targetFriendId = null) {
@@ -5728,8 +5990,8 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error ? errorData.error.message : response.statusText);
+                    const errorData = await safeReadApiJson(response);
+                    throw new Error(buildApiErrorMessage(response, errorData));
                 }
 
                 const contentType = response.headers.get('content-type');
@@ -5754,7 +6016,7 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                             if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
                                 try {
                                     const json = JSON.parse(trimmedLine.substring(6));
-                                    const delta = json.choices[0].delta.content || "";
+                                    const delta = json?.choices?.[0]?.delta?.content || "";
                                     if (delta) {
                                         // 检查是否有引用标记
                                         if (fullContent === "" && delta.startsWith("(引用:")) {
@@ -5787,9 +6049,12 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                     }
                 } else {
                     // 处理非流式输出（即 fallback 情况）
-                    const data = await response.json();
-                    if (!data.choices || !data.choices[0]) throw new Error('API 返回数据格式错误');
-                    const aiResponse = data.choices[0].message.content;
+                    const data = await safeReadApiJson(response);
+                    const aiResponse = getApiReplyContent(data);
+                    if (!aiResponse) {
+                        console.warn('API 没有返回有效回复:', data);
+                        return;
+                    }
                     
                     const parts = aiResponse.split(/[\n\r]+/).filter(p => p.trim() !== '');
                     
@@ -5842,7 +6107,9 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
                     chatStatus.classList.remove('typing-status');
                 }
                 console.error("AI Error:", e);
-                receiveAIMessage(e.message || "未知错误");
+                if (isCurrentChat) {
+                    receiveAIMessage(e.message || "请求失败，请稍后重试", null, null, friendId);
+                }
             }
         }
 
@@ -6088,9 +6355,13 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                         temperature: 0.8
                     })
                 });
-                const data = await response.json();
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const resContent = data.choices[0].message.content.trim();
+                const data = await safeReadApiJson(response);
+                if (!response.ok) {
+                    throw new Error(buildApiErrorMessage(response, data));
+                }
+
+                const resContent = getApiReplyContent(data);
+                if (resContent) {
                     
                     let content = resContent;
                     let images = [];

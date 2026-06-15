@@ -67,6 +67,7 @@
 
         /* 所有页面容器在边框开启时统一在边框内 */
         body.has-phone-border .phone-container,
+        body.has-phone-border #wechatContainer,
         body.has-phone-border #contactsContainer,
         body.has-phone-border #chatPageContainer,
         body.has-phone-border #settingsContainer,
@@ -424,13 +425,13 @@
         }
 
         body.moments-active.moments-scrolled .status-bar {
-            background: #f2f2f2 !important; /* 向上滑动时出现的灰色背景 */
+            background: transparent !important;
             pointer-events: auto;
         }
 
-        /* 联系人详情页激活时状态栏背景为白色 */
+        /* 联系人详情页激活时状态栏背景透明 */
         body.contact-detail-active .status-bar {
-            background: #fff !important;
+            background: transparent !important;
             pointer-events: auto;
         }
 
@@ -1921,9 +1922,9 @@
             box-shadow: none !important;
         }
 
-        /* 微信"消息"、"通讯录"、"发现"、"我"主页面激活时状态栏背景为白色 */
+        /* 微信"消息"、"通讯录"、"发现"、"我"主页面激活时状态栏背景透明 */
         body.wechat-main-active .status-bar {
-            background: #ffffff !important;
+            background: transparent !important;
             pointer-events: auto;
         }
 
@@ -5253,10 +5254,10 @@
     box-shadow: none !important;
 }
 
-/* 服务页面或分类管理页面激活时状态栏背景变灰 */
+/* 服务页面或分类管理页面激活时状态栏背景透明 */
 body.service-page-active .status-bar,
 body.category-management-active .status-bar {
-    background: #f7f7f7 !important;
+    background: transparent !important;
     pointer-events: auto;
 }
 

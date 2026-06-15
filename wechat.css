@@ -16,19 +16,19 @@
 }
 
 /* ========== 1. 状态栏（顶部显示时间区域）背景色 ========== */
-/* 微信四个 tab 主页面（消息/通讯录/发现/我）激活时，状态栏背景纯白 */
+/* 微信四个 tab 主页面（消息/通讯录/发现/我）激活时，状态栏背景透明 */
 body.wechat-main-active .status-bar,
 body.wechat-main-active.has-phone-border .status-bar {
-    background: #ffffff !important;
+    background: transparent !important;
     pointer-events: auto;
 }
 
-/* 发现/我页面激活时，状态栏需要与页面背景色一致（灰色） */
+/* 发现/我页面激活时，状态栏背景透明 */
 body.wechat-discover-active .status-bar,
 body.wechat-discover-active.has-phone-border .status-bar,
 body.wechat-me-active .status-bar,
 body.wechat-me-active.has-phone-border .status-bar {
-    background: #f7f7f7 !important;
+    background: transparent !important;
     pointer-events: auto;
 }
 
@@ -374,10 +374,17 @@ body.has-phone-border .status-bar {
     background: #f7f7f7;
 }
 
-/* ========== 11. 存储空间页面：顶部状态栏纯白色 ========== */
+/* ========== 11. 存储空间页面：顶部状态栏透明 ========== */
 body.wechat-storage-active .status-bar,
 body.wechat-storage-active.has-phone-border .status-bar {
-    background: #ffffff !important;
+    background: transparent !important;
+    pointer-events: auto;
+}
+
+/* ========== 11.1 微信设置页面：顶部状态栏透明 ========== */
+body.wechat-settings-active .status-bar,
+body.wechat-settings-active.has-phone-border .status-bar {
+    background: transparent !important;
     pointer-events: auto;
 }
 

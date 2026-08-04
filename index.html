@@ -323,6 +323,30 @@
                 <button id="chatSendBtn" style="display: none; background: #000; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: 500; margin-bottom: 5px;" onclick="sendChatMessage()">发送</button>
             </div>
         </div>
+        <!-- 对方心声卡片 -->
+        <div class="heart-voice-modal" id="heartVoiceModal" aria-hidden="true" onclick="if(event.target===this) closeHeartVoiceCard()">
+            <div class="heart-voice-card" role="dialog" aria-modal="true" aria-labelledby="heartVoiceTitle">
+                <button class="heart-voice-close" type="button" onclick="closeHeartVoiceCard()" aria-label="关闭">×</button>
+                <div class="heart-voice-layout">
+                    <div class="heart-voice-title" id="heartVoiceTitle">VOICE<br>OF THE<br>HEART</div>
+                    <div class="heart-voice-list" id="heartVoiceList"></div>
+                </div>
+                <div class="heart-voice-footer" id="heartVoiceFooter"></div>
+            </div>
+        </div>
+
+        <!-- 用户当前状态编辑 -->
+        <div class="modal" id="userStatusModal">
+            <div class="modal-content user-status-content">
+                <div class="modal-title">我的当前状态</div>
+                <textarea id="userCurrentStatusInput" class="user-status-input" maxlength="120" placeholder="写下现在的状态，让联系人更懂你"></textarea>
+                <div class="user-status-actions">
+                    <button class="modal-btn cancel" type="button" onclick="closeUserStatusModal()">取消</button>
+                    <button class="modal-btn confirm" type="button" onclick="saveUserCurrentStatus()">确认</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 表情选择面板 -->
         <div id="stickerPickerPanel" class="sticker-picker-panel">
             <div id="chatStickerGrid" class="chat-sticker-grid">

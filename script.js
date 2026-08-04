@@ -3006,7 +3006,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             signature: '未设置',
             country: '中国',
             location: '未设置',
-            mimiId: ''
+            mimiId: '',
+            currentStatus: ''
         };
 
         let realNameInfo = {
@@ -3048,6 +3049,109 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('wechatMeNickname').textContent = wechatUserInfo.nickname;
             document.getElementById('wechatMeID').textContent = '微信号：' + wechatUserInfo.wechatId;
             document.getElementById('wechatMeAvatar').src = wechatUserInfo.avatar;
+        }
+
+        function openUserStatusModal() {
+            const input = document.getElementById('userCurrentStatusInput');
+            if (!input) return;
+            input.value = wechatUserInfo.currentStatus || '';
+            document.getElementById('userStatusModal').classList.add('active');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function closeUserStatusModal() {
+            const modal = document.getElementById('userStatusModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function saveUserCurrentStatus() {
+            const input = document.getElementById('userCurrentStatusInput');
+            if (!input) return;
+            wechatUserInfo.currentStatus = input.value.trim();
+            saveWechatUserInfo();
+            closeUserStatusModal();
+            renderMessages();
+        }
+
+        let heartVoiceRequestToken = 0;
+
+        function openHeartVoiceCard(friendId) {
+            const friend = chatList.find(item => item.id === friendId);
+            if (!friend) return;
+            const modal = document.getElementById('heartVoiceModal');
+            const title = document.getElementById('heartVoiceTitle');
+            if (!modal || !title) return;
+            title.innerHTML = 'VOICE<br>OF THE<br>HEART';
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            renderHeartVoiceItems(friend, true);
+            const token = ++heartVoiceRequestToken;
+            generateHeartVoice(friendId, token);
+        }
+
+        function closeHeartVoiceCard() {
+            const modal = document.getElementById('heartVoiceModal');
+            if (modal) {
+                modal.classList.remove('active');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        function renderHeartVoiceItems(friend, loading = false) {
+            const contact = contacts.find(item => item.id === friend.contactId) || {};
+            const list = document.getElementById('heartVoiceList');
+            const footer = document.getElementById('heartVoiceFooter');
+            if (!list) return;
+            const currentState = loading ? '正在感受此刻...' : (friend.innerVoiceStatus || friend.currentStatus || '正在和你聊天');
+            const innerVoice = loading ? '心声正在浮现...' : (friend.innerVoice || contact.signature || '其实我一直有话想和你说');
+            list.innerHTML = `
+                <div class="heart-voice-item state"><div class="heart-voice-label">当前状态</div><div class="heart-voice-text"></div></div>
+                <div class="heart-voice-item voice"><div class="heart-voice-label">心声</div><div class="heart-voice-text"></div></div>
+            `;
+            list.querySelector('.state .heart-voice-text').textContent = currentState;
+            list.querySelector('.voice .heart-voice-text').textContent = innerVoice;
+            if (footer) footer.textContent = loading ? '正在更新' : `刚刚 · ${getFriendDisplayName(friend)}`;
+        }
+
+        async function generateHeartVoice(friendId, token) {
+            const friend = chatList.find(item => item.id === friendId);
+            const contact = friend && contacts.find(item => item.id === friend.contactId);
+            if (!friend || !contact) return;
+            const fallback = {
+                status: friend.currentStatus || '正在和你聊天',
+                voice: friend.innerVoice || contact.signature || '其实我一直有话想和你说'
+            };
+            try {
+                const configId = localStorage.getItem('current_api_config_id') || 'default';
+                const configs = await dbGetAll('api_configs');
+                const config = configs.find(item => item.id === configId);
+                if (!config || !config.url || !config.key) throw new Error('API config missing');
+                const history = (chatHistories[friendId] || []).slice(-12).map(item => `${item.type === 'sent' ? '用户' : '你'}：${item.content || ''}`).join('\n');
+                const prompt = `你是微信联系人“${getFriendDisplayName(friend)}”。根据你的人设“${contact.design || '自然真诚'}”、最近聊天：\n${history || '暂无聊天'}\n，写出你此刻的状态和没有说出口的心声。只返回 JSON：{"currentStatus":"不超过18字","innerVoice":"不超过45字"}，不要解释。`;
+                let apiUrl = config.url.trim().replace(/\/$/, '');
+                if (!apiUrl.endsWith('/chat/completions')) apiUrl += '/chat/completions';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
+                    body: JSON.stringify({ model: config.model, messages: [{ role: 'user', content: prompt }], temperature: parseFloat(config.temp) || 0.8 })
+                });
+                const data = await safeReadApiJson(response);
+                if (!response.ok) throw new Error(buildApiErrorMessage(response, data));
+                const content = getApiReplyContent(data);
+                const match = content && content.match(/\{[\s\S]*\}/);
+                const parsed = match ? JSON.parse(match[0]) : null;
+                if (parsed && (parsed.currentStatus || parsed.innerVoice)) {
+                    fallback.status = String(parsed.currentStatus || fallback.status).trim();
+                    fallback.voice = String(parsed.innerVoice || fallback.voice).trim();
+                }
+            } catch (error) {
+                console.warn('Heart voice generation unavailable:', error);
+            }
+            friend.innerVoiceStatus = fallback.status;
+            friend.innerVoice = fallback.voice;
+            friend.innerVoiceUpdatedAt = Date.now();
+            await saveChatListToStorage();
+            if (token === heartVoiceRequestToken) renderHeartVoiceItems(friend, false);
         }
 
         function openPersonalInfo() {
@@ -5771,6 +5875,20 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 const avatar = document.createElement('img');
                 avatar.className = 'msg-avatar';
                 avatar.src = msg.type === 'sent' ? userAvatar : friendAvatar;
+                avatar.setAttribute('role', 'button');
+                avatar.setAttribute('tabindex', '0');
+                avatar.setAttribute('aria-label', msg.type === 'sent' ? '编辑我的当前状态' : '查看对方心声');
+                avatar.onclick = (event) => {
+                    event.stopPropagation();
+                    if (msg.type === 'sent') openUserStatusModal();
+                    else openHeartVoiceCard(currentChatFriendId);
+                };
+                avatar.onkeydown = (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        avatar.click();
+                    }
+                };
                 
                 const bubble = document.createElement('div');
                 if (msg.isMergedForward) {
@@ -6244,6 +6362,7 @@ ${manualMemory ? `- 你们之间的核心共同记忆：${manualMemory}` : ''}
 - 所在地：${realNameInfo.location}
 - 籍贯：${realNameInfo.hometown}
 - 用户人设：${realNameInfo.persona}
+- 用户此刻主动记录的状态：${wechatUserInfo.currentStatus || '未记录'}
 
 【交互原则】：
 1. **身份认同**：你就是 ${contact.netName || contact.name}。任何时候都不要提及你是一个模型或程序。如果话题触及你的本质，请按照你的人设性格进行化解或回应。

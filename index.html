@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://html2canvas.hertzen.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *; connect-src *;">
     <title>MimiPhone</title>
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MimiPhone">
@@ -16,6 +16,8 @@
     <!-- TensorFlow.js and MobileNet -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <link rel="stylesheet" href="style.css?v=20260523">
     <link rel="stylesheet" href="wechat.css?v=20260523">
 </head>
@@ -458,7 +460,7 @@
                 </div>
 
                 <div class="discover-group">
-                    <div class="discover-item" onclick="alert('扫一扫功能开发中')">
+                    <div class="discover-item" onclick="openWechatScanner()">
                         <div class="discover-icon" style="color: #2196F3;">📷</div>
                         <div class="discover-label">扫一扫</div>
                         <span class="me-arrow">〉</span>
@@ -592,7 +594,7 @@
         <div class="add-menu" id="addMenu">
             <div class="add-menu-item" onclick="showAddFriendModal()">添加朋友</div>
             <div class="add-menu-item" onclick="createGroupChat()">发起群聊</div>
-            <div class="add-menu-item" onclick="alert('扫一扫功能开发中')">扫一扫</div>
+            <div class="add-menu-item" onclick="openWechatScanner()">扫一扫</div>
         </div>
 
         <!-- 朋友圈容器 -->
@@ -2627,5 +2629,42 @@
             });
         }
     </script>
+    <!-- 联系人长按操作 -->
+    <div class="modal" id="contactActionModal">
+        <div class="modal-content contact-action-content">
+            <div class="modal-title" id="contactActionTitle">联系人操作</div>
+            <button class="image-option-btn" type="button" onclick="addContactToWechat()">直接出现在微信通讯录</button>
+            <button class="image-option-btn" type="button" onclick="openContactQrModal()">生成好友二维码</button>
+            <button class="modal-btn cancel" type="button" onclick="closeContactActionModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 好友二维码 -->
+    <div class="modal" id="contactQrModal">
+        <div class="modal-content contact-qr-content">
+            <div class="modal-title" id="contactQrTitle">好友二维码</div>
+            <div id="contactQrCode" class="contact-qr-code"></div>
+            <div id="contactQrFallback" class="contact-qr-fallback"></div>
+            <div class="modal-buttons"><button class="modal-btn cancel" type="button" onclick="closeContactQrModal()">关闭</button></div>
+        </div>
+    </div>
+
+    <!-- 微信扫一扫 -->
+    <div class="modal" id="wechatScannerModal">
+        <div class="modal-content scanner-content">
+            <div class="modal-title">扫一扫</div>
+            <div class="scanner-viewport">
+                <video id="wechatScannerVideo" autoplay playsinline muted></video>
+                <canvas id="wechatScannerCanvas" hidden></canvas>
+                <div class="scanner-frame"></div>
+            </div>
+            <div class="scanner-actions">
+                <label class="image-option-btn scanner-file-btn">从相册选择二维码<input id="wechatQrFile" type="file" accept="image/*" onchange="scanQrFile(event)"></label>
+                <button class="image-option-btn" type="button" onclick="scanQrTextPrompt()">输入二维码内容</button>
+                <button class="modal-btn cancel" type="button" onclick="closeWechatScanner()">取消</button>
+            </div>
+            <div id="scannerStatus" class="scanner-status">将二维码放入框内</div>
+        </div>
+    </div>
 </body>
 </html>

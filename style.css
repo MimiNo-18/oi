@@ -1,4 +1,10 @@
-* {
+        html {
+            width: 100%;
+            min-height: 100%;
+            background: #fff;
+        }
+
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -9,7 +15,8 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #ffffff;
             overflow: hidden;
-            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -17,7 +24,7 @@
         .phone-container {
             width: 100%;
             max-width: 100vw;
-            height: 100vh;
+            height: 100dvh;
             background: #ffffff;
             background-size: cover;
             background-position: center;
@@ -94,7 +101,10 @@
         body.has-phone-border #worldBookContainer,
         body.has-phone-border #worldBookEditPage,
         body.has-phone-border #bookItemEditPage,
-        body.has-phone-border #momentsContainer,
+        body.has-phone-border #momentsContainer {
+            border-radius: 48px !important;
+            overflow: hidden !important;
+        }
         body.has-phone-border #momentsEditPage,
         body.has-phone-border #wechatAccountSwitchContainer,
         body.has-phone-border #servicePageContainer,
@@ -136,7 +146,8 @@
 
         /* 确保设置和个人资料页在边框模式下也是灰色 */
         body.has-phone-border #wechatSettingsContainer,
-        body.has-phone-border #personalInfoContainer {
+        body.has-phone-border #personalInfoContainer,
+        body.has-phone-border #chatInfoContainer {
             background-color: #f7f7f7 !important;
         }
 
@@ -393,8 +404,76 @@
             padding-top: 49px !important;
         }
 
+        /* 隐藏系统状态栏后移除原有占位，页面立即填满顶部空间。 */
+        body.status-bar-hidden .phone-container,
+        body.status-bar-hidden #worldBookContainer,
+        body.status-bar-hidden #settingsContainer,
+        body.status-bar-hidden #accountContainer,
+        body.status-bar-hidden #accountInfoContainer,
+        body.status-bar-hidden #displaySettingsContainer,
+        body.status-bar-hidden #themeContainer,
+        body.status-bar-hidden #contactsContainer,
+        body.status-bar-hidden #servicePageContainer,
+        body.status-bar-hidden #wechatContainer,
+        body.status-bar-hidden #chatPageContainer,
+        body.status-bar-hidden #personalInfoContainer,
+        body.status-bar-hidden #wechatSettingsContainer,
+        body.status-bar-hidden #wechatDisplaySettingsContainer,
+        body.status-bar-hidden #wechatStorageContainer,
+        body.status-bar-hidden #categoryManagementContainer,
+        body.status-bar-hidden #chatInfoContainer,
+        body.status-bar-hidden #addContactContainer,
+        body.status-bar-hidden #wechatFavoritesContainer,
+        body.status-bar-hidden #stickerLibraryContainer,
+        body.status-bar-hidden #stickerManagementContainer,
+        body.status-bar-hidden #mergedChatDetailContainer,
+        body.status-bar-hidden #realNameContainer,
+        body.status-bar-hidden #manualMemoryContainer,
+        body.status-bar-hidden #mineContainer,
+        body.status-bar-hidden #worldBookEditPage,
+        body.status-bar-hidden #bookItemEditPage,
+        body.status-bar-hidden #momentsEditPage,
+        body.status-bar-hidden #batterySettingsContainer,
+        body.status-bar-hidden #apiConfigContainer,
+        body.status-bar-hidden #wechatAccountSwitchContainer {
+            padding-top: 0 !important;
+        }
+
+        html:fullscreen,
+        html:fullscreen body,
+        body:fullscreen {
+            width: 100vw;
+            height: 100dvh;
+            min-height: 100dvh;
+            background: #fff;
+        }
+
+        html:fullscreen .phone-container {
+            width: 100vw;
+            max-width: none;
+            height: 100dvh;
+            min-height: 100dvh;
+        }
+
         /* 朋友圈和联系人详情页面背景图从顶部状态栏开始 */
-        #momentsContainer,
+        #momentsContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #f2f2f2;
+            z-index: 10300;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        body.has-phone-border #momentsContainer {
+            border-radius: 48px;
+            overflow: hidden;
+        }
+        
         #contactDetailPage {
             padding-top: 0 !important;
             background-color: #f7f7f7 !important; /* 保持灰色背景 */
@@ -3510,7 +3589,7 @@
         #chatInfoContainer {
             display: none;
             position: fixed;
-            top: 0;
+            top: 20px;
             left: 0;
             right: 0;
             bottom: 0;
@@ -5265,6 +5344,23 @@ body.category-management-active .status-bar {
 body.has-phone-border #categoryManagementContainer .wechat-content-area {
     height: calc(812px - 44px - 49px) !important; /* 减去状态栏占位和导航栏高度 */
 }
+
+/* 联系人长按、二维码和扫一扫 */
+.contact-action-content,
+.contact-qr-content,
+.scanner-content { width: min(92vw, 360px); }
+.contact-action-content .image-option-btn,
+.scanner-actions .image-option-btn { width: 100%; margin: 4px 0; }
+.contact-qr-code { width: 220px; height: 220px; margin: 8px auto 12px; display: flex; align-items: center; justify-content: center; background: #fff; }
+.contact-qr-code img, .contact-qr-code canvas { max-width: 100%; max-height: 100%; }
+.contact-qr-fallback { color: #777; font-size: 11px; word-break: break-all; text-align: center; line-height: 1.4; }
+.scanner-viewport { position: relative; width: 100%; aspect-ratio: 1; background: #111; overflow: hidden; border-radius: 8px; }
+.scanner-viewport video { width: 100%; height: 100%; object-fit: cover; }
+.scanner-frame { position: absolute; inset: 16%; border: 2px solid #07c160; box-shadow: 0 0 0 999px rgba(0,0,0,.25); pointer-events: none; }
+.scanner-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.scanner-file-btn { position: relative; overflow: hidden; text-align: center; }
+.scanner-file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.scanner-status { margin-top: 8px; color: #777; font-size: 12px; text-align: center; min-height: 18px; }
 
 /* 文件预览弹窗样式 */
 .file-preview-content {

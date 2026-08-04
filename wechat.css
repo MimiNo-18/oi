@@ -239,6 +239,11 @@ body.has-phone-border .status-bar {
     cursor: pointer;
 }
 
+/* 任务1：让返回按钮与外部边缘对齐 */
+.wechat-nav-left {
+    margin-left: -8px;
+}
+
 .wechat-nav-title {
     font-size: 18px;
     font-weight: 600;
@@ -386,6 +391,26 @@ body.wechat-settings-active .status-bar,
 body.wechat-settings-active.has-phone-border .status-bar {
     background: transparent !important;
     pointer-events: auto;
+}
+
+/* ========== 11.2 群聊信息页面：背景纯灰色+状态栏纯灰色 ========== */
+body.chat-info-active .status-bar,
+body.chat-info-active.has-phone-border .status-bar {
+    background: #f7f7f7 !important;
+    pointer-events: auto;
+}
+
+#chatInfoContainer {
+    background: #f7f7f7 !important;
+}
+
+#chatInfoContainer .wechat-nav-bar {
+    background: #f7f7f7 !important;
+    border-bottom: none !important;
+}
+
+#chatInfoContainer .wechat-content-area {
+    background: #f7f7f7 !important;
 }
 
 #wechatStorageContainer .wechat-nav-bar {

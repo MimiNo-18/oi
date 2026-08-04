@@ -1322,6 +1322,66 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             listContainer.innerHTML = html;
         }
 
+        let contactActionId = null;
+        let contactPressTimer = null;
+        let contactLongPressTriggered = false;
+
+        function bindContactLongPress(container) {
+            if (!container || container.dataset.longPressBound === 'true') return;
+            container.dataset.longPressBound = 'true';
+            const itemForEvent = event => event.target.closest('.contact-item[data-id]');
+            container.addEventListener('contextmenu', event => {
+                const item = itemForEvent(event);
+                if (!item) return;
+                event.preventDefault();
+                showContactActionMenu(Number(item.dataset.id));
+            });
+            container.addEventListener('touchstart', event => {
+                const item = itemForEvent(event);
+                if (!item || contactSelectMode) return;
+                contactLongPressTriggered = false;
+                clearTimeout(contactPressTimer);
+                contactPressTimer = setTimeout(() => {
+                    contactLongPressTriggered = true;
+                    item.dataset.skipClick = 'true';
+                    showContactActionMenu(Number(item.dataset.id));
+                    if (navigator.vibrate) navigator.vibrate(35);
+                    setTimeout(() => { item.dataset.skipClick = 'false'; }, 1200);
+                }, 600);
+            }, { passive: true });
+            ['touchend', 'touchcancel', 'touchmove'].forEach(type => container.addEventListener(type, () => clearTimeout(contactPressTimer), { passive: true }));
+            container.addEventListener('mousedown', event => {
+                if (event.button !== 0 || contactSelectMode) return;
+                const item = itemForEvent(event);
+                if (!item) return;
+                contactLongPressTriggered = false;
+                clearTimeout(contactPressTimer);
+                contactPressTimer = setTimeout(() => {
+                    contactLongPressTriggered = true;
+                    item.dataset.skipClick = 'true';
+                    showContactActionMenu(Number(item.dataset.id));
+                    setTimeout(() => { item.dataset.skipClick = 'false'; }, 1200);
+                }, 600);
+            });
+            ['mouseup', 'mouseleave'].forEach(type => container.addEventListener(type, () => clearTimeout(contactPressTimer)));
+        }
+
+        function showContactActionMenu(id) {
+            const contact = contacts.find(item => item.id === id);
+            if (!contact) return;
+            contactActionId = id;
+            const title = document.getElementById('contactActionTitle');
+            if (title) title.textContent = `${contact.name || contact.netName || '联系人'}：选择操作`;
+            const modal = document.getElementById('contactActionModal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeContactActionModal() {
+            const modal = document.getElementById('contactActionModal');
+            if (modal) modal.classList.remove('active');
+            contactActionId = null;
+        }
+
         function searchForwardContacts() {
             const keyword = document.getElementById('forwardSearchInput').value.trim();
             renderForwardContacts(keyword);
@@ -1510,8 +1570,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function toggleStatusBar(enabled) {
             const statusBar = document.getElementById('globalStatusBar');
             if (statusBar) statusBar.style.display = enabled ? 'none' : 'flex';
+            document.body.classList.toggle('status-bar-hidden', !!enabled);
             safeLocalStorageSet('mimi_status_bar_hide_pref', enabled ? 'true' : 'false');
             document.querySelectorAll('[id="statusBarToggle"]').forEach(toggle => { toggle.checked = enabled; });
+            window.dispatchEvent(new Event('resize'));
         }
 
         function loadDisplayExtras() {
@@ -1528,7 +1590,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 const toggle = document.getElementById('notchToggle');
                 if (toggle) toggle.checked = true;
             }
-            if (statusBarHidePref) toggleStatusBar(true);
+            toggleStatusBar(statusBarHidePref);
         }
 
         function updateBattery() {
@@ -1930,16 +1992,16 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         function enterFullscreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().then(() => {
-                    if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
-                }).catch(err => console.warn("Fullscreen request failed:", err));
+                const request = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+                if (!request) return;
+                Promise.resolve(request.call(document.documentElement)).catch(err => console.warn("Fullscreen request failed:", err));
             }
         }
 
         function exitFullscreen() {
             if (document.fullscreenElement) {
-                document.exitFullscreen();
-                if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                if (exit) exit.call(document);
             }
         }
 
@@ -2845,6 +2907,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         // 处理联系人点击
         function handleContactClick(id) {
+            const item = document.querySelector(`.contact-item[data-id="${id}"]`);
+            if (item && item.dataset.skipClick === 'true') {
+                item.dataset.skipClick = 'false';
+                return;
+            }
             if (contactSelectMode) {
                 toggleContactSelection(id);
             } else {
@@ -3387,6 +3454,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             });
 
             listContainer.innerHTML = html;
+            bindContactLongPress(listContainer);
         }
 
         // 保存联系人到本地存储
@@ -3517,36 +3585,226 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 return;
             }
 
-            // 检查是否已经添加过
-            const alreadyAdded = chatList.some(f => f.contactId === contact.id);
+            addContactAsWechatFriend(contact, true);
+            closeWechatModal();
+        }
 
+        async function addContactAsWechatFriend(contact, notify = false) {
+            if (!contact) return false;
+            const alreadyAdded = chatList.some(friend => friend.contactId === contact.id);
             if (alreadyAdded) {
-                alert('该联系人已经是你的好友了');
-                return;
+                if (notify) alert('该联系人已经是你的好友了');
+                return false;
             }
-
-            const friend = {
+            chatList.push({
                 id: Date.now(),
                 contactId: contact.id,
                 name: contact.name,
-                remark: contact.netName || '', // 需求3：备注一开始为网名
+                remark: contact.netName || '',
                 avatar: contact.avatar || '',
                 message: '我通过了你的朋友验证请求，现在我们可以开始聊天了',
                 time: formatTime(new Date()),
                 isPinned: false
-            };
+            });
+            await saveChatListToStorage();
+            const activeLabel = document.querySelector('.wechat-bottom-nav .wechat-nav-item.active .wechat-nav-label');
+            if (activeLabel && activeLabel.textContent === '消息') renderChatList();
+            if (activeLabel && activeLabel.textContent === '通讯录') renderWechatContacts();
+            if (notify) alert('已添加到微信通讯录');
+            return true;
+        }
 
-            chatList.push(friend);
-            saveChatListToStorage();
-            
-            const activeTab = document.querySelector('.wechat-bottom-nav .wechat-nav-item.active .wechat-nav-label').textContent;
-            if (activeTab === '消息') {
-                renderChatList();
-            } else if (activeTab === '通讯录') {
-                renderWechatContacts();
+        async function addContactToWechat() {
+            const id = contactActionId;
+            closeContactActionModal();
+            const contact = contacts.find(item => item.id === id);
+            await addContactAsWechatFriend(contact, true);
+        }
+
+        let scannerStream = null;
+        let scannerFrameRequest = null;
+        let scannerProcessing = false;
+
+        function buildFriendQrPayload(contact) {
+            const data = {
+                version: 1,
+                type: 'mimiphone-friend',
+                contact: {
+                    name: contact.name || '',
+                    nickname: contact.nickname || '',
+                    netName: contact.netName || '',
+                    wechat: contact.wechat || '',
+                    phoneNumber: contact.phoneNumber || '',
+                    region: contact.region || '',
+                    signature: contact.signature || '',
+                    category: contact.category || '朋友',
+                    design: contact.design || '',
+                    avatar: contact.avatar || ''
+                }
+            };
+            return `mimiphone://friend?data=${encodeURIComponent(JSON.stringify(data))}`;
+        }
+
+        function openContactQrModal() {
+            const contact = contacts.find(item => item.id === contactActionId);
+            if (!contact) return;
+            const payload = buildFriendQrPayload(contact);
+            document.getElementById('contactActionModal').classList.remove('active');
+            document.getElementById('contactQrTitle').textContent = `${contact.name || '联系人'}的好友二维码`;
+            const qrNode = document.getElementById('contactQrCode');
+            const fallback = document.getElementById('contactQrFallback');
+            qrNode.innerHTML = '';
+            fallback.textContent = '';
+            if (window.QRCode) {
+                new QRCode(qrNode, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+            } else {
+                const image = new Image();
+                image.alt = '好友二维码';
+                image.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
+                qrNode.appendChild(image);
+                fallback.textContent = '二维码服务暂不可用时，可在扫一扫中输入以下内容：' + payload;
             }
-            
-            closeWechatModal();
+            document.getElementById('contactQrModal').classList.add('active');
+        }
+
+        function closeContactQrModal() {
+            document.getElementById('contactQrModal').classList.remove('active');
+            contactActionId = null;
+        }
+
+        async function openWechatScanner() {
+            const addMenu = document.getElementById('addMenu');
+            if (addMenu) addMenu.classList.remove('active');
+            const modal = document.getElementById('wechatScannerModal');
+            modal.classList.add('active');
+            document.getElementById('scannerStatus').textContent = '正在打开摄像头...';
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                document.getElementById('scannerStatus').textContent = '当前浏览器不支持摄像头，请从相册选择二维码';
+                return;
+            }
+            try {
+                scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                const video = document.getElementById('wechatScannerVideo');
+                video.srcObject = scannerStream;
+                await video.play();
+                document.getElementById('scannerStatus').textContent = '将二维码放入框内';
+                scanCameraFrame();
+            } catch (error) {
+                document.getElementById('scannerStatus').textContent = '无法使用摄像头，请授权或从相册选择二维码';
+            }
+        }
+
+        function scanCameraFrame() {
+            const modal = document.getElementById('wechatScannerModal');
+            if (!modal.classList.contains('active')) return;
+            const video = document.getElementById('wechatScannerVideo');
+            const canvas = document.getElementById('wechatScannerCanvas');
+            if (window.jsQR && video.readyState >= 2 && video.videoWidth) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+                const result = jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
+                if (result && handleScannedFriendPayload(result.data)) return;
+            }
+            scannerFrameRequest = requestAnimationFrame(scanCameraFrame);
+        }
+
+        function scanQrFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const image = new Image();
+            image.onload = () => {
+                const canvas = document.getElementById('wechatScannerCanvas');
+                const maxSize = 1400;
+                const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+                canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+                canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+                const result = window.jsQR && jsQR(pixels.data, pixels.width, pixels.height);
+                if (!result || !handleScannedFriendPayload(result.data)) {
+                    document.getElementById('scannerStatus').textContent = '未识别到有效的好友二维码';
+                }
+                URL.revokeObjectURL(image.src);
+            };
+            image.src = URL.createObjectURL(file);
+            event.target.value = '';
+        }
+
+        function scanQrTextPrompt() {
+            const value = prompt('请输入好友二维码内容');
+            if (value && !handleScannedFriendPayload(value.trim())) alert('这不是有效的好友二维码');
+        }
+
+        function parseFriendQrPayload(value) {
+            const prefix = 'mimiphone://friend?data=';
+            if (!value || !value.startsWith(prefix)) return null;
+            try {
+                const payload = JSON.parse(decodeURIComponent(value.slice(prefix.length)));
+                if (payload.type !== 'mimiphone-friend' || !payload.contact || !payload.contact.name) return null;
+                return payload.contact;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function handleScannedFriendPayload(value) {
+            if (scannerProcessing) return true;
+            const scannedContact = parseFriendQrPayload(value);
+            if (!scannedContact) return false;
+            scannerProcessing = true;
+            addScannedFriend(scannedContact);
+            return true;
+        }
+
+        async function addScannedFriend(scannedContact) {
+            await loadContactsFromStorage();
+            let contact = contacts.find(item =>
+                (scannedContact.wechat && item.wechat === scannedContact.wechat) ||
+                (scannedContact.phoneNumber && item.phoneNumber === scannedContact.phoneNumber) ||
+                (!scannedContact.wechat && !scannedContact.phoneNumber && item.name === scannedContact.name)
+            );
+            let contactWasCreated = false;
+            if (!contact) {
+                contact = {
+                    id: Date.now(),
+                    name: scannedContact.name,
+                    nickname: scannedContact.nickname || '',
+                    netName: scannedContact.netName || '',
+                    wechat: scannedContact.wechat || '',
+                    phoneNumber: scannedContact.phoneNumber || '',
+                    region: scannedContact.region || '',
+                    signature: scannedContact.signature || '',
+                    category: scannedContact.category || '朋友',
+                    design: scannedContact.design || '',
+                    avatar: scannedContact.avatar || '',
+                    phone: scannedContact.wechat || scannedContact.phoneNumber || scannedContact.nickname || scannedContact.netName || '未设置'
+                };
+                contacts.push(contact);
+                contactWasCreated = true;
+                await saveContactsToStorage(false);
+                renderContactsList();
+            }
+            const friendWasCreated = await addContactAsWechatFriend(contact, false);
+            closeWechatScanner();
+            if (contactWasCreated && friendWasCreated) alert('已将好友信息保存到联系人，并添加到微信通讯录');
+            else if (friendWasCreated) alert('已添加到微信通讯录');
+            else alert('该联系人已经是你的微信好友');
+        }
+
+        function closeWechatScanner() {
+            const modal = document.getElementById('wechatScannerModal');
+            if (modal) modal.classList.remove('active');
+            if (scannerFrameRequest) cancelAnimationFrame(scannerFrameRequest);
+            scannerFrameRequest = null;
+            scannerProcessing = false;
+            if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
+            scannerStream = null;
+            const video = document.getElementById('wechatScannerVideo');
+            if (video) video.srcObject = null;
         }
 
         // 关闭微信模态框
@@ -3678,10 +3936,26 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         // 删除聊天
         function deleteChat(id, event) {
             if (event) event.stopPropagation();
-            if (confirm('确定要删除该聊天吗？')) {
-                chatList = chatList.filter(c => c.id !== id);
-                saveChatListToStorage();
-                renderChatList();
+            if (confirm('确定要删除该聊天吗？删除后将从通讯录中移除该联系人，并清除所有聊天记录。')) {
+                const friend = chatList.find(c => c.id === id);
+                if (friend) {
+                    // 从聊天列表移除
+                    chatList = chatList.filter(c => c.id !== id);
+                    
+                    // 从通讯录移除对应联系人
+                    if (friend.contactId) {
+                        contacts = contacts.filter(c => c.id !== friend.contactId);
+                        saveContactsToStorage();
+                    }
+                    
+                    // 删除聊天记录
+                    delete chatHistories[id];
+                    saveChatHistories();
+                    
+                    saveChatListToStorage();
+                    renderChatList();
+                    renderWechatContacts();
+                }
             }
         }
 

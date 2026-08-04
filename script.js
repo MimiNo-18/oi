@@ -1574,6 +1574,54 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             safeLocalStorageSet('mimi_status_bar_hide_pref', enabled ? 'true' : 'false');
             document.querySelectorAll('[id="statusBarToggle"]').forEach(toggle => { toggle.checked = enabled; });
             window.dispatchEvent(new Event('resize'));
+            scheduleBrowserThemeColorUpdate();
+        }
+
+        let browserThemeColorObserver = null;
+        let browserThemeColorFrame = null;
+
+        function isTransparentColor(color) {
+            return !color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)';
+        }
+
+        function getCurrentTopBackgroundColor() {
+            const statusBar = document.getElementById('globalStatusBar');
+            if (statusBar && statusBar.style.display !== 'none') {
+                const statusColor = getComputedStyle(statusBar).backgroundColor;
+                if (!isTransparentColor(statusColor)) return statusColor;
+            }
+            const x = Math.max(1, Math.floor(window.innerWidth / 2));
+            const y = Math.min(Math.max(1, document.body.classList.contains('status-bar-hidden') ? 1 : 43), Math.max(1, window.innerHeight - 1));
+            const layers = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+            for (const element of layers) {
+                if (element === statusBar || element.classList.contains('notch') || element.classList.contains('phone-border-frame')) continue;
+                const color = getComputedStyle(element).backgroundColor;
+                if (!isTransparentColor(color)) return color;
+            }
+            return getComputedStyle(document.body).backgroundColor || '#ffffff';
+        }
+
+        function updateBrowserThemeColor() {
+            browserThemeColorFrame = null;
+            const themeMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeMeta) themeMeta.setAttribute('content', getCurrentTopBackgroundColor());
+        }
+
+        function scheduleBrowserThemeColorUpdate() {
+            if (browserThemeColorFrame) cancelAnimationFrame(browserThemeColorFrame);
+            browserThemeColorFrame = requestAnimationFrame(updateBrowserThemeColor);
+        }
+
+        function setupBrowserThemeColorSync() {
+            if (browserThemeColorObserver) return;
+            browserThemeColorObserver = new MutationObserver(scheduleBrowserThemeColorUpdate);
+            browserThemeColorObserver.observe(document.body, {
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class', 'style']
+            });
+            window.addEventListener('resize', scheduleBrowserThemeColorUpdate);
+            scheduleBrowserThemeColorUpdate();
         }
 
         function loadDisplayExtras() {
@@ -3654,6 +3702,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const qrNode = document.getElementById('contactQrCode');
             const fallback = document.getElementById('contactQrFallback');
             qrNode.innerHTML = '';
+            qrNode.dataset.payload = payload;
             fallback.textContent = '';
             if (window.QRCode) {
                 new QRCode(qrNode, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
@@ -3664,7 +3713,63 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 qrNode.appendChild(image);
                 fallback.textContent = '二维码服务暂不可用时，可在扫一扫中输入以下内容：' + payload;
             }
+            prepareQrForAlbumSave(qrNode, contact.name || '好友');
             document.getElementById('contactQrModal').classList.add('active');
+        }
+
+        function prepareQrForAlbumSave(qrNode, contactName) {
+            if (!qrNode) return;
+            qrNode.dataset.contactName = contactName;
+            const makeImage = () => {
+                const canvas = qrNode.querySelector('canvas');
+                if (canvas) {
+                    try {
+                        const image = new Image();
+                        image.alt = '好友二维码';
+                        image.className = 'contact-qr-image';
+                        image.src = canvas.toDataURL('image/png');
+                        qrNode.innerHTML = '';
+                        qrNode.appendChild(image);
+                    } catch (error) {
+                        // 保留原二维码节点，浏览器仍可通过系统菜单保存。
+                    }
+                }
+                if (!qrNode.querySelector('img') && !qrNode.querySelector('canvas')) {
+                    const fallbackImage = new Image();
+                    fallbackImage.alt = '好友二维码';
+                    fallbackImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrNode.dataset.payload || '')}`;
+                    qrNode.appendChild(fallbackImage);
+                }
+                if (qrNode.dataset.saveGestureBound === 'true') return;
+                qrNode.dataset.saveGestureBound = 'true';
+                let saveTimer = null;
+                const startSave = () => {
+                    clearTimeout(saveTimer);
+                    saveTimer = setTimeout(() => saveContactQrImage(qrNode), 700);
+                };
+                const stopSave = () => clearTimeout(saveTimer);
+                qrNode.addEventListener('touchstart', startSave, { passive: true });
+                qrNode.addEventListener('touchend', stopSave, { passive: true });
+                qrNode.addEventListener('touchcancel', stopSave, { passive: true });
+                qrNode.addEventListener('mousedown', startSave);
+                qrNode.addEventListener('mouseup', stopSave);
+                qrNode.addEventListener('mouseleave', stopSave);
+            };
+            // QRCode.js 需要一个短暂的绘制周期，随后把 canvas 转为可保存的图片。
+            setTimeout(makeImage, 80);
+        }
+
+        function saveContactQrImage(qrNode) {
+            const image = qrNode && qrNode.querySelector('img');
+            if (!image || !image.src) return;
+            const link = document.createElement('a');
+            link.href = image.src;
+            link.download = `${qrNode.dataset.contactName || '好友'}-二维码.png`;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         }
 
         function closeContactQrModal() {
@@ -3711,11 +3816,30 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             scannerFrameRequest = requestAnimationFrame(scanCameraFrame);
         }
 
+        async function decodeQrCanvas(canvas) {
+            if (window.BarcodeDetector) {
+                try {
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    const detected = await detector.detect(canvas);
+                    if (detected && detected[0] && detected[0].rawValue) return detected[0].rawValue;
+                } catch (error) {
+                    // 某些浏览器没有 BarcodeDetector 的 qr_code 实现，继续使用 jsQR。
+                }
+            }
+            if (window.jsQR) {
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+                const result = jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'attemptBoth' });
+                return result ? result.data : null;
+            }
+            return null;
+        }
+
         function scanQrFile(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             const image = new Image();
-            image.onload = () => {
+            image.onload = async () => {
                 const canvas = document.getElementById('wechatScannerCanvas');
                 const maxSize = 1400;
                 const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
@@ -3723,9 +3847,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
                 const context = canvas.getContext('2d', { willReadFrequently: true });
                 context.drawImage(image, 0, 0, canvas.width, canvas.height);
-                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-                const result = window.jsQR && jsQR(pixels.data, pixels.width, pixels.height);
-                if (!result || !handleScannedFriendPayload(result.data)) {
+                const payload = await decodeQrCanvas(canvas);
+                if (!payload || !handleScannedFriendPayload(payload)) {
                     document.getElementById('scannerStatus').textContent = '未识别到有效的好友二维码';
                 }
                 URL.revokeObjectURL(image.src);
@@ -3756,6 +3879,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const scannedContact = parseFriendQrPayload(value);
             if (!scannedContact) return false;
             scannerProcessing = true;
+            const scannerStatus = document.getElementById('scannerStatus');
+            if (scannerStatus) scannerStatus.textContent = '识别成功，正在添加到微信通讯录...';
             addScannedFriend(scannedContact);
             return true;
         }
@@ -9389,6 +9514,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                 // loadUIState(); // 刷新始终回到主页，不加载上一次的状态
                 checkFullscreenPref();
                 loadDisplayExtras();
+                setupBrowserThemeColorSync();
             } catch (e) {
                 console.error("Initialization failed:", e);
                 alert("数据库初始化失败，部分功能可能无法使用。");

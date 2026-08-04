@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mimiphone-v4';
+const CACHE_NAME = 'mimiphone-v5';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -7,6 +7,9 @@ const ASSETS_TO_CACHE = [
     './wechat.js',
     './script.js',
     './manifest.json',
+    './vendor/qrcode.min.js',
+    './vendor/jsQR.js',
+    './vendor/lz-string.min.js',
     'https://html2canvas.hertzen.com/dist/html2canvas.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js'
 ];

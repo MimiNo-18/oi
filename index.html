@@ -16,8 +16,9 @@
     <!-- TensorFlow.js and MobileNet -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="vendor/qrcode.min.js"></script>
+    <script src="vendor/jsQR.js"></script>
+    <script src="vendor/lz-string.min.js"></script>
     <link rel="stylesheet" href="style.css?v=20260523">
     <link rel="stylesheet" href="wechat.css?v=20260523">
 </head>
@@ -2684,7 +2685,6 @@
             </div>
             <div class="scanner-actions">
                 <label class="image-option-btn scanner-file-btn">从相册选择二维码<input id="wechatQrFile" type="file" accept="image/*" onchange="scanQrFile(event)"></label>
-                <button class="image-option-btn" type="button" onclick="scanQrTextPrompt()">输入二维码内容</button>
                 <button class="modal-btn cancel" type="button" onclick="closeWechatScanner()">取消</button>
             </div>
             <div id="scannerStatus" class="scanner-status">将二维码放入框内</div>

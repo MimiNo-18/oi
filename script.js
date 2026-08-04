@@ -3788,13 +3788,33 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     wechat: contact.wechat || '',
                     phoneNumber: contact.phoneNumber || '',
                     region: contact.region || '',
-                    signature: contact.signature || '',
+                    signature: (contact.signature || '').slice(0, 160),
                     category: contact.category || '朋友',
-                    design: contact.design || '',
-                    avatar: contact.avatar || ''
+                    design: (contact.design || '').slice(0, 500),
+                    // base64 头像会让二维码急剧膨胀，扫码后仍可使用默认头像。
+                    avatar: contact.avatar && !String(contact.avatar).startsWith('data:') ? contact.avatar : ''
                 }
             };
-            return `mimiphone://friend?data=${encodeURIComponent(JSON.stringify(data))}`;
+            return `mimiphone://friend?data=${encodeFriendData(JSON.stringify(data))}`;
+        }
+
+        function encodeFriendData(value) {
+            const base64 = btoa(unescape(encodeURIComponent(value)));
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        }
+
+        function decodeFriendData(value) {
+            try {
+                // 兼容之前使用 encodeURIComponent 生成的旧二维码。
+                if (value.trim().startsWith('{')) return decodeURIComponent(value);
+                const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+                const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+                const binary = atob(padded);
+                const bytes = Array.from(binary, char => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`).join('');
+                return decodeURIComponent(bytes);
+            } catch (error) {
+                return decodeURIComponent(value);
+            }
         }
 
         function openContactQrModal() {
@@ -3809,7 +3829,15 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             qrNode.dataset.payload = payload;
             fallback.textContent = '';
             if (window.QRCode) {
-                new QRCode(qrNode, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+                try {
+                    new QRCode(qrNode, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.L });
+                } catch (error) {
+                    const image = new Image();
+                    image.alt = '好友二维码';
+                    image.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
+                    qrNode.appendChild(image);
+                    fallback.textContent = '请使用扫一扫识别二维码';
+                }
             } else {
                 const image = new Image();
                 image.alt = '好友二维码';
@@ -3903,19 +3931,26 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
-        function scanCameraFrame() {
+        let scannerDecodeBusy = false;
+
+        async function scanCameraFrame() {
             const modal = document.getElementById('wechatScannerModal');
             if (!modal.classList.contains('active')) return;
             const video = document.getElementById('wechatScannerVideo');
             const canvas = document.getElementById('wechatScannerCanvas');
-            if (window.jsQR && video.readyState >= 2 && video.videoWidth) {
+            if (!scannerDecodeBusy && video.readyState >= 2 && video.videoWidth) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const context = canvas.getContext('2d', { willReadFrequently: true });
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-                const result = jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
-                if (result && handleScannedFriendPayload(result.data)) return;
+                scannerDecodeBusy = true;
+                let payload = null;
+                try {
+                    payload = await decodeQrCanvas(canvas);
+                } finally {
+                    scannerDecodeBusy = false;
+                }
+                if (payload && handleScannedFriendPayload(payload)) return;
             }
             scannerFrameRequest = requestAnimationFrame(scanCameraFrame);
         }
@@ -3970,7 +4005,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const prefix = 'mimiphone://friend?data=';
             if (!value || !value.startsWith(prefix)) return null;
             try {
-                const payload = JSON.parse(decodeURIComponent(value.slice(prefix.length)));
+                const payload = JSON.parse(decodeFriendData(value.slice(prefix.length)));
                 if (payload.type !== 'mimiphone-friend' || !payload.contact || !payload.contact.name) return null;
                 return payload.contact;
             } catch (error) {
@@ -4029,6 +4064,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             if (modal) modal.classList.remove('active');
             if (scannerFrameRequest) cancelAnimationFrame(scannerFrameRequest);
             scannerFrameRequest = null;
+            scannerDecodeBusy = false;
             scannerProcessing = false;
             if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
             scannerStream = null;

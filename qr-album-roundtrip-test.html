@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>RUNNING</title>
+<script src="vendor/qrcode.min.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/lz-string.min.js"></script>
+<div id="qr"></div>
+<script>
+(async function () {
+  try {
+    const original = {
+      version: 2,
+      type: 'mimiphone-friend',
+      contact: {
+        name: '相册测试好友',
+        nickname: '测试昵称',
+        netName: '测试网名',
+        design: '这是会长期保存在二维码中的完整人设内容。'.repeat(30)
+      }
+    };
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(original));
+    const payload = `mimiphone://friend/v2?encoding=lz&data=${encodeURIComponent(compressed)}`;
+    new QRCode(document.getElementById('qr'), { text: payload, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.L });
+    await new Promise(resolve => setTimeout(resolve, 250));
+    const sourceCanvas = document.querySelector('#qr canvas');
+    if (!sourceCanvas) throw new Error('NO_QR_CANVAS');
+    const blob = await new Promise(resolve => sourceCanvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('NO_PNG_BLOB');
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(blob);
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = () => reject(new Error('IMAGE_LOAD_FAILED'));
+      image.src = objectUrl;
+    });
+    const albumCanvas = document.createElement('canvas');
+    albumCanvas.width = image.naturalWidth;
+    albumCanvas.height = image.naturalHeight;
+    const context = albumCanvas.getContext('2d', { willReadFrequently: true });
+    context.fillStyle = '#fff';
+    context.fillRect(0, 0, albumCanvas.width, albumCanvas.height);
+    context.drawImage(image, 0, 0);
+    URL.revokeObjectURL(objectUrl);
+    const pixels = context.getImageData(0, 0, albumCanvas.width, albumCanvas.height);
+    const decoded = jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'attemptBoth' });
+    if (!decoded || decoded.data !== payload) throw new Error('QR_DECODE_FAILED');
+    const query = new URL(decoded.data).searchParams;
+    const restored = JSON.parse(LZString.decompressFromEncodedURIComponent(query.get('data')));
+    if (restored.contact.name !== original.contact.name || restored.contact.design !== original.contact.design) throw new Error('CONTACT_DATA_MISMATCH');
+    document.title = 'PASS';
+  } catch (error) {
+    document.title = `FAIL:${error.message}`;
+  }
+})();
+</script>

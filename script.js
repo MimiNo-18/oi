@@ -3918,14 +3918,34 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             contactActionId = null;
         }
 
+        function setScannerStatus(message, type = 'working') {
+            const status = document.getElementById('scannerStatus');
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove('success', 'error', 'working');
+            if (type) status.classList.add(type);
+        }
+
+        function chooseQrFromAlbum() {
+            const input = document.getElementById('wechatQrFile');
+            if (!input) {
+                setScannerStatus('相册入口不可用，请刷新后重试', 'error');
+                return;
+            }
+            stopScannerCamera();
+            setScannerStatus('请选择二维码图片', 'working');
+            input.value = '';
+            input.click();
+        }
+
         async function openWechatScanner() {
             const addMenu = document.getElementById('addMenu');
             if (addMenu) addMenu.classList.remove('active');
             const modal = document.getElementById('wechatScannerModal');
             modal.classList.add('active');
-            document.getElementById('scannerStatus').textContent = '正在打开摄像头...';
+            setScannerStatus('正在打开摄像头...', 'working');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                document.getElementById('scannerStatus').textContent = '当前浏览器不支持摄像头，请从相册选择二维码';
+                setScannerStatus('当前浏览器不支持摄像头，请从相册选择二维码', 'working');
                 return;
             }
             try {
@@ -3933,10 +3953,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 const video = document.getElementById('wechatScannerVideo');
                 video.srcObject = scannerStream;
                 await video.play();
-                document.getElementById('scannerStatus').textContent = '将二维码放入框内';
+                setScannerStatus('将二维码放入框内', 'working');
                 scanCameraFrame();
             } catch (error) {
-                document.getElementById('scannerStatus').textContent = '无法使用摄像头，请授权或从相册选择二维码';
+                setScannerStatus('无法使用摄像头，请授权或从相册选择二维码', 'error');
             }
         }
 
@@ -4005,8 +4025,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function scanQrFile(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
-            const scannerStatus = document.getElementById('scannerStatus');
-            if (scannerStatus) scannerStatus.textContent = '正在读取二维码...';
+            setScannerStatus('正在读取二维码...', 'working');
             const image = new Image();
             image.onload = async () => {
                 try {
@@ -4021,18 +4040,18 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     context.drawImage(image, 0, 0, canvas.width, canvas.height);
                     const payload = await decodeQrCanvas(canvas);
                     if (!payload || !handleScannedFriendPayload(payload)) {
-                        if (scannerStatus) scannerStatus.textContent = '未识别到有效的好友二维码';
+                        setScannerStatus('二维码无效，请重试', 'error');
                     }
                 } catch (error) {
                     console.error('QR album scan failed:', error);
-                    if (scannerStatus) scannerStatus.textContent = '二维码读取失败，请重新选择清晰图片';
+                    setScannerStatus('二维码读取失败，请重试', 'error');
                 } finally {
                     URL.revokeObjectURL(image.src);
                 }
             };
             image.onerror = () => {
                 URL.revokeObjectURL(image.src);
-                if (scannerStatus) scannerStatus.textContent = '图片读取失败，请重新选择';
+                setScannerStatus('图片读取失败，请重试', 'error');
             };
             image.src = URL.createObjectURL(file);
             event.target.value = '';
@@ -4064,9 +4083,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const scannedContact = parseFriendQrPayload(value);
             if (!scannedContact) return false;
             scannerProcessing = true;
-            const scannerStatus = document.getElementById('scannerStatus');
-            if (scannerStatus) scannerStatus.textContent = '识别成功，正在添加到微信通讯录...';
-            addScannedFriend(scannedContact);
+            stopScannerCamera();
+            setScannerStatus('识别成功，正在添加好友...', 'working');
+            addScannedFriend(scannedContact).catch(error => {
+                console.error('Add scanned friend failed:', error);
+                scannerProcessing = false;
+                setScannerStatus('二维码有效，但添加失败，请重试', 'error');
+            });
             return true;
         }
 
@@ -4099,23 +4122,29 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 renderContactsList();
             }
             const friendWasCreated = await addContactAsWechatFriend(contact, false);
-            closeWechatScanner();
-            if (contactWasCreated && friendWasCreated) alert('已将好友信息保存到联系人，并添加到微信通讯录');
-            else if (friendWasCreated) alert('已添加到微信通讯录');
-            else alert('该联系人已经是你的微信好友');
+            scannerProcessing = false;
+            if (contactWasCreated || friendWasCreated) {
+                setScannerStatus('已成功添加好友', 'success');
+            } else {
+                setScannerStatus('该好友已在微信通讯录中', 'success');
+            }
+        }
+
+        function stopScannerCamera() {
+            if (scannerFrameRequest) cancelAnimationFrame(scannerFrameRequest);
+            scannerFrameRequest = null;
+            scannerDecodeBusy = false;
+            if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
+            scannerStream = null;
+            const video = document.getElementById('wechatScannerVideo');
+            if (video) video.srcObject = null;
         }
 
         function closeWechatScanner() {
             const modal = document.getElementById('wechatScannerModal');
             if (modal) modal.classList.remove('active');
-            if (scannerFrameRequest) cancelAnimationFrame(scannerFrameRequest);
-            scannerFrameRequest = null;
-            scannerDecodeBusy = false;
+            stopScannerCamera();
             scannerProcessing = false;
-            if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
-            scannerStream = null;
-            const video = document.getElementById('wechatScannerVideo');
-            if (video) video.srcObject = null;
         }
 
         // 关闭微信模态框

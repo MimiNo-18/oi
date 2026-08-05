@@ -5382,8 +5382,10 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 .scanner-frame { position: absolute; inset: 16%; border: 2px solid #07c160; box-shadow: 0 0 0 999px rgba(0,0,0,.25); pointer-events: none; }
 .scanner-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .scanner-file-btn { position: relative; overflow: hidden; text-align: center; }
-.scanner-file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .scanner-status { margin-top: 8px; color: #777; font-size: 12px; text-align: center; min-height: 18px; }
+.scanner-status.success { color: #07a34a; font-weight: 600; }
+.scanner-status.error { color: #c33; font-weight: 600; }
+.scanner-status.working { color: #666; }
 
 /* 文件预览弹窗样式 */
 .file-preview-content {

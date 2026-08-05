@@ -2684,7 +2684,8 @@
                 <div class="scanner-frame"></div>
             </div>
             <div class="scanner-actions">
-                <label class="image-option-btn scanner-file-btn">从相册选择二维码<input id="wechatQrFile" type="file" accept="image/*" onchange="scanQrFile(event)"></label>
+                <button class="image-option-btn scanner-file-btn" type="button" onclick="chooseQrFromAlbum()">从相册选择二维码</button>
+                <input id="wechatQrFile" type="file" accept="image/*" onchange="scanQrFile(event)" hidden>
                 <button class="modal-btn cancel" type="button" onclick="closeWechatScanner()">取消</button>
             </div>
             <div id="scannerStatus" class="scanner-status">将二维码放入框内</div>

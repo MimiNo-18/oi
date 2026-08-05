@@ -2869,15 +2869,31 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }, 50);
         }
 
+        async function permanentlyDeleteContacts(contactIds) {
+            const ids = new Set(contactIds || []);
+            if (!ids.size) return;
+            const removedChatIds = chatList.filter(friend => ids.has(friend.contactId)).map(friend => friend.id);
+            contacts = contacts.filter(contact => !ids.has(contact.id));
+            chatList = chatList.filter(friend => !ids.has(friend.contactId));
+            removedChatIds.forEach(chatId => delete chatHistories[chatId]);
+            await Promise.all([
+                saveContactsToStorage(false),
+                saveChatListToStorage(),
+                saveChatHistories()
+            ]);
+            renderContactsList();
+            renderChatList();
+            renderWechatContacts();
+        }
+
         // 删除单个联系人
-        function deleteSingleContact() {
+        async function deleteSingleContact() {
             if (!editingContactId) return;
             
             if (confirm('确定要删除这个联系人吗?')) {
-                contacts = contacts.filter(c => c.id !== editingContactId);
-                saveContactsToStorage();
+                const id = editingContactId;
+                await permanentlyDeleteContacts([id]);
                 closeAddContactPage();
-                renderContactsList();
             }
         }
 
@@ -2986,12 +3002,11 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 确认删除联系人
-        function confirmDeleteContact() {
-            contacts = contacts.filter(c => !selectedContacts.has(c.id));
+        async function confirmDeleteContact() {
+            const ids = Array.from(selectedContacts);
+            await permanentlyDeleteContacts(ids);
             selectedContacts.clear();
-            saveContactsToStorage();
             updateDeleteButton();
-            renderContactsList();
             closeDeleteContactModal();
         }
 
@@ -3776,8 +3791,33 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let scannerStream = null;
         let scannerFrameRequest = null;
         let scannerProcessing = false;
+        const qrAvatarCache = new Map();
 
-        function buildFriendQrPayload(contact) {
+        function createContactQrId() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return `mimi-${window.crypto.randomUUID()}`;
+            }
+            return `mimi-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+        }
+
+        function ensureContactQrId(contact) {
+            if (!contact.qrId) {
+                let qrId = createContactQrId();
+                while (contacts.some(item => item !== contact && item.qrId === qrId)) qrId = createContactQrId();
+                contact.qrId = qrId;
+            }
+            return contact.qrId;
+        }
+
+        function stableStringify(value) {
+            if (Array.isArray(value)) return `[${value.map(item => stableStringify(item)).join(',')}]`;
+            if (value && typeof value === 'object') {
+                return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+            }
+            return JSON.stringify(value);
+        }
+
+        async function buildFriendQrPayload(contact) {
             if (!contact || typeof contact !== 'object') throw new Error('联系人数据为空');
             let contactData;
             try {
@@ -3786,17 +3826,54 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 throw new Error('联系人数据无法序列化');
             }
             delete contactData.id;
-            // data: 头像通常很大，会挤占二维码容量；头像不是人设，接收端使用默认头像。
-            if (typeof contactData.avatar === 'string' && contactData.avatar.startsWith('data:')) contactData.avatar = '';
+            contactData.qrId = ensureContactQrId(contact);
+            // 头像先压成小图再写入二维码，保留头像同时避免原图拖慢或撑爆二维码。
+            contactData.avatar = await compactAvatarForQr(contactData.avatar);
             if (contactData.design == null && contactData.persona != null) contactData.design = String(contactData.persona);
-            if (contactData.persona == null) contactData.persona = contactData.design || '';
             if (!String(contactData.name || '').trim()) throw new Error('联系人缺少姓名');
+            // 空字段没有实际内容，去掉后可以明显降低二维码密度；非空字段全部保留。
+            Object.keys(contactData).forEach(key => {
+                if (contactData[key] === '' || contactData[key] == null) delete contactData[key];
+            });
             const data = { version: 3, type: 'mimiphone-friend', contact: contactData };
-            const serialized = JSON.stringify(data);
+            const serialized = stableStringify(data);
             const hasLz = Boolean(window.LZString && LZString.compressToEncodedURIComponent);
             const compressed = hasLz ? LZString.compressToEncodedURIComponent(serialized) : encodeFriendData(serialized);
             const encoding = hasLz ? 'lz' : 'b64';
-            return `mimiphone://friend/v3?encoding=${encoding}&data=${encodeURIComponent(compressed)}`;
+            return `mimiphone://friend/v3?encoding=${encoding}&data=${encodeFriendQrQueryData(compressed)}`;
+        }
+
+        async function compactAvatarForQr(avatar) {
+            const source = String(avatar || '');
+            if (!source.startsWith('data:image/') || source.length <= 1800) return source;
+            if (qrAvatarCache.has(source)) return qrAvatarCache.get(source);
+            const task = new Promise(resolve => {
+                const image = new Image();
+                image.onload = () => {
+                    try {
+                        const maxSide = 48;
+                        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || maxSide, image.naturalHeight || maxSide));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round((image.naturalWidth || maxSide) * scale));
+                        canvas.height = Math.max(1, Math.round((image.naturalHeight || maxSide) * scale));
+                        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+                        const compressed = canvas.toDataURL('image/jpeg', 0.55);
+                        resolve(compressed.length < source.length ? compressed : source);
+                    } catch (error) {
+                        resolve(source);
+                    }
+                };
+                image.onerror = () => resolve(source);
+                image.src = source;
+            });
+            qrAvatarCache.set(source, task);
+            return task;
+        }
+
+        function encodeFriendQrQueryData(value) {
+            // LZString 的 URI 字符集本身不含 &, =, ?, # 等分隔符，只需转义 +，
+            // 避免 encodeURIComponent 把压缩结果无谓地膨胀，给头像和长人设留出更多容量。
+            return String(value || '').replace(/\+/g, '%2B');
         }
 
         function encodeFriendData(value) {
@@ -3828,92 +3905,89 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
-        function openContactQrModal() {
+        async function openContactQrModal() {
             const contact = contacts.find(item => item.id === contactActionId);
             if (!contact) return;
             document.getElementById('contactActionModal').classList.remove('active');
             document.getElementById('contactQrTitle').textContent = `${contact.name || '联系人'}的好友二维码`;
             const qrNode = document.getElementById('contactQrCode');
             const fallback = document.getElementById('contactQrFallback');
-            qrNode.innerHTML = '';
+            qrNode.innerHTML = '<div class="contact-qr-loading" aria-label="正在生成联系人二维码"><span class="contact-qr-spinner"></span><span>正在生成联系人二维码</span></div>';
             fallback.textContent = '';
+            document.getElementById('contactQrModal').classList.add('active');
             let payload;
             try {
-                payload = buildFriendQrPayload(contact);
+                ensureContactQrId(contact);
+                // 二维码身份先写入内存，持久化放到后台，不阻塞二维码绘制。
+                saveContactsToStorage(false).catch(error => console.warn('QR identity save delayed:', error));
+                payload = await buildFriendQrPayload(contact);
             } catch (error) {
+                qrNode.innerHTML = '';
                 fallback.textContent = error.message || '联系人数据无法生成二维码';
-                document.getElementById('contactQrModal').classList.add('active');
                 return;
             }
             qrNode.dataset.payload = payload;
+            qrNode.innerHTML = '';
             if (window.QRCode) {
                 try {
-                    new QRCode(qrNode, { text: payload, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.L });
+                    new QRCode(qrNode, { text: payload, width: 420, height: 420, correctLevel: QRCode.CorrectLevel.L });
                 } catch (error) {
-                    const image = new Image();
-                    image.alt = '好友二维码';
-                    image.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(payload)}`;
-                    qrNode.appendChild(image);
-                    fallback.textContent = '请使用扫一扫识别二维码';
+                    console.error('QR generation failed:', error);
+                    fallback.textContent = '联系人资料过大，单张二维码无法容纳，请压缩人设或头像后重试。';
                 }
             } else {
-                const image = new Image();
-                image.alt = '好友二维码';
-                image.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(payload)}`;
-                qrNode.appendChild(image);
-                fallback.textContent = '二维码服务暂不可用时，可在扫一扫中输入以下内容：' + payload;
+                fallback.textContent = '二维码组件未加载，请刷新页面后重试。';
             }
             prepareQrForAlbumSave(qrNode, contact.name || '好友');
-            document.getElementById('contactQrModal').classList.add('active');
         }
 
         function prepareQrForAlbumSave(qrNode, contactName) {
             if (!qrNode) return;
             qrNode.dataset.contactName = contactName;
-            const makeImage = () => {
-                const canvas = qrNode.querySelector('canvas');
-                if (canvas) {
-                    try {
-                        const image = new Image();
-                        image.alt = '好友二维码';
-                        image.className = 'contact-qr-image';
-                        image.src = canvas.toDataURL('image/png');
-                        qrNode.innerHTML = '';
-                        qrNode.appendChild(image);
-                    } catch (error) {
-                        // 保留原二维码节点，浏览器仍可通过系统菜单保存。
-                    }
+            const canvas = qrNode.querySelector('canvas');
+            if (canvas) {
+                try {
+                    const image = new Image();
+                    image.alt = '好友二维码';
+                    image.className = 'contact-qr-image';
+                    image.onload = () => {
+                        if (qrNode.contains(canvas)) {
+                            qrNode.innerHTML = '';
+                            qrNode.appendChild(image);
+                        }
+                    };
+                    image.src = canvas.toDataURL('image/png');
+                } catch (error) {
+                    // 保留 canvas，二维码仍可直接识别和保存。
                 }
-                if (!qrNode.querySelector('img') && !qrNode.querySelector('canvas')) {
-                    const fallbackImage = new Image();
-                    fallbackImage.alt = '好友二维码';
-                    fallbackImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrNode.dataset.payload || '')}`;
-                    qrNode.appendChild(fallbackImage);
-                }
-                if (qrNode.dataset.saveGestureBound === 'true') return;
-                qrNode.dataset.saveGestureBound = 'true';
-                let saveTimer = null;
-                const startSave = () => {
-                    clearTimeout(saveTimer);
-                    saveTimer = setTimeout(() => saveContactQrImage(qrNode), 700);
-                };
-                const stopSave = () => clearTimeout(saveTimer);
-                qrNode.addEventListener('touchstart', startSave, { passive: true });
-                qrNode.addEventListener('touchend', stopSave, { passive: true });
-                qrNode.addEventListener('touchcancel', stopSave, { passive: true });
-                qrNode.addEventListener('mousedown', startSave);
-                qrNode.addEventListener('mouseup', stopSave);
-                qrNode.addEventListener('mouseleave', stopSave);
+            }
+            if (qrNode.dataset.saveGestureBound === 'true') return;
+            qrNode.dataset.saveGestureBound = 'true';
+            let saveTimer = null;
+            const startSave = () => {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => saveContactQrImage(qrNode), 700);
             };
-            // QRCode.js 需要一个短暂的绘制周期，随后把 canvas 转为可保存的图片。
-            setTimeout(makeImage, 80);
+            const stopSave = () => clearTimeout(saveTimer);
+            qrNode.addEventListener('touchstart', startSave, { passive: true });
+            qrNode.addEventListener('touchend', stopSave, { passive: true });
+            qrNode.addEventListener('touchcancel', stopSave, { passive: true });
+            qrNode.addEventListener('mousedown', startSave);
+            qrNode.addEventListener('mouseup', stopSave);
+            qrNode.addEventListener('mouseleave', stopSave);
         }
 
         function saveContactQrImage(qrNode) {
-            const image = qrNode && qrNode.querySelector('img');
-            if (!image || !image.src) return;
+            if (!qrNode) return;
+            const image = qrNode.querySelector('img');
+            const canvas = qrNode.querySelector('canvas');
+            let source = image && image.src;
+            if (!source && canvas) {
+                try { source = canvas.toDataURL('image/png'); } catch (error) { source = ''; }
+            }
+            if (!source) return;
             const link = document.createElement('a');
-            link.href = image.src;
+            link.href = source;
             link.download = `${qrNode.dataset.contactName || '好友'}-二维码.png`;
             link.target = '_blank';
             link.rel = 'noopener';
@@ -4114,14 +4188,17 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         async function addScannedFriend(scannedContact) {
             await loadContactsFromStorage();
-            let contact = contacts.find(item =>
+            let contact = scannedContact.qrId && contacts.find(item => item.qrId === scannedContact.qrId);
+            if (!contact) contact = contacts.find(item =>
                 (scannedContact.wechat && item.wechat === scannedContact.wechat) ||
                 (scannedContact.phoneNumber && (item.phoneNumber === scannedContact.phoneNumber || item.phone === scannedContact.phoneNumber)) ||
                 (!scannedContact.wechat && !scannedContact.phoneNumber && item.name === scannedContact.name)
             );
             let contactWasCreated = false;
+            let contactWasUpdated = false;
             if (!contact) {
                 contact = {
+                    ...scannedContact,
                     id: Date.now(),
                     name: scannedContact.name,
                     nickname: scannedContact.nickname || '',
@@ -4135,24 +4212,40 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     avatar: scannedContact.avatar || '',
                     phone: scannedContact.phone || scannedContact.wechat || scannedContact.phoneNumber || scannedContact.nickname || scannedContact.netName || '未设置'
                 };
+                ensureContactQrId(contact);
                 contacts.push(contact);
                 contactWasCreated = true;
             } else {
                 // 已有联系人也要更新，避免扫描后人设仍是旧内容。
                 Object.keys(scannedContact).forEach(key => {
                     if (key === 'id' || (key === 'avatar' && !scannedContact[key])) return;
-                    if (scannedContact[key] !== undefined) contact[key] = scannedContact[key];
+                    if (scannedContact[key] !== undefined && contact[key] !== scannedContact[key]) {
+                        contact[key] = scannedContact[key];
+                        contactWasUpdated = true;
+                    }
                 });
             }
             await saveContactsToStorage(false);
             renderContactsList();
             const friendWasCreated = await addContactAsWechatFriend(contact, false);
+            const existingWechatFriend = chatList.find(friend => friend.contactId === contact.id);
+            if (existingWechatFriend && (contactWasCreated || contactWasUpdated)) {
+                existingWechatFriend.name = contact.name;
+                existingWechatFriend.remark = contact.netName || '';
+                existingWechatFriend.avatar = contact.avatar || '';
+                await saveChatListToStorage();
+                renderChatList();
+                renderWechatContacts();
+            }
             scannerProcessing = false;
             if (contactWasCreated || friendWasCreated) {
                 setScannerStatus('已成功添加好友', 'success');
+            } else if (contactWasUpdated) {
+                setScannerStatus('联系人内容已更新，微信通讯录已同步', 'success');
             } else {
                 setScannerStatus('该好友已在微信通讯录中', 'success');
             }
+            setTimeout(closeWechatScanner, 500);
         }
 
         function stopScannerCamera() {

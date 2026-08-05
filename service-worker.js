@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mimiphone-v6';
+const CACHE_NAME = 'mimiphone-v13';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

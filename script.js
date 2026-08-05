@@ -3778,29 +3778,25 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let scannerProcessing = false;
 
         function buildFriendQrPayload(contact) {
-            const data = {
-                version: 2,
-                type: 'mimiphone-friend',
-                contact: {
-                    name: contact.name || '',
-                    nickname: contact.nickname || '',
-                    netName: contact.netName || '',
-                    wechat: contact.wechat || '',
-                    phoneNumber: contact.phoneNumber || '',
-                    region: contact.region || '',
-                    signature: contact.signature || '',
-                    category: contact.category || '朋友',
-                    design: contact.design || '',
-                    // base64 头像会让二维码急剧膨胀，扫码后仍可使用默认头像。
-                    avatar: contact.avatar && !String(contact.avatar).startsWith('data:') ? contact.avatar : ''
-                }
-            };
+            if (!contact || typeof contact !== 'object') throw new Error('联系人数据为空');
+            let contactData;
+            try {
+                contactData = JSON.parse(JSON.stringify(contact));
+            } catch (error) {
+                throw new Error('联系人数据无法序列化');
+            }
+            delete contactData.id;
+            // data: 头像通常很大，会挤占二维码容量；头像不是人设，接收端使用默认头像。
+            if (typeof contactData.avatar === 'string' && contactData.avatar.startsWith('data:')) contactData.avatar = '';
+            if (contactData.design == null && contactData.persona != null) contactData.design = String(contactData.persona);
+            if (contactData.persona == null) contactData.persona = contactData.design || '';
+            if (!String(contactData.name || '').trim()) throw new Error('联系人缺少姓名');
+            const data = { version: 3, type: 'mimiphone-friend', contact: contactData };
             const serialized = JSON.stringify(data);
-            const compressed = window.LZString && LZString.compressToEncodedURIComponent
-                ? LZString.compressToEncodedURIComponent(serialized)
-                : encodeFriendData(serialized);
-            const encoding = window.LZString && LZString.compressToEncodedURIComponent ? 'lz' : 'b64';
-            return `mimiphone://friend/v2?encoding=${encoding}&data=${encodeURIComponent(compressed)}`;
+            const hasLz = Boolean(window.LZString && LZString.compressToEncodedURIComponent);
+            const compressed = hasLz ? LZString.compressToEncodedURIComponent(serialized) : encodeFriendData(serialized);
+            const encoding = hasLz ? 'lz' : 'b64';
+            return `mimiphone://friend/v3?encoding=${encoding}&data=${encodeURIComponent(compressed)}`;
         }
 
         function encodeFriendData(value) {
@@ -3809,34 +3805,47 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function decodeFriendData(value) {
+            const raw = String(value || '');
             try {
-                if (value.startsWith('lz:') && window.LZString && LZString.decompressFromEncodedURIComponent) {
-                    return LZString.decompressFromEncodedURIComponent(value.slice(3));
+                if (raw.startsWith('lz:')) {
+                    if (!window.LZString || !LZString.decompressFromEncodedURIComponent) throw new Error('缺少二维码压缩库');
+                    const decoded = LZString.decompressFromEncodedURIComponent(raw.slice(3));
+                    if (!decoded) throw new Error('二维码压缩数据为空');
+                    return decoded;
                 }
-                if (value.startsWith('b64:')) return decodeFriendData(value.slice(4));
-                // 兼容之前使用 encodeURIComponent 生成的旧二维码。
-                if (value.trim().startsWith('{')) return decodeURIComponent(value);
-                const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+                if (raw.startsWith('b64:')) return decodeFriendData(raw.slice(4));
+                const unescaped = decodeURIComponent(raw);
+                if (unescaped.trim().startsWith('{')) return unescaped;
+                const base64 = unescaped.replace(/-/g, '+').replace(/_/g, '/');
                 const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
                 const binary = atob(padded);
                 const bytes = Array.from(binary, char => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`).join('');
                 return decodeURIComponent(bytes);
             } catch (error) {
-                return decodeURIComponent(value);
+                const fallback = decodeURIComponent(raw);
+                if (fallback.trim().startsWith('{')) return fallback;
+                throw error;
             }
         }
 
         function openContactQrModal() {
             const contact = contacts.find(item => item.id === contactActionId);
             if (!contact) return;
-            const payload = buildFriendQrPayload(contact);
             document.getElementById('contactActionModal').classList.remove('active');
             document.getElementById('contactQrTitle').textContent = `${contact.name || '联系人'}的好友二维码`;
             const qrNode = document.getElementById('contactQrCode');
             const fallback = document.getElementById('contactQrFallback');
             qrNode.innerHTML = '';
-            qrNode.dataset.payload = payload;
             fallback.textContent = '';
+            let payload;
+            try {
+                payload = buildFriendQrPayload(contact);
+            } catch (error) {
+                fallback.textContent = error.message || '联系人数据无法生成二维码';
+                document.getElementById('contactQrModal').classList.add('active');
+                return;
+            }
+            qrNode.dataset.payload = payload;
             if (window.QRCode) {
                 try {
                     new QRCode(qrNode, { text: payload, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.L });
@@ -3911,6 +3920,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.body.appendChild(link);
             link.click();
             link.remove();
+        }
+
+        function saveCurrentContactQrImage() {
+            saveContactQrImage(document.getElementById('contactQrCode'));
         }
 
         function closeContactQrModal() {
@@ -4006,16 +4019,19 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         async function decodeQrCanvas(canvas) {
             const direct = await decodeQrCanvasOnce(canvas);
             if (direct) return direct;
-            // 相册照片常常带有留白或边框，依次尝试中心裁剪区域。
-            const cropRatios = [0.86, 0.68];
+            // 相册照片常常带有留白、边框或被压缩，依次尝试中心裁剪和放大。
+            const cropRatios = [0.94, 0.86, 0.72, 0.58];
             for (const ratio of cropRatios) {
                 const size = Math.floor(Math.min(canvas.width, canvas.height) * ratio);
                 const sourceX = Math.floor((canvas.width - size) / 2);
                 const sourceY = Math.floor((canvas.height - size) / 2);
                 const crop = document.createElement('canvas');
-                crop.width = size;
-                crop.height = size;
-                crop.getContext('2d', { willReadFrequently: true }).drawImage(canvas, sourceX, sourceY, size, size, 0, 0, size, size);
+                const targetSize = Math.min(1800, Math.max(size, 720));
+                crop.width = targetSize;
+                crop.height = targetSize;
+                const cropContext = crop.getContext('2d', { willReadFrequently: true });
+                cropContext.imageSmoothingEnabled = false;
+                cropContext.drawImage(canvas, sourceX, sourceY, size, size, 0, 0, targetSize, targetSize);
                 const result = await decodeQrCanvasOnce(crop);
                 if (result) return result;
             }
@@ -4060,8 +4076,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function parseFriendQrPayload(value) {
             if (!value) return null;
             try {
+                value = String(value).trim();
                 let encodedData = '';
-                if (value.startsWith('mimiphone://friend/v2?')) {
+                if (value.startsWith('mimiphone://friend/v3?') || value.startsWith('mimiphone://friend/v2?')) {
                     const query = new URL(value).searchParams;
                     const encoding = query.get('encoding') || 'b64';
                     encodedData = `${encoding === 'lz' ? 'lz:' : 'b64:'}${query.get('data') || ''}`;
@@ -4071,8 +4088,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     return null;
                 }
                 const payload = JSON.parse(decodeFriendData(encodedData));
-                if (payload.type !== 'mimiphone-friend' || !payload.contact || !payload.contact.name) return null;
-                return payload.contact;
+                if (payload.type !== 'mimiphone-friend' || !payload.contact || !String(payload.contact.name || '').trim()) return null;
+                const contact = { ...payload.contact };
+                if (!contact.design && contact.persona) contact.design = contact.persona;
+                return contact;
             } catch (error) {
                 return null;
             }
@@ -4114,13 +4133,19 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     category: scannedContact.category || '朋友',
                     design: scannedContact.design || '',
                     avatar: scannedContact.avatar || '',
-                    phone: scannedContact.wechat || scannedContact.phoneNumber || scannedContact.nickname || scannedContact.netName || '未设置'
+                    phone: scannedContact.phone || scannedContact.wechat || scannedContact.phoneNumber || scannedContact.nickname || scannedContact.netName || '未设置'
                 };
                 contacts.push(contact);
                 contactWasCreated = true;
-                await saveContactsToStorage(false);
-                renderContactsList();
+            } else {
+                // 已有联系人也要更新，避免扫描后人设仍是旧内容。
+                Object.keys(scannedContact).forEach(key => {
+                    if (key === 'id' || (key === 'avatar' && !scannedContact[key])) return;
+                    if (scannedContact[key] !== undefined) contact[key] = scannedContact[key];
+                });
             }
+            await saveContactsToStorage(false);
+            renderContactsList();
             const friendWasCreated = await addContactAsWechatFriend(contact, false);
             scannerProcessing = false;
             if (contactWasCreated || friendWasCreated) {

@@ -3991,7 +3991,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const hasLz = Boolean(window.LZString && LZString.compressToEncodedURIComponent);
             const compressed = hasLz ? LZString.compressToEncodedURIComponent(serialized) : encodeFriendData(serialized);
             const encoding = hasLz ? 'lz' : 'b64';
-            return `mimiphone://friend/v3?encoding=${encoding}&data=${encodeFriendQrQueryData(compressed)}`;
+            // 使用短协议头降低二维码字节数；压缩算法和联系人字段保持不变。
+            return `mimiphone://friend?data=${encoding === 'lz' ? 'lz:' : 'b64:'}${encodeFriendQrQueryData(compressed)}`;
         }
 
         async function compactAvatarForQr(avatar) {
@@ -4037,7 +4038,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             try {
                 if (raw.startsWith('lz:')) {
                     if (!window.LZString || !LZString.decompressFromEncodedURIComponent) throw new Error('缺少二维码压缩库');
-                    const decoded = LZString.decompressFromEncodedURIComponent(raw.slice(3));
+                    const decoded = LZString.decompressFromEncodedURIComponent(decodeURIComponent(raw.slice(3)));
                     if (!decoded) throw new Error('二维码压缩数据为空');
                     return decoded;
                 }
@@ -4282,6 +4283,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             if (!file) return;
             setScannerStatus('正在读取二维码...', 'working');
             const image = new Image();
+            const objectUrl = URL.createObjectURL(file);
+            let usingObjectUrl = true;
+            const releaseObjectUrl = () => {
+                if (usingObjectUrl) {
+                    URL.revokeObjectURL(objectUrl);
+                    usingObjectUrl = false;
+                }
+            };
             image.onload = async () => {
                 try {
                     const canvas = document.getElementById('wechatScannerCanvas');
@@ -4301,14 +4310,26 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     console.error('QR album scan failed:', error);
                     setScannerStatus('二维码读取失败，请重试', 'error');
                 } finally {
-                    URL.revokeObjectURL(image.src);
+                    releaseObjectUrl();
                 }
             };
             image.onerror = () => {
-                URL.revokeObjectURL(image.src);
+                // 部分移动浏览器无法直接解码相册 Blob URL，回退为 data URL 再读一次。
+                if (usingObjectUrl && typeof FileReader !== 'undefined') {
+                    releaseObjectUrl();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        image.onerror = () => setScannerStatus('图片读取失败，请重试', 'error');
+                        image.src = reader.result;
+                    };
+                    reader.onerror = () => setScannerStatus('图片读取失败，请重试', 'error');
+                    reader.readAsDataURL(file);
+                    return;
+                }
+                releaseObjectUrl();
                 setScannerStatus('图片读取失败，请重试', 'error');
             };
-            image.src = URL.createObjectURL(file);
+            image.src = objectUrl;
             event.target.value = '';
         }
 
@@ -4324,7 +4345,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     if (!queryData) return null;
                     encodedData = `${encoding === 'lz' ? 'lz:' : 'b64:'}${queryData}`;
                 } else if (value.startsWith('mimiphone://friend?data=')) {
-                    encodedData = value.slice('mimiphone://friend?data='.length);
+                    encodedData = value.slice('mimiphone://friend?data='.length).replace(/ /g, '+');
                 } else {
                     return null;
                 }
@@ -8374,15 +8395,23 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
 
         const dbPromise = new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
+            const timeout = setTimeout(() => reject(new Error('IndexedDB 打开超时')), 5000);
 
             request.onerror = (event) => {
+                clearTimeout(timeout);
                 console.error("IndexedDB error:", event.target.error);
                 reject(event.target.error);
             };
 
             request.onsuccess = (event) => {
+                clearTimeout(timeout);
                 db = event.target.result;
                 resolve(db);
+            };
+
+            request.onblocked = () => {
+                clearTimeout(timeout);
+                reject(new Error('IndexedDB 被其他页面占用'));
             };
 
             request.onupgradeneeded = (event) => {
@@ -8413,15 +8442,25 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         });
 
         // DB 辅助函数
+        function waitForDbRequest(request, operation) {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error(`${operation}超时`)), 5000);
+                request.onsuccess = () => {
+                    clearTimeout(timeout);
+                    resolve(request.result);
+                };
+                request.onerror = () => {
+                    clearTimeout(timeout);
+                    reject(request.error);
+                };
+            });
+        }
+
         async function dbGet(storeName, key) {
             await dbPromise;
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.get(key);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+            const transaction = db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            return waitForDbRequest(store.get(key), `读取 ${storeName}`);
         }
 
         async function dbGetAll(storeName) {
@@ -8437,13 +8476,9 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
 
         async function dbPut(storeName, value) {
             await dbPromise;
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.put(value);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            return waitForDbRequest(store.put(value), `写入 ${storeName}`);
         }
 
         async function dbDelete(storeName, key) {

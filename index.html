@@ -38,6 +38,7 @@
                 <span class="battery-percent">100%</span>
                 <div class="battery-icon">
                     <div class="battery-fill" style="width: 100%;"></div>
+                    <span class="charging-bolt" id="chargingBolt" aria-label="正在充电">⚡</span>
                 </div>
             </div>
         </div>
@@ -1866,6 +1867,18 @@
                 </div>
                 <span class="settings-item-arrow">〉</span>
             </div>
+            <div class="settings-item" onclick="openChargingPromptSettings()">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">充电提示</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
+            <div class="settings-item" onclick="openStatusBarBeautySettings()">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">状态栏美化</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
             <div class="settings-item">
                 <div class="settings-item-content">
                     <span class="settings-item-label">关闭顶部状态栏</span>
@@ -1927,6 +1940,62 @@
                 </div>
 
                 <button class="theme-action-btn" style="width: 100%;" onclick="previewBatteryAlert()">预览效果</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 充电提示设置容器 -->
+    <div id="chargingPromptSettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeChargingPromptSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="settings-title">充电提示</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item">
+                <div class="settings-item-content"><span class="settings-item-label">充电时显示提示</span></div>
+                <label class="switch"><input type="checkbox" id="chargingPromptToggle" onchange="toggleChargingPrompt(this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="battery-config-area" style="padding: 10px 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 12px;">充电提示样式</div>
+                    <div class="settings-template-grid">
+                        <button class="theme-bottom-btn" onclick="applyChargingPromptTemplate('glass')">清透白</button>
+                        <button class="theme-bottom-btn" onclick="applyChargingPromptTemplate('dark')">深色浮层</button>
+                        <button class="theme-bottom-btn" onclick="applyChargingPromptTemplate('energy')">绿色能量</button>
+                        <button class="theme-bottom-btn" onclick="applyChargingPromptTemplate('neon')">霓虹充电</button>
+                    </div>
+                </div>
+                <button class="theme-action-btn" style="width: 100%;" onclick="previewChargingPrompt()">预览效果</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态栏美化设置容器 -->
+    <div id="statusBarBeautySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+        <div class="settings-header">
+            <div class="settings-back" onclick="closeStatusBarBeautySettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="settings-title">状态栏美化</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item">
+                <div class="settings-item-content"><span class="settings-item-label">启用状态栏美化</span></div>
+                <label class="switch"><input type="checkbox" id="statusBarBeautyToggle" onchange="toggleStatusBarBeauty(this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="battery-config-area" style="padding: 10px 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 12px;">状态栏样式</div>
+                    <div class="settings-template-grid">
+                        <button class="theme-bottom-btn" onclick="applyStatusBarBeautyTemplate('glass')">清透状态栏</button>
+                        <button class="theme-bottom-btn" onclick="applyStatusBarBeautyTemplate('dark')">深色状态栏</button>
+                        <button class="theme-bottom-btn" onclick="applyStatusBarBeautyTemplate('pill')">悬浮胶囊</button>
+                        <button class="theme-bottom-btn" onclick="applyStatusBarBeautyTemplate('color')">彩色状态栏</button>
+                    </div>
+                </div>
+                <button class="theme-action-btn" style="width: 100%;" onclick="previewStatusBarBeauty()">预览效果</button>
             </div>
         </div>
     </div>
@@ -2684,7 +2753,9 @@
             <div class="scanner-viewport">
                 <video id="wechatScannerVideo" autoplay playsinline muted></video>
                 <canvas id="wechatScannerCanvas" hidden></canvas>
-                <div class="scanner-frame"></div>
+                <div class="scanner-frame" aria-hidden="true">
+                    <div class="scanner-line"></div>
+                </div>
             </div>
             <div class="scanner-actions">
                 <button class="image-option-btn scanner-file-btn" type="button" onclick="chooseQrFromAlbum()">从相册选择二维码</button>

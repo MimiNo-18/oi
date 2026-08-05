@@ -1639,11 +1639,15 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 if (toggle) toggle.checked = true;
             }
             toggleStatusBar(statusBarHidePref);
+            loadStatusBarBeautySettings();
+            applyStatusBarBeauty();
         }
 
         function updateBattery() {
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
+                    if (battery.__mimiPhoneBound) return;
+                    battery.__mimiPhoneBound = true;
                     const updateAll = () => {
                         const level = Math.round(battery.level * 100);
                         document.querySelectorAll('.battery-percent').forEach(el => { el.textContent = `${level}%`; });
@@ -1652,10 +1656,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                             if (level <= 20) el.classList.add('low');
                             else el.classList.remove('low');
                         });
+                        document.querySelectorAll('.battery-icon').forEach(el => el.classList.toggle('is-charging', !!battery.charging));
                         checkBatteryAlert(level);
+                        window.currentBatteryLevel = level;
+                        checkChargingPrompt(!!battery.charging, level);
                     };
                     updateAll();
                     battery.addEventListener('levelchange', updateAll);
+                    battery.addEventListener('chargingchange', updateAll);
                 });
             }
         }
@@ -1707,6 +1715,147 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('batterySettingsContainer').style.display = 'none';
             document.getElementById('displaySettingsContainer').style.display = 'flex';
             saveUIState();
+        }
+
+        function openChargingPromptSettings() {
+            document.getElementById('displaySettingsContainer').style.display = 'none';
+            document.getElementById('chargingPromptSettingsContainer').style.display = 'flex';
+            loadChargingPromptSettings();
+            updateTime();
+            saveUIState();
+        }
+
+        function closeChargingPromptSettings() {
+            document.getElementById('chargingPromptSettingsContainer').style.display = 'none';
+            document.getElementById('displaySettingsContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function loadChargingPromptSettings() {
+            const enabled = localStorage.getItem('mimi_charging_prompt_enabled') === 'true';
+            const toggle = document.getElementById('chargingPromptToggle');
+            if (toggle) toggle.checked = enabled;
+            if (!localStorage.getItem('mimi_charging_prompt_template')) safeLocalStorageSet('mimi_charging_prompt_template', 'glass');
+        }
+
+        function toggleChargingPrompt(enabled) {
+            safeLocalStorageSet('mimi_charging_prompt_enabled', enabled);
+        }
+
+        function getChargingPromptTemplateCss(type) {
+            const templates = {
+                glass: 'background: rgba(255,255,255,0.9); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); color: #111; border: 1px solid rgba(255,255,255,0.75); border-radius: 22px;',
+                dark: 'background: #1c1c1e; color: #fff; border: 1px solid #3a3a3c; border-radius: 18px; box-shadow: 0 14px 42px rgba(0,0,0,0.45);',
+                energy: 'background: #f3fff7; color: #087a35; border: 2px solid #34c759; border-radius: 20px; box-shadow: 0 10px 30px rgba(52,199,89,0.2);',
+                neon: 'background: #101415; color: #7dffb2; border: 1px solid #2dff82; border-radius: 12px; box-shadow: 0 0 22px rgba(45,255,130,0.42);'
+            };
+            return templates[type] || templates.glass;
+        }
+
+        function applyChargingPromptTemplate(type) {
+            safeLocalStorageSet('mimi_charging_prompt_template', type);
+            previewChargingPrompt();
+        }
+
+        function showChargingPrompt(level) {
+            const template = localStorage.getItem('mimi_charging_prompt_template') || 'glass';
+            const content = `<div class="charging-prompt-icon">⚡</div><div class="charging-prompt-title">正在充电</div><div class="charging-prompt-level">当前电量 ${Number(level) || 0}%</div>`;
+            showCustomBatteryAlert(content, getChargingPromptTemplateCss(template));
+        }
+
+        function checkChargingPrompt(charging, level) {
+            const enabled = localStorage.getItem('mimi_charging_prompt_enabled') === 'true';
+            const previous = window.mimiLastChargingState;
+            window.mimiLastChargingState = charging;
+            if (!enabled) {
+                window.chargingPromptShown = false;
+                return;
+            }
+            // 初次读取只同步状态；只有检测到插入充电器的状态变化时才弹出。
+            if (previous === false && charging && !window.chargingPromptShown) {
+                showChargingPrompt(level);
+                window.chargingPromptShown = true;
+            } else if (!charging) {
+                window.chargingPromptShown = false;
+            }
+        }
+
+        function previewChargingPrompt() {
+            showChargingPrompt(window.currentBatteryLevel ?? 80);
+        }
+
+        function openStatusBarBeautySettings() {
+            document.getElementById('displaySettingsContainer').style.display = 'none';
+            document.getElementById('statusBarBeautySettingsContainer').style.display = 'flex';
+            loadStatusBarBeautySettings();
+            updateTime();
+            saveUIState();
+        }
+
+        function closeStatusBarBeautySettings() {
+            document.getElementById('statusBarBeautySettingsContainer').style.display = 'none';
+            document.getElementById('displaySettingsContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function loadStatusBarBeautySettings() {
+            const enabled = localStorage.getItem('mimi_status_bar_beauty_enabled') === 'true';
+            const toggle = document.getElementById('statusBarBeautyToggle');
+            if (toggle) toggle.checked = enabled;
+            if (!localStorage.getItem('mimi_status_bar_beauty_template')) safeLocalStorageSet('mimi_status_bar_beauty_template', 'glass');
+        }
+
+        function saveStatusBarBeautySettings() {
+            const toggle = document.getElementById('statusBarBeautyToggle');
+            if (toggle) safeLocalStorageSet('mimi_status_bar_beauty_enabled', toggle.checked);
+        }
+
+        function toggleStatusBarBeauty(enabled) {
+            safeLocalStorageSet('mimi_status_bar_beauty_enabled', enabled);
+            applyStatusBarBeauty();
+        }
+
+        function getStatusBarBeautyTemplate(type) {
+            const templates = {
+                glass: 'background: rgba(255,255,255,0.88) !important; color: #111; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 1px 8px rgba(0,0,0,0.08);',
+                dark: 'background: #171719 !important; color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.32);',
+                pill: 'top: 5px; left: 10px; right: 10px; height: 34px; padding: 8px 16px; background: #fff !important; color: #111; border: 1px solid rgba(0,0,0,0.08); border-radius: 17px; box-shadow: 0 5px 18px rgba(0,0,0,0.14);',
+                color: 'background: #ff6b6b !important; color: #fff; box-shadow: 0 2px 12px rgba(255,107,107,0.3);'
+            };
+            return templates[type] || templates.glass;
+        }
+
+        function applyStatusBarBeautyTemplate(type) {
+            safeLocalStorageSet('mimi_status_bar_beauty_template', type);
+            safeLocalStorageSet('mimi_status_bar_beauty_enabled', true);
+            const toggle = document.getElementById('statusBarBeautyToggle');
+            if (toggle) toggle.checked = true;
+            applyStatusBarBeauty();
+        }
+
+        function applyStatusBarBeauty() {
+            const statusBar = document.getElementById('globalStatusBar');
+            if (!statusBar) return;
+            const enabled = localStorage.getItem('mimi_status_bar_beauty_enabled') === 'true';
+            const template = localStorage.getItem('mimi_status_bar_beauty_template') || 'glass';
+            const css = getStatusBarBeautyTemplate(template);
+            statusBar.classList.toggle('status-bar-beautified', enabled);
+            ['glass', 'dark', 'pill', 'color'].forEach(name => statusBar.classList.toggle(`status-template-${name}`, enabled && template === name));
+            let style = document.getElementById('statusBarBeautyStyle');
+            if (enabled && css.trim()) {
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'statusBarBeautyStyle';
+                    document.head.appendChild(style);
+                }
+                style.textContent = `#globalStatusBar { ${css} }`;
+            } else if (style) {
+                style.remove();
+            }
+        }
+
+        function previewStatusBarBeauty() {
+            applyStatusBarBeauty();
         }
 
         function loadBatterySettings() {
@@ -3791,6 +3940,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let scannerStream = null;
         let scannerFrameRequest = null;
         let scannerProcessing = false;
+        let scannerDecodeBusy = false;
+        let scannerBarcodeDetector;
         const qrAvatarCache = new Map();
 
         function createContactQrId() {
@@ -4029,6 +4180,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const addMenu = document.getElementById('addMenu');
             if (addMenu) addMenu.classList.remove('active');
             const modal = document.getElementById('wechatScannerModal');
+            if (!modal) return;
+            stopScannerCamera();
+            scannerProcessing = false;
             modal.classList.add('active');
             setScannerStatus('正在打开摄像头...', 'working');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -4036,7 +4190,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 return;
             }
             try {
-                scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                scannerStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
                 const video = document.getElementById('wechatScannerVideo');
                 video.srcObject = scannerStream;
                 await video.play();
@@ -4047,16 +4208,17 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
-        let scannerDecodeBusy = false;
-
         async function scanCameraFrame() {
             const modal = document.getElementById('wechatScannerModal');
-            if (!modal.classList.contains('active')) return;
+            if (!modal || !modal.classList.contains('active') || scannerProcessing) return;
             const video = document.getElementById('wechatScannerVideo');
             const canvas = document.getElementById('wechatScannerCanvas');
             if (!scannerDecodeBusy && video.readyState >= 2 && video.videoWidth) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                // 手机摄像头常输出 2K/4K 帧，直接逐帧解码会阻塞页面并造成“扫不到”的假象。
+                const decodeMaxSide = 960;
+                const scale = Math.min(1, decodeMaxSide / Math.max(video.videoWidth, video.videoHeight));
+                canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+                canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
                 const context = canvas.getContext('2d', { willReadFrequently: true });
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
                 scannerDecodeBusy = true;
@@ -4072,13 +4234,16 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         async function decodeQrCanvasOnce(canvas) {
-            if (window.BarcodeDetector) {
+            if (window.BarcodeDetector && scannerBarcodeDetector !== null) {
                 try {
-                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                    const detected = await detector.detect(canvas);
+                    if (scannerBarcodeDetector === undefined) {
+                        scannerBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+                    }
+                    const detected = await scannerBarcodeDetector.detect(canvas);
                     if (detected && detected[0] && detected[0].rawValue) return detected[0].rawValue;
                 } catch (error) {
                     // 某些浏览器没有 BarcodeDetector 的 qr_code 实现，继续使用 jsQR。
+                    scannerBarcodeDetector = null;
                 }
             }
             if (window.jsQR) {
@@ -4155,7 +4320,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 if (value.startsWith('mimiphone://friend/v3?') || value.startsWith('mimiphone://friend/v2?')) {
                     const query = new URL(value).searchParams;
                     const encoding = query.get('encoding') || 'b64';
-                    encodedData = `${encoding === 'lz' ? 'lz:' : 'b64:'}${query.get('data') || ''}`;
+                    const queryData = (query.get('data') || '').replace(/ /g, '+');
+                    if (!queryData) return null;
+                    encodedData = `${encoding === 'lz' ? 'lz:' : 'b64:'}${queryData}`;
                 } else if (value.startsWith('mimiphone://friend?data=')) {
                     encodedData = value.slice('mimiphone://friend?data='.length);
                 } else {
@@ -4186,62 +4353,87 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             return true;
         }
 
+        function normalizeContactIdentity(value) {
+            return String(value || '').trim().toLocaleLowerCase();
+        }
+
+        function normalizeContactPhone(value) {
+            return String(value || '').replace(/[^\d+]/g, '');
+        }
+
+        function findScannedContact(scannedContact) {
+            const qrId = normalizeContactIdentity(scannedContact.qrId);
+            if (qrId) {
+                const byQrId = contacts.find(item => normalizeContactIdentity(item.qrId) === qrId);
+                if (byQrId) return byQrId;
+            }
+
+            const wechat = normalizeContactIdentity(scannedContact.wechat);
+            if (wechat) {
+                const byWechat = contacts.find(item => normalizeContactIdentity(item.wechat) === wechat);
+                if (byWechat) return byWechat;
+            }
+
+            const phone = normalizeContactPhone(scannedContact.phoneNumber || scannedContact.phone);
+            if (phone) {
+                const byPhone = contacts.find(item => normalizeContactPhone(item.phoneNumber || item.phone) === phone);
+                if (byPhone) return byPhone;
+            }
+
+            const scannedNames = [scannedContact.name, scannedContact.nickname, scannedContact.netName]
+                .map(normalizeContactIdentity)
+                .filter(Boolean);
+            return contacts.find(item => {
+                const contactNames = [item.name, item.nickname, item.netName]
+                    .map(normalizeContactIdentity)
+                    .filter(Boolean);
+                return scannedNames.some(name => contactNames.includes(name));
+            }) || null;
+        }
+
+        function createScannedContact(scannedContact) {
+            let id = Date.now();
+            while (contacts.some(item => item.id === id)) id += 1;
+            const name = String(scannedContact.name || '').trim();
+            const nickname = String(scannedContact.nickname || '').trim();
+            const netName = String(scannedContact.netName || '').trim();
+            const wechat = String(scannedContact.wechat || '').trim();
+            const phoneNumber = String(scannedContact.phoneNumber || '').trim();
+            return {
+                id,
+                name,
+                nickname,
+                netName,
+                wechat,
+                phoneNumber,
+                region: String(scannedContact.region || '').trim(),
+                signature: String(scannedContact.signature || '').trim(),
+                category: String(scannedContact.category || '朋友').trim() || '朋友',
+                design: String(scannedContact.design || scannedContact.persona || '').trim(),
+                avatar: String(scannedContact.avatar || ''),
+                phone: String(scannedContact.phone || wechat || phoneNumber || nickname || netName || '未设置'),
+                qrId: String(scannedContact.qrId || createContactQrId())
+            };
+        }
+
         async function addScannedFriend(scannedContact) {
             await loadContactsFromStorage();
-            let contact = scannedContact.qrId && contacts.find(item => item.qrId === scannedContact.qrId);
-            if (!contact) contact = contacts.find(item =>
-                (scannedContact.wechat && item.wechat === scannedContact.wechat) ||
-                (scannedContact.phoneNumber && (item.phoneNumber === scannedContact.phoneNumber || item.phone === scannedContact.phoneNumber)) ||
-                (!scannedContact.wechat && !scannedContact.phoneNumber && item.name === scannedContact.name)
-            );
-            let contactWasCreated = false;
-            let contactWasUpdated = false;
+            let contact = findScannedContact(scannedContact);
+            const contactWasCreated = !contact;
             if (!contact) {
-                contact = {
-                    ...scannedContact,
-                    id: Date.now(),
-                    name: scannedContact.name,
-                    nickname: scannedContact.nickname || '',
-                    netName: scannedContact.netName || '',
-                    wechat: scannedContact.wechat || '',
-                    phoneNumber: scannedContact.phoneNumber || '',
-                    region: scannedContact.region || '',
-                    signature: scannedContact.signature || '',
-                    category: scannedContact.category || '朋友',
-                    design: scannedContact.design || '',
-                    avatar: scannedContact.avatar || '',
-                    phone: scannedContact.phone || scannedContact.wechat || scannedContact.phoneNumber || scannedContact.nickname || scannedContact.netName || '未设置'
-                };
-                ensureContactQrId(contact);
+                contact = createScannedContact(scannedContact);
                 contacts.push(contact);
-                contactWasCreated = true;
-            } else {
-                // 已有联系人也要更新，避免扫描后人设仍是旧内容。
-                Object.keys(scannedContact).forEach(key => {
-                    if (key === 'id' || (key === 'avatar' && !scannedContact[key])) return;
-                    if (scannedContact[key] !== undefined && contact[key] !== scannedContact[key]) {
-                        contact[key] = scannedContact[key];
-                        contactWasUpdated = true;
-                    }
-                });
+                await saveContactsToStorage(false);
+                renderContactsList();
             }
-            await saveContactsToStorage(false);
-            renderContactsList();
+
+            // 已在系统联系人中时不覆盖其资料，只把现有联系人加入微信通讯录。
             const friendWasCreated = await addContactAsWechatFriend(contact, false);
-            const existingWechatFriend = chatList.find(friend => friend.contactId === contact.id);
-            if (existingWechatFriend && (contactWasCreated || contactWasUpdated)) {
-                existingWechatFriend.name = contact.name;
-                existingWechatFriend.remark = contact.netName || '';
-                existingWechatFriend.avatar = contact.avatar || '';
-                await saveChatListToStorage();
-                renderChatList();
-                renderWechatContacts();
-            }
             scannerProcessing = false;
-            if (contactWasCreated || friendWasCreated) {
-                setScannerStatus('已成功添加好友', 'success');
-            } else if (contactWasUpdated) {
-                setScannerStatus('联系人内容已更新，微信通讯录已同步', 'success');
+            if (contactWasCreated) {
+                setScannerStatus('已添加到联系人和微信通讯录', 'success');
+            } else if (friendWasCreated) {
+                setScannerStatus('已添加到微信通讯录', 'success');
             } else {
                 setScannerStatus('该好友已在微信通讯录中', 'success');
             }
@@ -9245,6 +9437,8 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             else if (document.getElementById('stickerManagementContainer').style.display === 'flex') state.activeContainer = 'stickerManagementContainer';
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
+            else if (document.getElementById('chargingPromptSettingsContainer').style.display === 'flex') state.activeContainer = 'chargingPromptSettingsContainer';
+            else if (document.getElementById('statusBarBeautySettingsContainer').style.display === 'flex') state.activeContainer = 'statusBarBeautySettingsContainer';
             else if (document.getElementById('wechatFavoritesContainer').style.display === 'flex') state.activeContainer = 'wechatFavoritesContainer';
             else if (document.getElementById('contactDetailPage').style.display === 'flex') state.activeContainer = 'contactDetailPage';
             else if (document.getElementById('chatPageContainer').style.display === 'flex') state.activeContainer = 'chatPageContainer';
@@ -9303,6 +9497,16 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                 openSettings();
                 openDisplaySettings();
                 openBatterySettings();
+            }
+            else if (state.activeContainer === 'chargingPromptSettingsContainer') {
+                openSettings();
+                openDisplaySettings();
+                openChargingPromptSettings();
+            }
+            else if (state.activeContainer === 'statusBarBeautySettingsContainer') {
+                openSettings();
+                openDisplaySettings();
+                openStatusBarBeautySettings();
             }
             else if (state.activeContainer === 'stickerLibraryContainer') {
                 openWechat();

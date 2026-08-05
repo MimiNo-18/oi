@@ -82,6 +82,8 @@
         body.has-phone-border #accountInfoContainer,
         body.has-phone-border #displaySettingsContainer,
         body.has-phone-border #batterySettingsContainer,
+        body.has-phone-border #chargingPromptSettingsContainer,
+        body.has-phone-border #statusBarBeautySettingsContainer,
         body.has-phone-border #apiConfigContainer,
         body.has-phone-border #themeContainer,
         body.has-phone-border #mineContainer,
@@ -167,6 +169,8 @@
         body.has-phone-border #accountInfoContainer,
         body.has-phone-border #displaySettingsContainer,
         body.has-phone-border #batterySettingsContainer,
+        body.has-phone-border #chargingPromptSettingsContainer,
+        body.has-phone-border #statusBarBeautySettingsContainer,
         body.has-phone-border #apiConfigContainer,
         body.has-phone-border #chatInfoContainer,
         body.has-phone-border #addContactContainer,
@@ -399,6 +403,8 @@
         #bookItemEditPage,
         #momentsEditPage,
         #batterySettingsContainer,
+        #chargingPromptSettingsContainer,
+        #statusBarBeautySettingsContainer,
         #apiConfigContainer,
         #wechatAccountSwitchContainer {
             padding-top: 49px !important;
@@ -434,6 +440,8 @@
         body.status-bar-hidden #bookItemEditPage,
         body.status-bar-hidden #momentsEditPage,
         body.status-bar-hidden #batterySettingsContainer,
+        body.status-bar-hidden #chargingPromptSettingsContainer,
+        body.status-bar-hidden #statusBarBeautySettingsContainer,
         body.status-bar-hidden #apiConfigContainer,
         body.status-bar-hidden #wechatAccountSwitchContainer {
             padding-top: 0 !important;
@@ -573,6 +581,36 @@
 
         .battery-fill.low {
             background: #ff3b30;
+        }
+
+        .charging-bolt {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 9px;
+            line-height: 1;
+            text-shadow: 0 0 1px rgba(0,0,0,.45);
+            pointer-events: none;
+        }
+
+        .battery-icon.is-charging .charging-bolt {
+            display: flex;
+        }
+
+        #globalStatusBar.status-template-dark .battery-icon,
+        #globalStatusBar.status-template-color .battery-icon {
+            border-color: rgba(255,255,255,.72);
+        }
+
+        #globalStatusBar.status-template-dark .battery-icon::after,
+        #globalStatusBar.status-template-color .battery-icon::after,
+        #globalStatusBar.status-template-dark .battery-fill,
+        #globalStatusBar.status-template-color .battery-fill {
+            background: #fff;
         }
 
         .signal-icon {
@@ -5383,12 +5421,19 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 .scanner-viewport { position: relative; width: 100%; aspect-ratio: 1; background: #111; overflow: hidden; border-radius: 8px; }
 .scanner-viewport video { width: 100%; height: 100%; object-fit: cover; }
 .scanner-frame { position: absolute; inset: 16%; border: 2px solid #07c160; box-shadow: 0 0 0 999px rgba(0,0,0,.25); pointer-events: none; }
+.scanner-line { position: absolute; z-index: 1; top: 2%; left: 3%; right: 3%; height: 2px; background: #19e879; box-shadow: 0 0 5px rgba(25,232,121,.95), 0 0 12px rgba(25,232,121,.65); animation: scanner-line-sweep 2s ease-in-out infinite alternate; }
+@keyframes scanner-line-sweep { from { top: 2%; } to { top: calc(98% - 2px); } }
 .scanner-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .scanner-file-btn { position: relative; overflow: hidden; text-align: center; }
 .scanner-status { margin-top: 8px; color: #777; font-size: 12px; text-align: center; min-height: 18px; }
 .scanner-status.success { color: #07a34a; font-weight: 600; }
 .scanner-status.error { color: #c33; font-weight: 600; }
 .scanner-status.working { color: #666; }
+.settings-template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.settings-template-grid .theme-bottom-btn { min-height: 42px; background: #fff; border: 1px solid #d5d5d5; color: #222; border-radius: 8px; }
+.charging-prompt-icon { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+.charging-prompt-title { font-size: 20px; font-weight: 700; line-height: 1.25; }
+.charging-prompt-level { margin-top: 7px; font-size: 14px; font-weight: 500; opacity: .78; }
 
 /* 文件预览弹窗样式 */
 .file-preview-content {

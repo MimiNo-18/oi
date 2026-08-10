@@ -243,6 +243,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
         let momentImages = []; 
         let editingMomentId = null;
+        let momentDraftLocation = '';
+        let momentDraftRemindIds = [];
+        let momentDraftVisibility = { allowContactIds: [], denyContactIds: [], allowGroups: [], denyGroups: [] };
 
         function openMomentsEdit(item = null) {
             document.getElementById('momentsEditPage').style.display = 'flex';
@@ -251,18 +254,289 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 editingMomentId = item.id;
                 input.value = item.content;
                 momentImages = JSON.parse(JSON.stringify(item.images || []));
+                momentDraftLocation = item.location || '';
+                momentDraftRemindIds = [...(item.remindContactIds || [])];
+                momentDraftVisibility = JSON.parse(JSON.stringify(item.visibility || { allowContactIds: [], denyContactIds: [], allowGroups: [], denyGroups: [] }));
             } else {
                 editingMomentId = null;
                 input.value = '';
                 momentImages = [];
+                momentDraftLocation = '';
+                momentDraftRemindIds = [];
+                momentDraftVisibility = { allowContactIds: [], denyContactIds: [], allowGroups: [], denyGroups: [] };
             }
             renderEditImages();
+            updateMomentOptionLabels();
             updatePostBtnState();
         }
 
         function closeMomentsEdit() {
             document.getElementById('momentsEditPage').style.display = 'none';
             editingMomentId = null;
+        }
+
+        function editMomentLocation() {
+            const old = document.getElementById('momentLocationMethodModal');
+            if (old) old.remove();
+            const modal = document.createElement('div');
+            modal.id = 'momentLocationMethodModal';
+            modal.className = 'moment-choice-modal';
+            modal.innerHTML = '<div class="moment-choice-panel"><div class="moment-choice-header"><button type="button" class="cancel">取消</button><strong>所在位置</strong><span></span></div><div class="moment-location-methods"><button type="button" class="current-location" data-method="current">读取当前位置</button><button type="button" data-method="select">选择位置</button><button type="button" data-method="input">输入位置</button></div></div>';
+            modal.querySelector('.cancel').onclick = () => modal.remove();
+            modal.querySelector('[data-method="current"]').onclick = () => {
+                if (!navigator.geolocation) { alert('当前浏览器不支持定位服务'); return; }
+                const button = modal.querySelector('[data-method="current"]');
+                button.textContent = '正在定位...';
+                navigator.geolocation.getCurrentPosition(async position => {
+                    let detected = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&accept-language=zh-CN&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+                        const data = await response.json();
+                        if (data.display_name) detected = data.display_name.split(',').reverse().join(' ');
+                    } catch (error) {
+                        // 离线或反向地址查询不可用时保留经纬度，用户仍可修正地址。
+                    }
+                    modal.remove();
+                    const value = prompt('已定位当前位置，可补充或修改具体位置', detected);
+                    if (value !== null) { momentDraftLocation = value.trim(); updateMomentOptionLabels(); }
+                }, error => {
+                    button.textContent = '读取当前位置';
+                    alert(`定位失败：${error.message || '请检查定位权限'}`);
+                }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+            };
+            modal.querySelector('[data-method="input"]').onclick = () => {
+                modal.remove();
+                showMomentManualLocationModal();
+            };
+            modal.querySelector('[data-method="select"]').onclick = () => {
+                modal.remove();
+                openChinaMomentAreaPicker();
+            };
+            document.body.appendChild(modal);
+        }
+
+        function showMomentManualLocationModal() {
+            const old = document.getElementById('momentManualLocationModal');
+            if (old) old.remove();
+            const modal = document.createElement('div');
+            modal.id = 'momentManualLocationModal';
+            modal.className = 'moment-specific-location-modal';
+            modal.innerHTML = `<div class="moment-specific-location-dialog"><div class="moment-specific-location-title">输入位置</div><input id="momentManualLocationInput" type="text" value="${momentDraftLocation || ''}" placeholder="例如：中国 上海市 黄浦区 外滩酒店"><div class="moment-specific-location-actions"><button type="button" class="cancel">取消</button><button type="button" class="confirm">确定</button></div></div>`;
+            const input = modal.querySelector('#momentManualLocationInput');
+            const confirmLocation = () => {
+                const value = input.value.trim();
+                if (!value) { showMomentLocationNotice('请输入位置', true); return; }
+                momentDraftLocation = value;
+                updateMomentOptionLabels();
+                modal.remove();
+            };
+            modal.querySelector('.cancel').onclick = () => modal.remove();
+            modal.querySelector('.confirm').onclick = confirmLocation;
+            input.addEventListener('keydown', event => { if (event.key === 'Enter') confirmLocation(); });
+            document.body.appendChild(modal);
+            requestAnimationFrame(() => { input.focus(); input.select(); });
+        }
+
+        let chinaMomentAreaData = null;
+
+        async function loadChinaMomentAreaData() {
+            if (chinaMomentAreaData) return chinaMomentAreaData;
+            try {
+                const response = await fetch('./china-area-data.json');
+                if (!response.ok) throw new Error('行政区数据加载失败');
+                chinaMomentAreaData = await response.json();
+            } catch (fetchError) {
+                // file:// 页面通常禁止 fetch，使用同源 XHR 兼容本地打开。
+                chinaMomentAreaData = await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', './china-area-data.json', true);
+                    xhr.onload = () => {
+                        if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
+                            try { resolve(JSON.parse(xhr.responseText)); } catch (error) { reject(error); }
+                        } else reject(fetchError);
+                    };
+                    xhr.onerror = () => reject(fetchError);
+                    xhr.send();
+                });
+            }
+            return chinaMomentAreaData;
+        }
+
+        async function openChinaMomentAreaPicker() {
+            try {
+                const data = await loadChinaMomentAreaData();
+                openMomentInstantAreaList('选择省份或地区', data['86'] || {}, provinceCode => {
+                    const provinceName = data['86'][provinceCode];
+                    openMomentInstantAreaList(`选择${provinceName}城市`, data[provinceCode] || {}, cityCode => {
+                        const cityName = (data[provinceCode] || {})[cityCode];
+                        const districts = data[cityCode] || {};
+                        if (!Object.keys(districts).length) {
+                            showMomentSpecificLocationModal(provinceName, cityName, '');
+                            return;
+                        }
+                        openMomentInstantAreaList(`选择${cityName}地区`, districts, districtCode => {
+                            showMomentSpecificLocationModal(provinceName, cityName, districts[districtCode]);
+                        });
+                    });
+                });
+            } catch (error) {
+                showMomentLocationNotice(error.message || '行政区数据加载失败', true);
+            }
+        }
+
+        function showMomentLocationNotice(message, isError = false) {
+            const old = document.getElementById('momentLocationNotice');
+            if (old) old.remove();
+            const notice = document.createElement('div');
+            notice.id = 'momentLocationNotice';
+            notice.className = `moment-location-notice${isError ? ' error' : ''}`;
+            notice.textContent = message;
+            document.body.appendChild(notice);
+            setTimeout(() => notice.remove(), 2800);
+        }
+
+        function openMomentInstantAreaList(title, records, onSelect) {
+            const old = document.getElementById('momentChoiceModal');
+            if (old) old.remove();
+            const modal = document.createElement('div');
+            modal.id = 'momentChoiceModal';
+            modal.className = 'moment-choice-modal moment-area-modal';
+            modal.innerHTML = `<div class="moment-choice-panel"><div class="moment-choice-header"><button type="button" class="cancel">取消</button><strong>${title}</strong><span></span></div><div class="moment-choice-list"></div></div>`;
+            const list = modal.querySelector('.moment-choice-list');
+            Object.entries(records).forEach(([code, name]) => {
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = 'moment-choice-row moment-area-row';
+                row.innerHTML = `<span>${name}</span><span class="moment-area-arrow">〉</span>`;
+                row.onclick = () => { modal.remove(); onSelect(code); };
+                list.appendChild(row);
+            });
+            modal.querySelector('.cancel').onclick = () => modal.remove();
+            document.body.appendChild(modal);
+        }
+
+        function showMomentSpecificLocationModal(region, city, district = '') {
+            const old = document.getElementById('momentSpecificLocationModal');
+            if (old) old.remove();
+            const modal = document.createElement('div');
+            modal.id = 'momentSpecificLocationModal';
+            modal.className = 'moment-specific-location-modal';
+            modal.innerHTML = `<div class="moment-specific-location-dialog"><div class="moment-specific-location-title">是否输入具体位置？</div><div class="moment-specific-location-subtitle">${region}${city ? ` ${city}` : ''}${district ? ` ${district}` : ''}</div><input id="momentSpecificLocationInput" type="text" placeholder="可输入酒店、街道、商场等"><div class="moment-specific-location-actions"><button type="button" class="cancel">跳过</button><button type="button" class="confirm">确定</button></div></div>`;
+            const finish = detail => {
+                if (!city) { modal.remove(); return; }
+                momentDraftLocation = `中国 ${region} ${city}${district ? ` ${district}` : ''}${detail ? ` ${detail}` : ''}`;
+                updateMomentOptionLabels();
+                modal.remove();
+            };
+            modal.querySelector('.cancel').onclick = () => finish('');
+            modal.querySelector('.confirm').onclick = () => finish(document.getElementById('momentSpecificLocationInput').value.trim());
+            document.body.appendChild(modal);
+            const input = document.getElementById('momentSpecificLocationInput');
+            if (input) {
+                input.disabled = false;
+                input.readOnly = false;
+                input.style.pointerEvents = 'auto';
+                input.addEventListener('keydown', event => {
+                    if (event.key === 'Enter') finish(input.value.trim());
+                });
+                requestAnimationFrame(() => { input.focus(); input.select(); });
+            }
+        }
+
+        function updateMomentOptionLabels() {
+            const locationEl = document.getElementById('momentLocationValue');
+            const remindEl = document.getElementById('momentRemindValue');
+            const visibilityEl = document.getElementById('momentVisibilityValue');
+            if (locationEl) locationEl.textContent = momentDraftLocation ? `${momentDraftLocation} 〉` : '〉';
+            if (remindEl) remindEl.textContent = momentDraftRemindIds.length ? `已选 ${momentDraftRemindIds.length} 人 〉` : '〉';
+            if (visibilityEl) {
+                const total = momentDraftVisibility.allowContactIds.length + momentDraftVisibility.denyContactIds.length + momentDraftVisibility.allowGroups.length + momentDraftVisibility.denyGroups.length;
+                visibilityEl.textContent = total ? `已设置 ${total} 项 〉` : '公开 〉';
+            }
+        }
+
+        function getMomentSelectableFriends() {
+            return chatList.filter(friend => friend && friend.contactId).map(friend => ({
+                id: friend.contactId,
+                name: getFriendDisplayName(friend),
+                avatar: friend.avatar || (contacts.find(contact => contact.id === friend.contactId) || {}).avatar || DEFAULT_AVATAR
+            }));
+        }
+
+        function openMomentChoiceModal(title, items, selectedValues, multiple, onConfirm) {
+            const old = document.getElementById('momentChoiceModal');
+            if (old) old.remove();
+            const selected = new Set(selectedValues || []);
+            const modal = document.createElement('div');
+            modal.id = 'momentChoiceModal';
+            modal.className = 'moment-choice-modal';
+            modal.innerHTML = `<div class="moment-choice-panel"><div class="moment-choice-header"><button type="button" class="cancel">取消</button><strong>${title}</strong><button type="button" class="confirm">完成</button></div><div class="moment-choice-list"></div></div>`;
+            const list = modal.querySelector('.moment-choice-list');
+            if (!items.length) list.innerHTML = '<div class="moment-choice-empty">暂无可选择内容</div>';
+            items.forEach(item => {
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = 'moment-choice-row';
+                row.innerHTML = `${item.avatar ? `<img src="${item.avatar}">` : ''}<span>${item.name}</span><i class="moment-choice-check">✓</i>`;
+                row.classList.toggle('selected', selected.has(item.id));
+                row.onclick = () => {
+                    if (!multiple) {
+                        selected.clear();
+                        list.querySelectorAll('.selected').forEach(node => node.classList.remove('selected'));
+                    }
+                    if (selected.has(item.id)) selected.delete(item.id); else selected.add(item.id);
+                    row.classList.toggle('selected', selected.has(item.id));
+                };
+                list.appendChild(row);
+            });
+            modal.querySelector('.cancel').onclick = () => modal.remove();
+            modal.querySelector('.confirm').onclick = () => { onConfirm([...selected]); modal.remove(); };
+            document.body.appendChild(modal);
+        }
+
+        function openMomentPeopleSelector(mode) {
+            if (mode !== 'remind') return;
+            openMomentChoiceModal('提醒谁看', getMomentSelectableFriends(), momentDraftRemindIds, true, values => {
+                momentDraftRemindIds = values;
+                updateMomentOptionLabels();
+            });
+        }
+
+        function openMomentVisibilitySettings() {
+            const old = document.getElementById('momentVisibilityModal');
+            if (old) old.remove();
+            const modal = document.createElement('div');
+            modal.id = 'momentVisibilityModal';
+            modal.className = 'moment-choice-modal';
+            const count = key => (momentDraftVisibility[key] || []).length;
+            modal.innerHTML = `<div class="moment-choice-panel moment-visibility-panel"><div class="moment-choice-header"><button type="button" class="cancel">取消</button><strong>谁可以看</strong><button type="button" class="confirm">完成</button></div><div class="moment-visibility-list">
+                <button type="button" data-kind="allowContactIds"><span>可以看到的联系人</span><em>${count('allowContactIds') || '未设置'} 〉</em></button>
+                <button type="button" data-kind="denyContactIds"><span>不可以看到的联系人</span><em>${count('denyContactIds') || '未设置'} 〉</em></button>
+                <button type="button" data-kind="allowGroups"><span>可以看到的分组</span><em>${count('allowGroups') || '未设置'} 〉</em></button>
+                <button type="button" data-kind="denyGroups"><span>不可以看到的分组</span><em>${count('denyGroups') || '未设置'} 〉</em></button>
+                <button type="button" class="clear"><span>恢复公开</span></button>
+            </div></div>`;
+            modal.querySelector('.cancel').onclick = () => modal.remove();
+            modal.querySelector('.confirm').onclick = () => { updateMomentOptionLabels(); modal.remove(); };
+            modal.querySelector('.clear').onclick = () => {
+                momentDraftVisibility = { allowContactIds: [], denyContactIds: [], allowGroups: [], denyGroups: [] };
+                updateMomentOptionLabels();
+                modal.remove();
+            };
+            modal.querySelectorAll('[data-kind]').forEach(button => {
+                button.onclick = () => {
+                    const kind = button.dataset.kind;
+                    const isGroup = kind.endsWith('Groups');
+                    const items = isGroup
+                        ? [...new Set((topCategories || []).map(category => category.name).filter(name => name && name !== '默认'))].map(name => ({ id: name, name }))
+                        : getMomentSelectableFriends();
+                    openMomentChoiceModal(button.querySelector('span').textContent, items, momentDraftVisibility[kind], true, values => {
+                        momentDraftVisibility[kind] = values;
+                        button.querySelector('em').textContent = `${values.length || '未设置'} 〉`;
+                    });
+                };
+            });
+            document.body.appendChild(modal);
         }
 
         function updatePostBtnState() {
@@ -433,6 +707,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 if (moment) {
                     moment.content = text;
                     moment.images = JSON.parse(JSON.stringify(momentImages));
+                    moment.location = momentDraftLocation;
+                    moment.remindContactIds = [...momentDraftRemindIds];
+                    moment.visibility = JSON.parse(JSON.stringify(momentDraftVisibility));
                     postedId = editingMomentId;
                 }
             } else {
@@ -445,6 +722,9 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     time: Date.now(),
                     likes: [],
                     comments: [],
+                    location: momentDraftLocation,
+                    remindContactIds: [...momentDraftRemindIds],
+                    visibility: JSON.parse(JSON.stringify(momentDraftVisibility)),
                     isMine: true
                 };
                 momentsData.unshift(newMoment);
@@ -453,11 +733,17 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
             await saveMoments();
             
-            if (!editingMomentId && postedId) {
-                setTimeout(() => triggerAutoMomentsFeedback(postedId), 2000);
+            if (!editingMomentId && postedId && momentDraftRemindIds.length > 0) {
+                const remindedFriends = chatList.filter(friend => momentDraftRemindIds.includes(friend.contactId) && isFriendAllowedToViewMoment(friend, momentDraftVisibility));
+                remindedFriends.forEach((friend, index) => {
+                    setTimeout(() => callAIForMoment(postedId, friend, 'manual_trigger'), 800 + index * 500);
+                });
             }
 
             momentImages = [];
+            momentDraftLocation = '';
+            momentDraftRemindIds = [];
+            momentDraftVisibility = { allowContactIds: [], denyContactIds: [], allowGroups: [], denyGroups: [] };
             editingMomentId = null;
             closeMomentsEdit();
             renderMoments();
@@ -564,6 +850,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                     </div>`;
                 }
                 const contentHtml = item.content ? `<div class="moment-text">${item.content}</div>` : '';
+                const locationHtml = item.location ? `<div class="moment-location">${item.location}</div>` : '';
                 momentEl.innerHTML = `
                     <img src="${item.avatar || DEFAULT_AVATAR}" class="moment-avatar">
                     <div class="moment-content-box">
@@ -571,7 +858,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                         ${contentHtml}
                         ${imagesHtml}
                         <div class="moment-footer">
-                            <div class="moment-time">${formatMomentTime(item.time)}</div>
+                            <div class="moment-time-location"><div class="moment-time">${formatMomentTime(item.time)}</div>${locationHtml}</div>
                             <div class="moment-actions-btn" onclick="toggleMomentActions(${item.id}, event)">
                                 <div class="dot-icon"></div>
                                 <div class="dot-icon"></div>
@@ -635,6 +922,18 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             copyBtn.textContent = '复制';
             copyBtn.onclick = copyComment;
             btnGroup.appendChild(copyBtn);
+
+            if (comment.nickname === myNickname) {
+                const contactReplyBtn = document.createElement('button');
+                contactReplyBtn.className = 'modal-btn';
+                contactReplyBtn.style.cssText = 'background: #fff; color: #07c160; border-bottom: 1px solid #eee; border-radius: 0;';
+                contactReplyBtn.textContent = '联系人回复';
+                contactReplyBtn.onclick = () => {
+                    menu.classList.remove('active');
+                    openMomentContactReplySelector(momentId, comment.content);
+                };
+                btnGroup.appendChild(contactReplyBtn);
+            }
 
             // 如果不是自己发的评论，显示“重回”
             if (comment.nickname !== myNickname) {
@@ -738,7 +1037,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
             }
         }
 
-        async function handleMomentContactReply(id, event) {
+        function handleMomentContactReply(id, event) {
             event.stopPropagation();
             hideMomentPopups();
             const moment = momentsData.find(m => m.id === id);
@@ -747,20 +1046,22 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
                 alert('请先添加好友以进行联系人回复');
                 return;
             }
-            
-            let targetFriend = null;
-            // 需求4：AI朋友圈页面点击联系人回复会优先让该AI回复
-            if (currentMomentsFriendId) {
-                targetFriend = chatList.find(f => f.id === currentMomentsFriendId);
-            } else if (!moment.isMine && moment.friendId) {
-                targetFriend = chatList.find(f => f.id === moment.friendId);
-            }
+            openMomentContactReplySelector(id);
+        }
 
-            if (!targetFriend) {
-                targetFriend = chatList[Math.floor(Math.random() * chatList.length)];
-            }
-            
-            await callAIForMoment(id, targetFriend, 'manual_trigger');
+        function openMomentContactReplySelector(momentId, userComment = '') {
+            const moment = momentsData.find(item => item.id === momentId);
+            if (!moment) return;
+            const available = getMomentSelectableFriends().filter(item => {
+                const friend = chatList.find(entry => entry.contactId === item.id);
+                return isFriendAllowedToViewMoment(friend, moment.visibility);
+            });
+            openMomentChoiceModal('选择联系人回复', available, [], false, values => {
+                const friend = chatList.find(entry => entry.contactId === values[0]);
+                if (!friend) return;
+                if (userComment) callAIForMoment(momentId, friend, 'reply_to_user', { userComment });
+                else callAIForMoment(momentId, friend, 'manual_trigger');
+            });
         }
 
         function triggerAutoMomentsFeedback(momentId) {
@@ -1050,26 +1351,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 moment.comments.push(newComment);
                 await saveMoments();
 
-                // 需求4：在AI的朋友圈下面评论AI会自动回复
-                if (!moment.isMine && moment.friendId) {
-                    const friend = chatList.find(f => f.id === moment.friendId);
-                    if (friend) {
-                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000 + Math.random() * 2000);
-                    }
-                }
-
-                if (currentReplyTo && currentReplyTo !== myNickname) {
-                    const friend = chatList.find(f => getFriendDisplayName(f) === currentReplyTo);
-                    if (friend) {
-                        setTimeout(() => callAIForMoment(id, friend, 'reply_to_user', { userComment: content }), 1000);
-                    } else {
-                        const contact = contacts.find(c => (c.remark || c.netName || c.name) === currentReplyTo);
-                        if (contact) {
-                            const tempFriend = { id: 0, contactId: contact.id, name: contact.name };
-                            setTimeout(() => callAIForMoment(id, tempFriend, 'reply_to_user', { userComment: content }), 1000);
-                        }
-                    }
-                }
                 const momentEl = document.querySelector(`.moment-item[data-moment-id="${id}"]`);
                 if (momentEl) {
                     const feedbackSection = momentEl.querySelector('.moment-feedback-section');
@@ -1586,12 +1867,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         function getCurrentTopBackgroundColor() {
             const statusBar = document.getElementById('globalStatusBar');
-            if (statusBar && statusBar.style.display !== 'none') {
-                const statusColor = getComputedStyle(statusBar).backgroundColor;
-                if (!isTransparentColor(statusColor)) return statusColor;
-            }
             const x = Math.max(1, Math.floor(window.innerWidth / 2));
-            const y = Math.min(Math.max(1, document.body.classList.contains('status-bar-hidden') ? 1 : 43), Math.max(1, window.innerHeight - 1));
+            const y = Math.min(Math.max(1, document.body.classList.contains('status-bar-hidden') ? 1 : 48), Math.max(1, window.innerHeight - 1));
             const layers = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
             for (const element of layers) {
                 if (element === statusBar || element.classList.contains('notch') || element.classList.contains('phone-border-frame')) continue;
@@ -1604,7 +1881,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function updateBrowserThemeColor() {
             browserThemeColorFrame = null;
             const themeMeta = document.querySelector('meta[name="theme-color"]');
-            if (themeMeta) themeMeta.setAttribute('content', getCurrentTopBackgroundColor());
+            const color = getCurrentTopBackgroundColor();
+            document.documentElement.style.setProperty('--mimi-status-bar-bg', color);
+            if (themeMeta) themeMeta.setAttribute('content', color);
         }
 
         function scheduleBrowserThemeColorUpdate() {
@@ -1736,6 +2015,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const toggle = document.getElementById('chargingPromptToggle');
             if (toggle) toggle.checked = enabled;
             if (!localStorage.getItem('mimi_charging_prompt_template')) safeLocalStorageSet('mimi_charging_prompt_template', 'glass');
+            const cssInput = document.getElementById('chargingPromptCss');
+            if (cssInput) cssInput.value = localStorage.getItem('mimi_charging_prompt_css') || '';
+            renderStylePresetOptions('charging');
         }
 
         function toggleChargingPrompt(enabled) {
@@ -1759,8 +2041,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         function showChargingPrompt(level) {
             const template = localStorage.getItem('mimi_charging_prompt_template') || 'glass';
+            const customCss = localStorage.getItem('mimi_charging_prompt_css') || '';
             const content = `<div class="charging-prompt-icon">⚡</div><div class="charging-prompt-title">正在充电</div><div class="charging-prompt-level">当前电量 ${Number(level) || 0}%</div>`;
-            showCustomBatteryAlert(content, getChargingPromptTemplateCss(template));
+            showCustomBatteryAlert(content, `${getChargingPromptTemplateCss(template)}${customCss}`);
         }
 
         function checkChargingPrompt(charging, level) {
@@ -1781,7 +2064,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function previewChargingPrompt() {
-            showChargingPrompt(window.currentBatteryLevel ?? 80);
+            const template = localStorage.getItem('mimi_charging_prompt_template') || 'glass';
+            const cssInput = document.getElementById('chargingPromptCss');
+            const customCss = cssInput ? cssInput.value : (localStorage.getItem('mimi_charging_prompt_css') || '');
+            const level = window.currentBatteryLevel ?? 80;
+            const content = `<div class="charging-prompt-icon">⚡</div><div class="charging-prompt-title">正在充电</div><div class="charging-prompt-level">当前电量 ${Number(level) || 0}%</div>`;
+            showCustomBatteryAlert(content, `${getChargingPromptTemplateCss(template)}${customCss}`);
         }
 
         function openStatusBarBeautySettings() {
@@ -1793,6 +2081,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function closeStatusBarBeautySettings() {
+            const previewStyle = document.getElementById('statusBarBeautyPreviewStyle');
+            if (previewStyle) previewStyle.remove();
+            applyStatusBarBeauty();
             document.getElementById('statusBarBeautySettingsContainer').style.display = 'none';
             document.getElementById('displaySettingsContainer').style.display = 'flex';
             saveUIState();
@@ -1803,6 +2094,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const toggle = document.getElementById('statusBarBeautyToggle');
             if (toggle) toggle.checked = enabled;
             if (!localStorage.getItem('mimi_status_bar_beauty_template')) safeLocalStorageSet('mimi_status_bar_beauty_template', 'glass');
+            const cssInput = document.getElementById('statusBarBeautyCss');
+            if (cssInput) cssInput.value = localStorage.getItem('mimi_status_bar_beauty_css') || '';
+            renderStylePresetOptions('status');
         }
 
         function saveStatusBarBeautySettings() {
@@ -1838,7 +2132,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             if (!statusBar) return;
             const enabled = localStorage.getItem('mimi_status_bar_beauty_enabled') === 'true';
             const template = localStorage.getItem('mimi_status_bar_beauty_template') || 'glass';
-            const css = getStatusBarBeautyTemplate(template);
+            const customCss = localStorage.getItem('mimi_status_bar_beauty_css') || '';
+            const css = `${getStatusBarBeautyTemplate(template)}${customCss}`;
             statusBar.classList.toggle('status-bar-beautified', enabled);
             ['glass', 'dark', 'pill', 'color'].forEach(name => statusBar.classList.toggle(`status-template-${name}`, enabled && template === name));
             let style = document.getElementById('statusBarBeautyStyle');
@@ -1855,7 +2150,19 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         function previewStatusBarBeauty() {
-            applyStatusBarBeauty();
+            const statusBar = document.getElementById('globalStatusBar');
+            if (!statusBar) return;
+            const template = localStorage.getItem('mimi_status_bar_beauty_template') || 'glass';
+            const input = document.getElementById('statusBarBeautyCss');
+            const customCss = input ? input.value : '';
+            let style = document.getElementById('statusBarBeautyPreviewStyle');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'statusBarBeautyPreviewStyle';
+                document.head.appendChild(style);
+            }
+            style.textContent = `#globalStatusBar { ${getStatusBarBeautyTemplate(template)}${customCss} }`;
+            scheduleBrowserThemeColorUpdate();
         }
 
         function loadBatterySettings() {
@@ -1865,13 +2172,21 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('batteryAlertToggle').checked = enabled;
             document.getElementById('batteryAlertText').value = text;
             document.getElementById('batteryAlertCss').value = css;
+            renderStylePresetOptions('battery');
             updateBatteryConfigUI(enabled);
         }
 
         function toggleBatteryAlert(enabled) {
             safeLocalStorageSet('mimi_battery_alert_enabled', enabled);
             updateBatteryConfigUI(enabled);
-            saveBatterySettings();
+            saveBatteryTextSettings();
+        }
+
+        function saveBatteryTextSettings() {
+            const toggle = document.getElementById('batteryAlertToggle');
+            const textInput = document.getElementById('batteryAlertText');
+            if (toggle) safeLocalStorageSet('mimi_battery_alert_enabled', toggle.checked);
+            if (textInput) safeLocalStorageSet('mimi_battery_alert_text', textInput.value);
         }
 
         function updateBatteryConfigUI(enabled) {
@@ -1910,8 +2225,120 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 case 'dark': css = "background: #2c2c2e; color: #fff; border-radius: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.4);"; break;
             }
             document.getElementById('batteryAlertCss').value = css;
-            saveBatterySettings();
+            markStylePresetCustom('battery');
             showCustomBatteryAlert(document.getElementById('batteryAlertText').value, css);
+        }
+
+        const stylePresetConfigs = {
+            battery: { inputId: 'batteryAlertCss', selectId: 'batteryStylePresetSelect', presetsKey: 'mimi_battery_style_presets', activeNameKey: 'mimi_battery_style_preset_name' },
+            charging: { inputId: 'chargingPromptCss', selectId: 'chargingStylePresetSelect', presetsKey: 'mimi_charging_style_presets', activeNameKey: 'mimi_charging_style_preset_name' },
+            status: { inputId: 'statusBarBeautyCss', selectId: 'statusStylePresetSelect', presetsKey: 'mimi_status_style_presets', activeNameKey: 'mimi_status_style_preset_name' }
+        };
+
+        function getStylePresets(kind) {
+            const config = stylePresetConfigs[kind];
+            if (!config) return {};
+            try { return JSON.parse(localStorage.getItem(config.presetsKey) || '{}'); }
+            catch (error) { return {}; }
+        }
+
+        function renderStylePresetOptions(kind, selectedName) {
+            const config = stylePresetConfigs[kind];
+            if (!config) return;
+            const select = document.getElementById(config.selectId);
+            if (!select) return;
+            const presets = getStylePresets(kind);
+            const activeName = selectedName !== undefined ? selectedName : (localStorage.getItem(config.activeNameKey) || '__custom');
+            select.innerHTML = '<option value="__custom">自定义</option>';
+            Object.keys(presets).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+            select.value = Object.prototype.hasOwnProperty.call(presets, activeName) ? activeName : '__custom';
+        }
+
+        function markStylePresetCustom(kind) {
+            const config = stylePresetConfigs[kind];
+            const select = config && document.getElementById(config.selectId);
+            if (select) select.value = '__custom';
+        }
+
+        function saveStylePreset(kind) {
+            const config = stylePresetConfigs[kind];
+            if (!config) return;
+            const oldModal = document.getElementById('stylePresetNameModal');
+            if (oldModal) oldModal.remove();
+            const modal = document.createElement('div');
+            modal.id = 'stylePresetNameModal';
+            modal.className = 'style-preset-name-modal';
+            modal.innerHTML = `
+                <div class="style-preset-name-dialog">
+                    <div class="style-preset-name-title">保存为预设</div>
+                    <input id="stylePresetNameInput" type="text" maxlength="30" placeholder="请输入预设名">
+                    <div class="style-preset-name-actions">
+                        <button type="button" onclick="document.getElementById('stylePresetNameModal').remove()">取消</button>
+                        <button type="button" class="confirm" onclick="confirmStylePreset('${kind}')">保存</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            const nameInput = document.getElementById('stylePresetNameInput');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.addEventListener('keydown', event => {
+                    if (event.key === 'Enter') confirmStylePreset(kind);
+                });
+            }
+        }
+
+        function confirmStylePreset(kind) {
+            const config = stylePresetConfigs[kind];
+            if (!config) return;
+            const nameInput = document.getElementById('stylePresetNameInput');
+            const trimmedName = nameInput ? nameInput.value.trim() : '';
+            if (!trimmedName) {
+                alert('预设名不能为空');
+                return;
+            }
+            const presets = getStylePresets(kind);
+            if (Object.prototype.hasOwnProperty.call(presets, trimmedName) && !confirm('同名预设已存在，是否覆盖？')) return;
+            const input = document.getElementById(config.inputId);
+            presets[trimmedName] = input ? input.value : '';
+            safeLocalStorageSet(config.presetsKey, JSON.stringify(presets));
+            renderStylePresetOptions(kind, trimmedName);
+            const modal = document.getElementById('stylePresetNameModal');
+            if (modal) modal.remove();
+            alert('预设已保存');
+        }
+
+        function loadStylePreset(kind, name) {
+            const config = stylePresetConfigs[kind];
+            if (!config || name === '__custom') return;
+            const presets = getStylePresets(kind);
+            const input = document.getElementById(config.inputId);
+            if (input && Object.prototype.hasOwnProperty.call(presets, name)) input.value = presets[name];
+        }
+
+        function saveStyleApplication(kind) {
+            const config = stylePresetConfigs[kind];
+            if (!config) return;
+            const input = document.getElementById(config.inputId);
+            const select = document.getElementById(config.selectId);
+            const css = input ? input.value : '';
+            safeLocalStorageSet(config.activeNameKey, select ? select.value : '__custom');
+            if (kind === 'battery') {
+                saveBatterySettings();
+            } else if (kind === 'charging') {
+                safeLocalStorageSet('mimi_charging_prompt_css', css);
+            } else if (kind === 'status') {
+                safeLocalStorageSet('mimi_status_bar_beauty_css', css);
+                const previewStyle = document.getElementById('statusBarBeautyPreviewStyle');
+                if (previewStyle) previewStyle.remove();
+                applyStatusBarBeauty();
+                scheduleBrowserThemeColorUpdate();
+            }
+            alert('样式已保存并应用');
         }
 
         function editText(element, type) {
@@ -2842,7 +3269,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('newContactPhone').value = contact.phoneNumber || '';
             document.getElementById('newContactRegion').value = contact.region || '';
             document.getElementById('newContactSignature').value = contact.signature || '';
-            document.getElementById('newContactCategory').value = contact.category || '朋友';
             document.getElementById('newContactDesign').value = contact.design || '';
             saveUIState();
         }
@@ -2860,7 +3286,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const phoneNumber = document.getElementById('newContactPhone').value.trim();
             const region = document.getElementById('newContactRegion').value.trim();
             const signature = document.getElementById('newContactSignature').value.trim();
-            const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
 
             if (name) contact.name = name;
@@ -2871,7 +3296,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             contact.region = region;
             contact.signature = signature;
             contact.phone = wechat || nickname || netName || '未设置';
-            if (category !== '__custom__') contact.category = category;
             contact.design = design;
 
             // 实时更新可能存在的聊天列表显示
@@ -2901,7 +3325,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('newContactWechat').value = '';
             document.getElementById('newContactPhone').value = '';
             document.getElementById('newContactRegion').value = '';
-            document.getElementById('newContactCategory').value = '朋友';
             document.getElementById('newContactDesign').value = '';
         }
 
@@ -2951,7 +3374,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 保存新联系人
-        function saveNewContact(event) {
+        async function saveNewContact(event) {
             if (event) event.stopPropagation();
             const name = document.getElementById('newContactName').value.trim();
             const nickname = document.getElementById('newContactNickname').value.trim();
@@ -2960,7 +3383,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const phoneNumber = document.getElementById('newContactPhone').value.trim();
             const region = document.getElementById('newContactRegion').value.trim();
             const signature = document.getElementById('newContactSignature').value.trim();
-            const category = document.getElementById('newContactCategory').value;
             const design = document.getElementById('newContactDesign').value.trim();
             const avatar = document.getElementById('newContactAvatar').src;
 
@@ -2973,7 +3395,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const saveBtn = document.querySelector('.add-contact-nav-right');
             if (saveBtn) saveBtn.style.opacity = '0.5';
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 if (editingContactId) {
                     // 编辑现有联系人
                     const contact = contacts.find(c => c.id === editingContactId);
@@ -2987,7 +3409,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         contact.phoneNumber = phoneNumber;
                         contact.region = region;
                         contact.signature = signature;
-                        contact.category = category;
                         contact.design = design;
                     }
                 } else {
@@ -3003,16 +3424,15 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                         phoneNumber: phoneNumber,
                         region: region,
                         signature: signature,
-                        category: category,
                         design: design
                     };
                     contacts.push(newContact);
                 }
 
-                if (saveContactsToStorage(false)) {
+                if (await saveContactsToStorage(false)) {
                     alert('保存成功');
+                    refreshVisibleViews();
                     closeAddContactPage();
-                    renderContactsList();
                 }
                 if (saveBtn) saveBtn.style.opacity = '1';
             }, 50);
@@ -3060,7 +3480,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         }
 
         // 保存联系人
-        function saveContact() {
+        async function saveContact() {
             const name = document.getElementById('contactNameInput').value.trim();
             const phone = document.getElementById('contactPhoneInput').value.trim();
             const avatar = document.getElementById('contactAvatarInput').value.trim();
@@ -3092,9 +3512,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 contacts.push(newContact);
             }
 
-            if (saveContactsToStorage(false)) {
+            if (await saveContactsToStorage(false)) {
                 alert('保存成功');
-                renderContactsList();
+                refreshVisibleViews();
                 closeContactModal();
             }
         }
@@ -3358,14 +3778,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function openWechatStorage() {
             document.getElementById('wechatStorageContainer').style.display = 'flex';
             document.body.classList.add('wechat-storage-active');
-            document.getElementById('storageScanning').style.display = 'flex';
-            document.getElementById('storageDetail').style.display = 'none';
-
-            // 模拟计算过程
-            setTimeout(() => {
-                calculateStorage();
-            }, 1500);
-
             updateTime();
             saveUIState();
         }
@@ -3374,6 +3786,50 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('wechatStorageContainer').style.display = 'none';
             document.body.classList.remove('wechat-storage-active');
             saveUIState();
+        }
+
+        async function exportWechatData() {
+            try {
+                const data = { version: 1, type: 'mimiphone-wechat-data', exportedAt: new Date().toISOString(), localStorage: {}, indexedDB: {} };
+                const explicitKeys = new Set(['contacts', 'customCategories', 'mimi_moments_background']);
+                for (let index = 0; index < localStorage.length; index++) {
+                    const key = localStorage.key(index);
+                    if (key && (key.startsWith('wechat_') || explicitKeys.has(key))) data.localStorage[key] = localStorage.getItem(key);
+                }
+                for (const store of ['settings', 'chat_histories', 'moments']) data.indexedDB[store] = await dbGetAll(store);
+                downloadData(data, `MimiPhone_Wechat_${new Date().toISOString().slice(0, 10)}.json`);
+                alert('微信数据已导出');
+            } catch (error) {
+                alert('导出失败：' + error.message);
+            }
+        }
+
+        function importWechatData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async loadEvent => {
+                try {
+                    const data = JSON.parse(loadEvent.target.result);
+                    if (data.type !== 'mimiphone-wechat-data' || !data.localStorage || !data.indexedDB) throw new Error('不是有效的微信数据文件');
+                    if (!confirm('导入会覆盖当前微信联系人、聊天和朋友圈数据，是否继续？')) return;
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('wechat_') || ['contacts', 'customCategories', 'mimi_moments_background'].includes(key)) localStorage.removeItem(key);
+                    });
+                    Object.entries(data.localStorage).forEach(([key, value]) => localStorage.setItem(key, value));
+                    for (const store of ['settings', 'chat_histories', 'moments']) {
+                        await dbClear(store);
+                        for (const item of (data.indexedDB[store] || [])) await dbPut(store, item);
+                    }
+                    alert('微信数据导入成功，即将刷新页面');
+                    location.reload();
+                } catch (error) {
+                    alert('导入失败：' + error.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
         }
 
         async function calculateStorage() {
@@ -3930,6 +4386,20 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             return true;
         }
 
+        function isFriendAllowedToViewMoment(friend, visibility) {
+            if (!friend) return false;
+            const rules = visibility || {};
+            const contact = contacts.find(item => item.id === friend.contactId);
+            const group = contact && contact.category;
+            const allowContacts = rules.allowContactIds || [];
+            const denyContacts = rules.denyContactIds || [];
+            const allowGroups = rules.allowGroups || [];
+            const denyGroups = rules.denyGroups || [];
+            if (denyContacts.includes(friend.contactId) || (group && denyGroups.includes(group))) return false;
+            if (allowContacts.length || allowGroups.length) return allowContacts.includes(friend.contactId) || (group && allowGroups.includes(group));
+            return true;
+        }
+
         async function addContactToWechat() {
             const id = contactActionId;
             closeContactActionModal();
@@ -3942,7 +4412,6 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let scannerProcessing = false;
         let scannerDecodeBusy = false;
         let scannerBarcodeDetector;
-        const qrAvatarCache = new Map();
 
         function createContactQrId() {
             if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -3970,61 +4439,28 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
 
         async function buildFriendQrPayload(contact) {
             if (!contact || typeof contact !== 'object') throw new Error('联系人数据为空');
-            let contactData;
-            try {
-                contactData = JSON.parse(JSON.stringify(contact));
-            } catch (error) {
-                throw new Error('联系人数据无法序列化');
-            }
-            delete contactData.id;
-            contactData.qrId = ensureContactQrId(contact);
-            // 头像先压成小图再写入二维码，保留头像同时避免原图拖慢或撑爆二维码。
-            contactData.avatar = await compactAvatarForQr(contactData.avatar);
-            if (contactData.design == null && contactData.persona != null) contactData.design = String(contactData.persona);
-            if (!String(contactData.name || '').trim()) throw new Error('联系人缺少姓名');
-            // 空字段没有实际内容，去掉后可以明显降低二维码密度；非空字段全部保留。
-            Object.keys(contactData).forEach(key => {
-                if (contactData[key] === '' || contactData[key] == null) delete contactData[key];
-            });
+            const name = String(contact.name || '').trim();
+            if (!name) throw new Error('联系人缺少姓名');
+            const contactData = {
+                qrId: ensureContactQrId(contact),
+                name,
+                design: String(contact.design != null ? contact.design : (contact.persona || ''))
+            };
             const data = { version: 3, type: 'mimiphone-friend', contact: contactData };
             const serialized = stableStringify(data);
-            const hasLz = Boolean(window.LZString && LZString.compressToEncodedURIComponent);
-            const compressed = hasLz ? LZString.compressToEncodedURIComponent(serialized) : encodeFriendData(serialized);
-            const encoding = hasLz ? 'lz' : 'b64';
+            const compressedData = await compressFriendData(serialized);
+            const compressed = compressedData.value;
+            const encoding = compressedData.encoding;
             // 使用短协议头降低二维码字节数；压缩算法和联系人字段保持不变。
-            return `mimiphone://friend?data=${encoding === 'lz' ? 'lz:' : 'b64:'}${encodeFriendQrQueryData(compressed)}`;
-        }
-
-        async function compactAvatarForQr(avatar) {
-            const source = String(avatar || '');
-            if (!source.startsWith('data:image/') || source.length <= 1800) return source;
-            if (qrAvatarCache.has(source)) return qrAvatarCache.get(source);
-            const task = new Promise(resolve => {
-                const image = new Image();
-                image.onload = () => {
-                    try {
-                        const maxSide = 48;
-                        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || maxSide, image.naturalHeight || maxSide));
-                        const canvas = document.createElement('canvas');
-                        canvas.width = Math.max(1, Math.round((image.naturalWidth || maxSide) * scale));
-                        canvas.height = Math.max(1, Math.round((image.naturalHeight || maxSide) * scale));
-                        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-                        const compressed = canvas.toDataURL('image/jpeg', 0.55);
-                        resolve(compressed.length < source.length ? compressed : source);
-                    } catch (error) {
-                        resolve(source);
-                    }
-                };
-                image.onerror = () => resolve(source);
-                image.src = source;
-            });
-            qrAvatarCache.set(source, task);
-            return task;
+            const encoded = encodeFriendQrQueryData(compressed);
+            const prefix = `${encoding}:`;
+            const singlePayload = `mimiphone://friend?data=${prefix}${encoded}`;
+            return singlePayload;
         }
 
         function encodeFriendQrQueryData(value) {
             // LZString 的 URI 字符集本身不含 &, =, ?, # 等分隔符，只需转义 +，
-            // 避免 encodeURIComponent 把压缩结果无谓地膨胀，给头像和长人设留出更多容量。
+            // 避免 encodeURIComponent 把压缩结果无谓地膨胀，给长人设留出更多容量。
             return String(value || '').replace(/\+/g, '%2B');
         }
 
@@ -4033,7 +4469,43 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
         }
 
-        function decodeFriendData(value) {
+        function bytesToBase64Url(bytes) {
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+            }
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        }
+
+        function base64UrlToBytes(value) {
+            const base64 = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+            const binary = atob(padded);
+            return Uint8Array.from(binary, char => char.charCodeAt(0));
+        }
+
+        async function compressFriendData(serialized) {
+            const candidates = [];
+            if (window.CompressionStream && window.Response && Blob.prototype.stream) {
+                for (const [format, encoding] of [['deflate-raw', 'df'], ['deflate', 'dfz']]) {
+                    try {
+                        const stream = new Blob([serialized]).stream().pipeThrough(new CompressionStream(format));
+                        const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+                        candidates.push({ encoding, value: bytesToBase64Url(bytes) });
+                    } catch (error) {
+                        // 某些 WebView 只支持其中一种 deflate 格式，继续尝试下一种。
+                    }
+                }
+            }
+            if (window.LZString && LZString.compressToEncodedURIComponent) {
+                candidates.push({ encoding: 'lz', value: LZString.compressToEncodedURIComponent(serialized) });
+            }
+            candidates.push({ encoding: 'b64', value: encodeFriendData(serialized) });
+            return candidates.reduce((shortest, candidate) => candidate.value.length < shortest.value.length ? candidate : shortest);
+        }
+
+        async function decodeFriendData(value) {
             const raw = String(value || '');
             try {
                 if (raw.startsWith('lz:')) {
@@ -4041,6 +4513,13 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     const decoded = LZString.decompressFromEncodedURIComponent(decodeURIComponent(raw.slice(3)));
                     if (!decoded) throw new Error('二维码压缩数据为空');
                     return decoded;
+                }
+                if (raw.startsWith('df:') || raw.startsWith('dfz:')) {
+                    if (!window.DecompressionStream || !window.Response || !Blob.prototype.stream) throw new Error('当前浏览器不支持二维码压缩格式');
+                    const format = raw.startsWith('df:') ? 'deflate-raw' : 'deflate';
+                    const bytes = base64UrlToBytes(raw.slice(raw.indexOf(':') + 1));
+                    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream(format));
+                    return await new Response(stream).text();
                 }
                 if (raw.startsWith('b64:')) return decodeFriendData(raw.slice(4));
                 const unescaped = decodeURIComponent(raw);
@@ -4080,12 +4559,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
             qrNode.dataset.payload = payload;
             qrNode.innerHTML = '';
+            fallback.textContent = '';
             if (window.QRCode) {
                 try {
-                    new QRCode(qrNode, { text: payload, width: 420, height: 420, correctLevel: QRCode.CorrectLevel.L });
+                    new QRCode(qrNode, { text: payload, width: 560, height: 560, correctLevel: QRCode.CorrectLevel.L });
                 } catch (error) {
                     console.error('QR generation failed:', error);
-                    fallback.textContent = '联系人资料过大，单张二维码无法容纳，请压缩人设或头像后重试。';
+                    qrNode.innerHTML = '';
+                    fallback.textContent = '人设压缩后仍超过单张二维码容量，请缩短人设内容后重试。';
                 }
             } else {
                 fallback.textContent = '二维码组件未加载，请刷新页面后重试。';
@@ -4229,7 +4710,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 } finally {
                     scannerDecodeBusy = false;
                 }
-                if (payload && handleScannedFriendPayload(payload)) return;
+                if (payload && await handleScannedFriendPayload(payload)) return;
             }
             scannerFrameRequest = requestAnimationFrame(scanCameraFrame);
         }
@@ -4303,7 +4784,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     context.fillRect(0, 0, canvas.width, canvas.height);
                     context.drawImage(image, 0, 0, canvas.width, canvas.height);
                     const payload = await decodeQrCanvas(canvas);
-                    if (!payload || !handleScannedFriendPayload(payload)) {
+                    if (!payload || !await handleScannedFriendPayload(payload)) {
                         setScannerStatus('二维码无效，请重试', 'error');
                     }
                 } catch (error) {
@@ -4333,7 +4814,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             event.target.value = '';
         }
 
-        function parseFriendQrPayload(value) {
+        async function parseFriendQrPayload(value) {
             if (!value) return null;
             try {
                 value = String(value).trim();
@@ -4346,10 +4827,16 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     encodedData = `${encoding === 'lz' ? 'lz:' : 'b64:'}${queryData}`;
                 } else if (value.startsWith('mimiphone://friend?data=')) {
                     encodedData = value.slice('mimiphone://friend?data='.length).replace(/ /g, '+');
+                } else if (value.startsWith('mimiphone://friend-ref?')) {
+                    const query = new URL(value).searchParams;
+                    const qrId = query.get('qrId') || '';
+                    const name = query.get('name') || '联系人';
+                    if (!qrId) return null;
+                    return { qrId, name, __friendReference: true };
                 } else {
                     return null;
                 }
-                const payload = JSON.parse(decodeFriendData(encodedData));
+                const payload = JSON.parse(await decodeFriendData(encodedData));
                 if (payload.type !== 'mimiphone-friend' || !payload.contact || !String(payload.contact.name || '').trim()) return null;
                 const contact = { ...payload.contact };
                 if (!contact.design && contact.persona) contact.design = contact.persona;
@@ -4359,9 +4846,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
-        function handleScannedFriendPayload(value) {
+        async function handleScannedFriendPayload(value) {
             if (scannerProcessing) return true;
-            const scannedContact = parseFriendQrPayload(value);
+            const scannedContact = await parseFriendQrPayload(value);
             if (!scannedContact) return false;
             scannerProcessing = true;
             stopScannerCamera();
@@ -7429,6 +7916,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         // 更新分类下拉框
         function updateCategoryDropdown() {
             const select = document.getElementById('newContactCategory');
+            if (!select) return;
             const currentValue = select.value;
             
             // 保留默认选项
@@ -10052,6 +10540,47 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             closeWorldBookBindingModal();
             alert('绑定成功');
         }
+
+        function isElementVisible(id) {
+            const element = document.getElementById(id);
+            if (!element) return false;
+            const style = getComputedStyle(element);
+            return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
+        }
+
+        // 保存或确认后只重绘用户当前能看到的数据区域，不改变页面层级和滚动位置。
+        function refreshVisibleViews() {
+            try {
+                if (isElementVisible('contactsContainer')) renderContactsList();
+                if (isElementVisible('chatList')) renderChatList();
+                if (isElementVisible('wechatContactsPage')) renderWechatContacts();
+                if (isElementVisible('wechatMePage')) renderWechatMePage();
+                if (isElementVisible('chatPageContainer') && currentChatFriendId) renderMessages();
+                if (isElementVisible('momentsContainer')) renderMoments();
+                if (isElementVisible('chargingPromptSettingsContainer')) loadChargingPromptSettings();
+                if (isElementVisible('statusBarBeautySettingsContainer')) {
+                    loadStatusBarBeautySettings();
+                    applyStatusBarBeauty();
+                }
+            } catch (error) {
+                console.warn('刷新当前页面失败:', error);
+            }
+        }
+
+        function scheduleVisibleViewRefresh() {
+            requestAnimationFrame(refreshVisibleViews);
+            setTimeout(refreshVisibleViews, 120);
+            setTimeout(refreshVisibleViews, 500);
+        }
+
+        document.addEventListener('click', event => {
+            const button = event.target.closest('button, [role="button"], .modal-btn, .theme-action-btn');
+            if (!button) return;
+            const actionText = (button.textContent || '').trim();
+            if (/保存|确认|确定|完成|应用|绑定|添加|删除|移除|修改|提交/.test(actionText)) {
+                scheduleVisibleViewRefresh();
+            }
+        });
 
         // 初始化
         (async function init() {

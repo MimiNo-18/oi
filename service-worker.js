@@ -1,11 +1,13 @@
-const CACHE_NAME = 'mimiphone-v45';
+const CACHE_NAME = 'mimiphone-v56';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
     './wechat.css',
+    './music.css',
     './wechat.js',
     './script.js',
+    './music.js',
     './china-area-data.json',
     './manifest.json',
     './vendor/qrcode.min.js',

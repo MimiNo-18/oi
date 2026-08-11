@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://html2canvas.hertzen.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *; connect-src *;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://html2canvas.hertzen.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *; media-src 'self' blob: data: https:; connect-src *;">
     <title>MimiPhone</title>
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,6 +21,7 @@
     <script src="vendor/lz-string.min.js"></script>
     <link rel="stylesheet" href="style.css?v=20260523">
     <link rel="stylesheet" href="wechat.css?v=20260523">
+    <link rel="stylesheet" href="music.css?v=20260811">
 </head>
 <body>
     <div class="phone-border-frame"></div>
@@ -90,7 +91,7 @@
                 <div class="app-label">世界书</div>
             </div>
                 <div class="app-item">
-                    <img src="" class="app-icon" id="app4" onclick="changeImage('app4')" alt="应用图标">
+                    <img src="" class="app-icon" id="app4" onclick="openMusicApp()" alt="网易云音乐" style="cursor: pointer;">
                     <div class="app-label">网易云音乐</div>
                 </div>
             </div>
@@ -2647,8 +2648,26 @@
         </div>
     </div>
 
+    <!-- 网易云音乐 -->
+    <section id="musicApp" class="music-app" aria-label="网易云音乐" hidden>
+        <main id="musicView" class="music-view"></main>
+        <nav class="music-capsule-nav" aria-label="音乐导航">
+            <button class="music-nav-item" type="button" data-music-tab="player" aria-label="正在播放">
+                <span class="music-nav-cover-shell"><img id="musicNavCover" alt="正在播放的音乐封面"></span>
+            </button>
+            <button class="music-nav-item is-active" type="button" data-music-tab="home" aria-label="首页">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            </button>
+            <button class="music-nav-item" type="button" data-music-tab="mine" aria-label="我的">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            </button>
+        </nav>
+        <audio id="musicAudio" preload="metadata"></audio>
+    </section>
+
     <script src="wechat.js"></script>
     <script src="script.js"></script>
+    <script src="music.js?v=20260811"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

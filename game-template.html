@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>我的小游戏</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+        body {
+            color: #f3efff;
+            background: linear-gradient(160deg, #080914, #17102d);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        #game { position: relative; width: 100%; height: 100%; touch-action: none; }
+        .title { position: absolute; top: 28px; left: 22px; margin: 0; font-size: 25px; }
+        .hint { position: absolute; top: 66px; left: 22px; color: #90889f; font-size: 12px; }
+        .button {
+            position: absolute; left: 22px; bottom: 24px; min-width: 120px; height: 46px;
+            color: #fff; border: 1px solid #ffffff20; border-radius: 14px;
+            background: linear-gradient(100deg, #59409a, #302055);
+        }
+    </style>
+</head>
+<body>
+    <main id="game">
+        <h1 class="title">我的小游戏</h1>
+        <p class="hint">在这里设计游戏画面与玩法</p>
+        <button class="button" id="actionButton">开始</button>
+    </main>
+
+    <script>
+        // 从本 App 的存档卡读取数据；首次进入会得到 null。
+        const progress = window.MimiGameSave ? MimiGameSave.load() : null;
+        let score = progress && progress.score ? progress.score : 0;
+
+        document.getElementById('actionButton').addEventListener('click', function () {
+            score += 1;
+            this.textContent = '分数：' + score;
+
+            // 写入当前存档。数据必须能够被 JSON 序列化。
+            if (window.MimiGameSave) MimiGameSave.save({ score: score });
+        });
+    </script>
+</body>
+</html>

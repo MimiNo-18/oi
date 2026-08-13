@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MimiPhone">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%23000'%3E%3Crect width='192' height='192'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='80'%3EM%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="https://nos.netease.com/ysf/00366c55b2d0cfc204964e3cf235ba14.png">
     <link rel="manifest" href="manifest.json">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="style.css?v=20260523">
     <link rel="stylesheet" href="wechat.css?v=20260523">
     <link rel="stylesheet" href="music.css?v=20260811">
+    <link rel="stylesheet" href="game.css?v=20260813">
 </head>
 <body>
     <div class="phone-border-frame"></div>
@@ -83,7 +84,7 @@
                     <div class="app-label">微信</div>
                 </div>
                 <div class="app-item">
-                    <img src="" class="app-icon" id="app2" onclick="changeImage('app2')" alt="应用图标">
+                    <img src="" class="app-icon" id="app2" onclick="openGameApp()" alt="小游戏" style="cursor: pointer;">
                     <div class="app-label">小游戏</div>
                 </div>
             <div class="app-item">
@@ -2648,6 +2649,248 @@
         </div>
     </div>
 
+    <!-- 小游戏 -->
+    <section id="gameApp" class="game-app" aria-label="小游戏" hidden>
+        <div class="game-ambient game-ambient-one" aria-hidden="true"></div>
+        <div class="game-ambient game-ambient-two" aria-hidden="true"></div>
+
+        <header class="game-header">
+            <button class="game-brand" type="button" onclick="closeGameApp()" aria-label="返回小手机主页">
+                <span class="game-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7"/><path d="M9 12h10"/></svg>
+                </span>
+                <span>
+                    <span class="game-brand-name">NOCTURNE</span>
+                    <span class="game-brand-subtitle">GAME ARCHIVE</span>
+                </span>
+            </button>
+            <span class="game-header-index" id="gameHeaderIndex">01 / 04</span>
+        </header>
+
+        <main class="game-main">
+            <section class="game-intro" aria-labelledby="gameWelcomeTitle">
+                <span class="game-eyebrow">ENTER THE UNKNOWN</span>
+                <h1 id="gameWelcomeTitle">欢迎来到游戏app</h1>
+                <p>点击卡片开始游戏</p>
+            </section>
+
+            <section class="game-carousel-shell" aria-label="游戏卡牌选择">
+                <div class="game-carousel" id="gameCarousel"></div>
+            </section>
+
+            <section class="game-actions" aria-label="游戏操作">
+                <div class="game-action-list">
+                    <button class="game-action game-action-primary" type="button" data-game-action="start">
+                        <span class="game-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
+                        <span class="game-action-copy"><strong>开始游戏</strong><small>CONTINUE JOURNEY</small></span>
+                        <span class="game-action-arrow" aria-hidden="true">↗</span>
+                    </button>
+                    <button class="game-action" type="button" data-game-action="archive">
+                        <span class="game-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 4v6h8V4M9 16h6"/></svg></span>
+                        <span class="game-action-copy"><strong>游戏存档</strong><small>MEMORY VAULT</small></span>
+                        <span class="game-action-arrow" aria-hidden="true">↗</span>
+                    </button>
+                    <button class="game-action" type="button" data-game-action="create">
+                        <span class="game-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                        <span class="game-action-copy"><strong>创建游戏</strong><small>NEW UNIVERSE</small></span>
+                        <span class="game-action-arrow" aria-hidden="true">↗</span>
+                    </button>
+                </div>
+                <button class="game-avatar-button" id="gameAvatarButton" type="button" aria-label="打开个人主页编辑">
+                    <span class="game-avatar-halo" aria-hidden="true"></span>
+                    <img id="gameAvatarImage" alt="用户头像" hidden>
+                    <span class="game-avatar-placeholder" id="gameAvatarPlaceholder" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+                    </span>
+                    <span class="game-avatar-status" aria-hidden="true"></span>
+                </button>
+            </section>
+        </main>
+
+        <section class="game-create-page" id="gameCreatePage" aria-labelledby="gameCreateTitle" hidden>
+            <header class="game-subpage-header">
+                <button class="game-subpage-back" id="gameCreateBack" type="button" aria-label="返回游戏首页">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7"/><path d="M9 12h10"/></svg>
+                </button>
+                <div><span>NEW UNIVERSE</span><h1 id="gameCreateTitle">创建游戏</h1></div>
+                <button class="game-tutorial-link" id="gameTutorialButton" type="button">制作教程</button>
+            </header>
+
+            <form class="game-create-form" id="gameCreateForm">
+                <label class="game-create-field">
+                    <span class="game-create-label"><b>游戏标题</b><small>GAME TITLE</small></span>
+                    <input id="gameCreateName" type="text" maxlength="30" placeholder="输入你的游戏名称" required>
+                </label>
+                <label class="game-create-field">
+                    <span class="game-create-label"><b>游戏简介</b><small>DESCRIPTION</small></span>
+                    <textarea id="gameCreateDescription" maxlength="500" placeholder="介绍游戏背景、玩法与目标" required></textarea>
+                    <span class="game-create-count"><span id="gameDescriptionCount">0</span> / 500</span>
+                </label>
+
+                <div class="game-create-field">
+                    <span class="game-create-label"><b>游戏封面</b><small>COVER IMAGE</small></span>
+                    <button class="game-cover-upload" id="gameCoverUpload" type="button">
+                        <img id="gameCoverPreview" alt="游戏封面预览" hidden>
+                        <span id="gameCoverPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M5 14v5h14v-5"/></svg>
+                            <strong>上传游戏封面</strong><small>JPG、PNG 或 WEBP</small>
+                        </span>
+                    </button>
+                    <input id="gameCoverInput" type="file" accept="image/*" hidden>
+                </div>
+
+                <div class="game-create-field">
+                    <span class="game-create-label"><b>HTML 游戏文件</b><small>GAME SOURCE</small></span>
+                    <div class="game-source-tabs" role="tablist" aria-label="HTML录入方式">
+                        <button class="is-active" type="button" data-source-mode="input" role="tab" aria-selected="true">输入代码</button>
+                        <button type="button" data-source-mode="upload" role="tab" aria-selected="false">上传文件</button>
+                    </div>
+                    <div class="game-source-panel is-active" data-source-panel="input">
+                        <textarea id="gameHtmlSource" class="game-code-input" spellcheck="false" placeholder="在这里粘贴完整的 HTML 游戏代码"></textarea>
+                    </div>
+                    <div class="game-source-panel" data-source-panel="upload" hidden>
+                        <button class="game-html-upload" id="gameHtmlUpload" type="button">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>
+                            <strong id="gameHtmlFileName">选择 HTML 文件</strong>
+                            <small>仅支持单个 .html 或 .htm 文件</small>
+                        </button>
+                        <input id="gameHtmlFileInput" type="file" accept=".html,.htm,text/html" hidden>
+                    </div>
+                </div>
+
+                <p class="game-create-error" id="gameCreateError" role="alert" hidden></p>
+                <button class="game-create-submit" type="submit"><span>保存并创建游戏</span><b>CREATE ↗</b></button>
+            </form>
+        </section>
+
+        <section class="game-player-page" id="gamePlayerPage" hidden>
+            <header class="game-player-header">
+                <button id="gamePlayerBack" type="button" aria-label="退出游戏"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7"/><path d="M9 12h10"/></svg></button>
+                <div><span>NOW PLAYING</span><strong id="gamePlayerTitle"></strong></div>
+            </header>
+            <iframe id="gamePlayerFrame" title="HTML游戏运行窗口" sandbox="allow-scripts allow-forms allow-modals allow-pointer-lock"></iframe>
+        </section>
+
+        <section class="game-archive-page" id="gameArchivePage" aria-labelledby="gameArchiveTitle" hidden>
+            <header class="game-subpage-header">
+                <button class="game-subpage-back" id="gameArchiveBack" type="button" aria-label="返回游戏首页">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7"/><path d="M9 12h10"/></svg>
+                </button>
+                <div><span>MEMORY LIBRARY</span><h1 id="gameArchiveTitle">游戏存档</h1></div>
+                <span class="game-archive-count" id="gameArchiveCount">0 SAVES</span>
+            </header>
+            <div class="game-album-gallery" id="gameBookshelf"></div>
+
+            <section class="game-album-view" id="gameAlbumView" hidden>
+                <header class="game-album-header">
+                    <button id="gameAlbumBack" type="button" aria-label="返回卡册列表"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7"/><path d="M9 12h10"/></svg></button>
+                    <div><span>SAVE ALBUM</span><h2 id="gameAlbumTitle"></h2></div>
+                </header>
+                <div class="game-album-interior">
+                    <div class="game-album-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                    <div class="game-album-paper">
+                        <div class="game-album-paper-heading"><span>MEMORIES</span><b id="gameAlbumPageCount">00</b></div>
+                        <p class="game-album-hint">点击存档进入游戏 · 长按可重命名或删除</p>
+                        <div class="game-save-grid" id="gameSaveGrid"></div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <div class="game-modal" id="gameDescriptionModal" hidden>
+            <button class="game-modal-backdrop" type="button" data-close-game-modal aria-label="关闭"></button>
+            <article class="game-modal-panel" role="dialog" aria-modal="true" aria-labelledby="gameDescriptionTitle">
+                <div class="game-modal-grip" aria-hidden="true"></div>
+                <span class="game-modal-kicker">GAME FILE</span>
+                <h2 id="gameDescriptionTitle"></h2>
+                <p id="gameDescriptionText"></p>
+                <button class="game-modal-done" type="button" data-close-game-modal>收起简介</button>
+            </article>
+        </div>
+
+        <div class="game-modal" id="gameProfileModal" hidden>
+            <button class="game-modal-backdrop" type="button" data-close-profile-modal aria-label="关闭"></button>
+            <article class="game-modal-panel game-profile-panel" role="dialog" aria-modal="true" aria-labelledby="gameProfileTitle">
+                <div class="game-modal-grip" aria-hidden="true"></div>
+                <span class="game-modal-kicker">PLAYER PROFILE</span>
+                <h2 id="gameProfileTitle">编辑个人主页</h2>
+                <button class="game-profile-avatar" id="gameProfileAvatarButton" type="button">
+                    <img id="gameProfileAvatarImage" alt="用户头像预览" hidden>
+                    <span id="gameProfileAvatarPlaceholder"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg></span>
+                    <small>更换头像</small>
+                </button>
+                <input id="gameAvatarInput" type="file" accept="image/*" hidden>
+                <label class="game-field">
+                    <span>玩家昵称</span>
+                    <input id="gameProfileName" type="text" maxlength="20" placeholder="神秘玩家">
+                </label>
+                <label class="game-field">
+                    <span>个人签名</span>
+                    <textarea id="gameProfileBio" maxlength="80" placeholder="写下属于你的游戏宣言"></textarea>
+                </label>
+                <div class="game-profile-actions">
+                    <button class="game-profile-secondary" id="gameRemoveAvatar" type="button">移除头像</button>
+                    <button class="game-modal-done" id="gameSaveProfile" type="button">保存主页</button>
+                </div>
+            </article>
+        </div>
+        <div class="game-modal" id="gameTutorialModal" hidden>
+            <button class="game-modal-backdrop" type="button" data-close-tutorial-modal aria-label="关闭教程"></button>
+            <article class="game-modal-panel game-tutorial-panel" role="dialog" aria-modal="true" aria-labelledby="gameTutorialTitle">
+                <div class="game-modal-grip" aria-hidden="true"></div>
+                <span class="game-modal-kicker">MIMIPHONE GAME KIT</span>
+                <h2 id="gameTutorialTitle">小游戏 App 制作教程</h2>
+                <div class="game-tutorial-downloads">
+                    <button type="button" data-game-code="template"><span>空白模板代码</span><small>VIEW SOURCE ↗</small></button>
+                    <button type="button" data-game-code="example"><span>完整游戏代码</span><small>VIEW FULL GAME ↗</small></button>
+                </div>
+                <div class="game-tutorial-content">
+                    <section><span>01</span><div><h3>这个 App 如何载入游戏</h3><p>创建页面会把你提交的 HTML 保存为一张游戏卡牌。玩家先在主页左右滑动选择卡牌，再点击“开始游戏”；HTML 随后会在 App 内部的独立游戏窗口运行。游戏代码不会直接修改小手机主页。</p></div></section>
+                    <section><span>02</span><div><h3>必须制作成单个 HTML 文件</h3><p>请把页面结构、CSS 和 JavaScript 全部写进同一个 .html 文件。不要引用电脑上的相对路径，例如 images/a.png；它们导入后无法读取。少量图片可转为 Base64，网络资源需要完整 HTTPS 地址。</p><pre>&lt;style&gt;/* 游戏样式 */&lt;/style&gt;
+&lt;main id="game"&gt;&lt;/main&gt;
+&lt;script&gt;/* 游戏逻辑 */&lt;/script&gt;</pre></div></section>
+                    <section><span>03</span><div><h3>按照小手机窗口设计</h3><p>游戏主要运行在竖屏手机窗口中。设置 viewport，确保 html、body 和游戏根节点都是 100% 宽高；避免写死超过屏幕的尺寸。重要按钮至少保持 44 × 44 像素，文字不要贴近底部安全区域。</p></div></section>
+                    <section><span>04</span><div><h3>参考已有小游戏的操作方式</h3><p>“迷雾迷宫”同时支持方向按钮、键盘和滑动；“星轨躲避”使用 pointer 事件拖动；“午夜翻牌”使用点击；“数界归一”使用四方向滑动。推荐优先使用 pointerdown、pointermove、pointerup，让触屏和鼠标都能操作。</p></div></section>
+                    <section><span>05</span><div><h3>接入 App 存档卡牌</h3><p>游戏窗口会自动提供 MimiGameSave。读取时调用 MimiGameSave.load()；首次游戏返回 null，从存档卡进入则返回之前保存的数据。写入时调用 MimiGameSave.save(data)，data 应是可被 JSON 序列化的对象。</p><pre>const old = MimiGameSave.load();
+let score = old?.score || 0;
+MimiGameSave.save({ score, level: 2 });</pre></div></section>
+                    <section><span>06</span><div><h3>存档在 App 中如何出现</h3><p>玩家从“开始游戏”进入并退出后，App 会在该游戏的卡册中生成一张精确到秒的存档卡。玩家点击卡牌可以继续，长按可以重命名或删除。请在分数、关卡、棋盘或关键选择变化时调用 save。</p></div></section>
+                    <section><span>07</span><div><h3>封面与卡牌资料</h3><p>建议封面使用竖向或主体居中的图片，JPG、PNG、WEBP 均可；图片会裁切填充卡牌。标题建议 2–8 个汉字，简介写清游戏目标、操作和胜利条件。封面与 HTML 太大会超过浏览器本地保存容量。</p></div></section>
+                    <section><span>08</span><div><h3>运行环境限制</h3><p>游戏在隔离窗口中运行，可使用脚本、表单、弹窗和指针锁定，但不能控制父页面。声音必须在玩家第一次点击后播放。不要依赖后端服务器、Node.js、PHP 或本地文件系统。</p></div></section>
+                    <section><span>09</span><div><h3>导入与测试流程</h3><p>先下载上方空白模板开始制作，或查看完整示例。完成后在普通浏览器中测试竖屏、横滑、重新开始和游戏失败状态；再进入“创建游戏”，填写资料，选择“输入代码”粘贴源码，或选择“上传文件”导入 HTML。</p></div></section>
+                </div>
+                <button class="game-modal-done" type="button" data-close-tutorial-modal>我知道了</button>
+            </article>
+        </div>
+        <div class="game-modal" id="gameSaveActionModal" hidden>
+            <button class="game-modal-backdrop" type="button" data-close-save-action aria-label="关闭存档操作"></button>
+            <article class="game-modal-panel game-save-action-panel" role="dialog" aria-modal="true" aria-labelledby="gameSaveActionTitle">
+                <div class="game-modal-grip" aria-hidden="true"></div>
+                <span class="game-modal-kicker">SAVE CARD</span>
+                <h2 id="gameSaveActionTitle">编辑存档卡牌</h2>
+                <label class="game-field"><span>卡牌名字</span><input id="gameSaveRenameInput" type="text" maxlength="40"></label>
+                <div class="game-save-action-buttons">
+                    <button class="game-save-delete" id="gameSaveDelete" type="button">删除存档</button>
+                    <button class="game-modal-done" id="gameSaveRename" type="button">保存名字</button>
+                </div>
+            </article>
+        </div>
+        <div class="game-modal" id="gameCodeModal" hidden>
+            <button class="game-modal-backdrop" type="button" data-close-code-modal aria-label="关闭代码"></button>
+            <article class="game-modal-panel game-code-panel" role="dialog" aria-modal="true" aria-labelledby="gameCodeTitle">
+                <div class="game-modal-grip" aria-hidden="true"></div>
+                <span class="game-modal-kicker">HTML SOURCE</span>
+                <h2 id="gameCodeTitle">模板代码</h2>
+                <pre class="game-code-view"><code id="gameCodeContent"></code></pre>
+                <div class="game-code-actions">
+                    <button class="game-profile-secondary" id="gameCodeDownload" type="button">下载 HTML</button>
+                    <button class="game-modal-done" id="gameCodeCopy" type="button">复制代码</button>
+                </div>
+            </article>
+        </div>
+        <input id="gameCardBackgroundInput" type="file" accept="image/*" hidden>
+    </section>
+
     <!-- 网易云音乐 -->
     <section id="musicApp" class="music-app" aria-label="网易云音乐" hidden>
         <main id="musicView" class="music-view"></main>
@@ -2668,6 +2911,7 @@
     <script src="wechat.js"></script>
     <script src="script.js"></script>
     <script src="music.js?v=20260811"></script>
+    <script src="game.js?v=20260813"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

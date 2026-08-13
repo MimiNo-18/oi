@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>星光捕手</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+        body {
+            color: #f5f1ff;
+            background: radial-gradient(circle at 75% 10%, #5f47a655, transparent 30%), #070812;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        #game { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: manipulation; }
+        header { position: absolute; z-index: 2; top: 26px; right: 20px; left: 20px; display: flex; justify-content: space-between; }
+        h1 { margin: 0; font: 500 25px/1.2 Georgia, serif; }
+        #score { color: #b6a8e0; font: 600 13px/1.5 ui-monospace, monospace; }
+        .star {
+            position: absolute; width: 46px; height: 46px; padding: 0;
+            color: #f0e6ff; border: 1px solid #d9c9ff66; border-radius: 50%;
+            background: #8067d455; box-shadow: 0 0 28px #8c70ea99;
+            font-size: 21px; animation: appear .18s ease-out;
+        }
+        @keyframes appear { from { opacity: 0; transform: scale(.45); } }
+        .help { position: absolute; right: 20px; bottom: 25px; left: 20px; color: #766f83; text-align: center; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <main id="game">
+        <header><h1>星光捕手</h1><span id="score">0</span></header>
+        <p class="help">在星光消失前点击它，记录会保存到游戏存档卡。</p>
+    </main>
+
+    <script>
+        const saved = window.MimiGameSave ? MimiGameSave.load() : null;
+        let score = saved && saved.score ? saved.score : 0;
+        const game = document.getElementById('game');
+        const scoreView = document.getElementById('score');
+
+        function updateScore() { scoreView.textContent = 'SCORE ' + score; }
+
+        function createStar() {
+            const oldStar = game.querySelector('.star');
+            if (oldStar) oldStar.remove();
+
+            const star = document.createElement('button');
+            star.className = 'star';
+            star.textContent = '✦';
+            star.style.left = 18 + Math.random() * Math.max(20, game.clientWidth - 82) + 'px';
+            star.style.top = 90 + Math.random() * Math.max(30, game.clientHeight - 180) + 'px';
+            star.addEventListener('click', function () {
+                score += 1;
+                updateScore();
+                if (window.MimiGameSave) MimiGameSave.save({ score: score });
+                createStar();
+            });
+            game.appendChild(star);
+        }
+
+        updateScore();
+        createStar();
+        setInterval(createStar, 1800);
+    </script>
+</body>
+</html>

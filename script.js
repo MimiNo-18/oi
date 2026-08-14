@@ -1749,7 +1749,12 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             { id: 'dock2', name: '联系人' },
             { id: 'dock3', name: '主题' },
             { id: 'dock4', name: '设置' },
-            { id: 'accountAvatarImg', name: '账号头像' }
+            { id: 'accountAvatarImg', name: '账号头像' },
+            { id: 'storyAvatar', name: 'Story 用户头像' },
+            { id: 'storyApp1', name: 'Story 应用 1' }, { id: 'storyApp2', name: 'Story 应用 2' },
+            { id: 'storyApp3', name: 'Story 应用 3' }, { id: 'storyApp4', name: 'Story 应用 4' },
+            { id: 'storyApp5', name: 'Story 应用 5' }, { id: 'storyApp6', name: 'Story 应用 6' },
+            { id: 'storyApp7', name: 'Story 应用 7' }, { id: 'storyApp8', name: 'Story 应用 8' }
         ];
 
         const btnIconConfig = [
@@ -8943,6 +8948,46 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                 };
             });
         }
+
+        function openStoryPage() {
+            const page = document.getElementById('storyPageContainer');
+            if (page) page.classList.add('active');
+            document.body.classList.add('story-page-active');
+            updateTime();
+        }
+
+        function closeStoryPage() {
+            const page = document.getElementById('storyPageContainer');
+            if (page) page.classList.remove('active');
+            document.body.classList.remove('story-page-active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fallback = DEFAULT_AVATAR;
+            const storyAvatar = document.getElementById('storyAvatar');
+            if (storyAvatar && !storyAvatar.getAttribute('src')) storyAvatar.src = fallback;
+
+            const home = document.querySelector('.phone-container');
+            const story = document.getElementById('storyPageContainer');
+            const attachHorizontalSwipe = (element, direction, action) => {
+                if (!element) return;
+                let startX = 0;
+                let startY = 0;
+                element.addEventListener('pointerdown', event => {
+                    startX = event.clientX;
+                    startY = event.clientY;
+                }, { passive: true });
+                element.addEventListener('pointerup', event => {
+                    const deltaX = event.clientX - startX;
+                    const deltaY = event.clientY - startY;
+                    const isSwipe = Math.abs(deltaX) > 55 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25;
+                    if (isSwipe && Math.sign(deltaX) === direction) action();
+                }, { passive: true });
+            };
+
+            attachHorizontalSwipe(home, -1, openStoryPage);
+            attachHorizontalSwipe(story, 1, closeStoryPage);
+        });
 
         async function dbGet(storeName, key) {
             await dbPromise;

@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="wechat.css?v=20260523">
     <link rel="stylesheet" href="music.css?v=20260811">
     <link rel="stylesheet" href="game.css?v=20260813">
+    <link rel="stylesheet" href="telecom.css?v=20260814">
 </head>
 <body>
     <div class="phone-border-frame"></div>
@@ -99,6 +100,54 @@
             <div class="illustration-section">
                 <img src="" class="illustration" id="illustration" onclick="changeImage('illustration')" alt="插画">
                 <div class="illustration-text" id="txt-illustration-text" onclick="editText(this, '插画文字')">°. ⊹ ✟ Love you .† ☆ ⊹</div>
+            </div>
+        </div>
+
+        <!-- 第二页与第一页共用同一个主屏和 Dock -->
+        <div id="storyPageContainer" class="story-page-container">
+            <div class="story-shell">
+                <main class="story-scroll-area">
+                    <article class="story-post-card">
+                        <div class="story-card-heading">
+                            <button class="story-tag" id="txt-story-tag" type="button" onclick="editText(this, '标签')">STORY</button>
+                            <h1 class="story-title" id="txt-story-title" onclick="editText(this, '页面标题')">Story Mode</h1>
+                        </div>
+                        <div class="story-post-head">
+                            <div class="story-profile">
+                                <div class="story-avatar-wrap" onclick="changeImage('storyAvatar')" title="点击更换头像">
+                                    <img id="storyAvatar" class="story-avatar" alt="用户头像">
+                                </div>
+                                <div class="story-user-copy">
+                                    <div class="story-username" id="txt-story-username" onclick="editText(this, '用户名')">占位文案</div>
+                                    <div class="story-subtitle" id="txt-story-subtitle" onclick="editText(this, '用户副标题')">占位文案</div>
+                                </div>
+                            </div>
+                            <div class="story-rank" aria-label="排名与评分">
+                                <div class="story-hearts"><span>♡</span><span>♡</span><span class="filled">♥</span></div>
+                                <div class="story-rank-number">#1</div>
+                            </div>
+                        </div>
+
+                        <div class="story-bubble" id="txt-story-content" onclick="editText(this, '帖子内容')">占位文案</div>
+
+                        <div class="story-info-bar">
+                            <div class="story-date" id="txt-story-date" onclick="editText(this, '日期时间')">2026年06月13日 08:58</div>
+                            <div class="story-rating" aria-label="星级评分"><span class="story-star active">★</span><span class="story-star active">★</span><span class="story-star active">★</span><span class="story-star">☆</span><span class="story-star">☆</span></div>
+                            <div class="story-actions"><span>…</span><span class="story-trash" aria-label="删除图标"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></span></div>
+                        </div>
+                    </article>
+
+                    <section class="story-app-grid" aria-label="应用列表">
+                        <div class="app-item story-app-item telecom-story-entry" onclick="openTelecomApp()" role="button" tabindex="0" aria-label="打开通讯服务"><img id="storyApp1" class="app-icon story-app-icon" alt="通讯服务图标"><div class="app-label">通讯服务</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp2" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-2" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp3" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-3" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp4" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-4" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp5" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-5" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp6" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-6" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp7" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-7" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item"><img id="storyApp8" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-8" onclick="editText(this, '应用名称')">占位 App</div></div>
+                    </section>
+                </main>
             </div>
         </div>
 
@@ -770,7 +819,7 @@
         <div class="modal-content">
             <div class="modal-title" id="contactModalTitle">添加联系人</div>
             <input type="text" class="modal-input" id="contactNameInput" placeholder="姓名">
-            <input type="text" class="modal-input" id="contactPhoneInput" placeholder="电话号码">
+            <input type="hidden" id="contactPhoneInput">
             <input type="text" class="modal-input" id="contactAvatarInput" placeholder="头像URL（可选）">
             <div class="modal-buttons">
                 <button class="modal-btn cancel" type="button" onclick="closeContactModal()">取消</button>
@@ -1608,10 +1657,7 @@
                 <input type="text" class="form-input" id="newContactWechat" placeholder="角色微信号" oninput="syncContactEdit()">
             </div>
 
-            <div class="form-field">
-                <label class="form-label">手机号 (Phone number)</label>
-                <input type="text" class="form-input" id="newContactPhone" placeholder="角色手机号" oninput="syncContactEdit()">
-            </div>
+            <input type="hidden" id="newContactPhone">
 
             <div class="form-field">
                 <label class="form-label">地区 (Region)</label>
@@ -2908,10 +2954,34 @@ MimiGameSave.save({ score, level: 2 });</pre></div></section>
         <audio id="musicAudio" preload="metadata"></audio>
     </section>
 
+    <!-- 通讯服务 -->
+    <section id="telecomApp" class="telecom-app" aria-label="通讯服务" hidden>
+        <header class="telecom-header">
+            <button id="telecomBackBtn" class="telecom-icon-button" type="button" aria-label="返回">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div id="telecomHeaderTitle" class="telecom-header-title">通讯服务</div>
+            <span class="telecom-header-spacer" aria-hidden="true"></span>
+        </header>
+        <main id="telecomView" class="telecom-view"></main>
+        <nav id="telecomNav" class="telecom-nav" aria-label="通讯服务导航" hidden>
+            <button class="telecom-nav-item is-active" type="button" data-telecom-tab="home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+                <span>首页</span>
+            </button>
+            <button class="telecom-nav-item" type="button" data-telecom-tab="mine">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                <span>我的</span>
+            </button>
+        </nav>
+        <div id="telecomToast" class="telecom-toast" role="status" aria-live="polite"></div>
+    </section>
+
     <script src="wechat.js"></script>
     <script src="script.js"></script>
     <script src="music.js?v=20260811"></script>
     <script src="game.js?v=20260813"></script>
+    <script src="telecom.js?v=20260814"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

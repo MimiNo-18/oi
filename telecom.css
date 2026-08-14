@@ -1,0 +1,824 @@
+.telecom-story-entry {
+    cursor: pointer;
+}
+
+.telecom-story-entry:active .story-app-icon {
+    transform: scale(.92);
+}
+
+.telecom-story-entry .story-app-icon {
+    transition: transform .16s ease;
+}
+
+.telecom-app {
+    --telecom-primary: #147f83;
+    --telecom-primary-dark: #0f6570;
+    --telecom-ink: #172033;
+    --telecom-muted: #81899a;
+    --telecom-line: #e8ebf1;
+    --telecom-bg: #f5f7fb;
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    display: flex;
+    flex-direction: column;
+    padding-top: 49px;
+    color: var(--telecom-ink);
+    background: var(--telecom-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+}
+
+.telecom-app[hidden] {
+    display: none !important;
+}
+
+body.telecom-app-active .status-bar {
+    color: var(--telecom-ink, #172033) !important;
+    background: #f5f7fb !important;
+}
+
+.telecom-header {
+    height: 54px;
+    flex: 0 0 54px;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 0 12px;
+    background: rgba(245, 247, 251, .94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.telecom-header-title {
+    font-size: 17px;
+    font-weight: 650;
+    text-align: center;
+    letter-spacing: -.02em;
+}
+
+.telecom-icon-button {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 14px;
+    color: var(--telecom-ink);
+    background: transparent;
+    cursor: pointer;
+}
+
+.telecom-icon-button:active {
+    background: rgba(23, 32, 51, .06);
+}
+
+.telecom-icon-button svg {
+    width: 23px;
+    height: 23px;
+}
+
+.telecom-view {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+}
+
+.telecom-view::-webkit-scrollbar {
+    display: none;
+}
+
+.telecom-screen {
+    width: min(100%, 520px);
+    min-height: 100%;
+    margin: 0 auto;
+    padding: 18px 20px 34px;
+}
+
+.telecom-screen.has-nav {
+    padding-bottom: 112px;
+}
+
+.telecom-kicker {
+    margin-bottom: 9px;
+    color: var(--telecom-primary);
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .12em;
+}
+
+.telecom-title {
+    margin: 0;
+    color: var(--telecom-ink);
+    font-size: 29px;
+    line-height: 1.18;
+    letter-spacing: -.04em;
+}
+
+.telecom-description {
+    margin-top: 12px;
+    color: var(--telecom-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.telecom-card {
+    background: #fff;
+    border: 1px solid rgba(226, 230, 239, .85);
+    border-radius: 22px;
+    box-shadow: 0 10px 35px rgba(38, 48, 79, .06);
+}
+
+.telecom-verify-visual {
+    width: 86px;
+    height: 86px;
+    display: grid;
+    place-items: center;
+    margin: 24px 0 30px;
+    border-radius: 28px;
+    color: #fff;
+    background: linear-gradient(145deg, #2ba39a, #176b87);
+    box-shadow: 0 16px 34px rgba(23, 107, 135, .22);
+}
+
+.telecom-verify-visual svg {
+    width: 42px;
+    height: 42px;
+}
+
+.telecom-form-card {
+    margin-top: 27px;
+    padding: 20px;
+}
+
+.telecom-field + .telecom-field {
+    margin-top: 18px;
+}
+
+.telecom-field label {
+    display: block;
+    margin-bottom: 9px;
+    color: #5d6575;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.telecom-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 15px;
+    border: 1px solid var(--telecom-line);
+    border-radius: 14px;
+    outline: 0;
+    color: var(--telecom-ink);
+    background: #f8f9fc;
+    font: inherit;
+    font-size: 15px;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.telecom-input:focus {
+    border-color: rgba(20, 127, 131, .68);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(20, 127, 131, .1);
+}
+
+.telecom-input[readonly] {
+    color: #7c8494;
+    background: #f1f3f7;
+}
+
+.telecom-field-help,
+.telecom-form-error {
+    margin-top: 9px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.telecom-field-help {
+    color: #989fad;
+}
+
+.telecom-form-error {
+    min-height: 18px;
+    color: #d14a58;
+}
+
+.telecom-primary-button,
+.telecom-secondary-button,
+.telecom-text-button {
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.telecom-primary-button {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 18px;
+    border-radius: 15px;
+    color: #fff;
+    background: linear-gradient(135deg, #218f8d, #176b87);
+    box-shadow: 0 10px 24px rgba(23, 107, 135, .2);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.telecom-primary-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 5px 14px rgba(23, 107, 135, .18);
+}
+
+.telecom-primary-button:disabled {
+    color: rgba(255,255,255,.75);
+    background: #b7bdd7;
+    box-shadow: none;
+    cursor: default;
+}
+
+.telecom-secondary-button {
+    min-height: 42px;
+    padding: 0 17px;
+    border: 1px solid #e2e5ee;
+    border-radius: 13px;
+    color: #586172;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.telecom-text-button {
+    padding: 7px 0;
+    color: var(--telecom-primary);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.telecom-picker-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.telecom-number-grid {
+    display: grid;
+    gap: 11px;
+}
+
+.telecom-number-option {
+    width: 100%;
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 13px 15px;
+    border: 1px solid #e6e9f0;
+    border-radius: 17px;
+    color: var(--telecom-ink);
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.telecom-number-option:active {
+    transform: scale(.985);
+}
+
+.telecom-number-option.is-selected {
+    border-color: var(--telecom-primary);
+    background: #f2f4ff;
+    box-shadow: inset 0 0 0 1px var(--telecom-primary);
+}
+
+.telecom-number-copy strong {
+    display: block;
+    font-size: 17px;
+    letter-spacing: .02em;
+}
+
+.telecom-number-copy span {
+    display: block;
+    margin-top: 5px;
+    color: #9aa1ae;
+    font-size: 11px;
+}
+
+.telecom-number-check {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1.5px solid #d4d8e2;
+    border-radius: 50%;
+    color: transparent;
+    font-size: 13px;
+}
+
+.telecom-number-option.is-selected .telecom-number-check {
+    border-color: var(--telecom-primary);
+    color: #fff;
+    background: var(--telecom-primary);
+}
+
+.telecom-picker-actions {
+    position: sticky;
+    bottom: 0;
+    padding-top: 18px;
+    background: linear-gradient(to bottom, rgba(245,247,251,0), var(--telecom-bg) 22%);
+}
+
+.telecom-home-top,
+.telecom-mine-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.telecom-greeting {
+    color: #8a92a2;
+    font-size: 13px;
+}
+
+.telecom-home-top h1,
+.telecom-mine-heading h1 {
+    margin: 4px 0 0;
+    font-size: 25px;
+    letter-spacing: -.04em;
+}
+
+.telecom-status-pill {
+    padding: 7px 10px;
+    border-radius: 999px;
+    color: #25815c;
+    background: #e7f7ef;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.telecom-balance-card {
+    position: relative;
+    min-height: 218px;
+    padding: 24px;
+    overflow: hidden;
+    border-radius: 28px;
+    color: #fff;
+    background: linear-gradient(145deg, #218f8d 0%, #176b87 58%, #183b56 100%);
+    box-shadow: 0 18px 38px rgba(23, 79, 104, .23);
+}
+
+.telecom-balance-card::before,
+.telecom-balance-card::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 50%;
+}
+
+.telecom-balance-card::before {
+    width: 190px;
+    height: 190px;
+    top: -100px;
+    right: -40px;
+}
+
+.telecom-balance-card::after {
+    width: 120px;
+    height: 120px;
+    right: 32px;
+    bottom: -72px;
+}
+
+.telecom-balance-label {
+    position: relative;
+    z-index: 1;
+    color: rgba(255,255,255,.72);
+    font-size: 13px;
+}
+
+.telecom-balance-value {
+    position: relative;
+    z-index: 1;
+    margin-top: 8px;
+    font-size: 39px;
+    font-weight: 720;
+    letter-spacing: -.04em;
+}
+
+.telecom-balance-value small {
+    margin-right: 3px;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.telecom-primary-number {
+    position: absolute;
+    z-index: 1;
+    left: 24px;
+    right: 24px;
+    bottom: 23px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,.18);
+}
+
+.telecom-primary-number span {
+    display: block;
+    color: rgba(255,255,255,.62);
+    font-size: 11px;
+}
+
+.telecom-primary-number strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 18px;
+    letter-spacing: .045em;
+}
+
+.telecom-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 29px 2px 13px;
+}
+
+.telecom-section-heading h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -.025em;
+}
+
+.telecom-section-heading span {
+    color: #9ba2af;
+    font-size: 12px;
+}
+
+.telecom-plan-list {
+    display: grid;
+    gap: 12px;
+}
+
+.telecom-plan-card {
+    display: grid;
+    grid-template-columns: 54px 1fr auto;
+    align-items: center;
+    gap: 13px;
+    padding: 15px;
+}
+
+.telecom-plan-icon {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 17px;
+    color: var(--telecom-primary);
+    background: #eef0ff;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.telecom-plan-card:nth-child(2) .telecom-plan-icon {
+    color: #b85647;
+    background: #fff0ed;
+}
+
+.telecom-plan-card:nth-child(3) .telecom-plan-icon {
+    color: #9a7518;
+    background: #fff7dc;
+}
+
+.telecom-plan-copy strong,
+.telecom-menu-copy strong {
+    display: block;
+    font-size: 14px;
+}
+
+.telecom-plan-copy span,
+.telecom-menu-copy span {
+    display: block;
+    margin-top: 5px;
+    color: #959ca9;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.telecom-plan-price {
+    color: var(--telecom-primary);
+    text-align: right;
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.telecom-plan-price span {
+    display: block;
+    margin-top: 6px;
+    color: #969da9;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.telecom-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 19px;
+}
+
+.telecom-profile-avatar {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 19px;
+    color: #fff;
+    background: linear-gradient(145deg, #2ba39a, #176b87);
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.telecom-profile-copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.telecom-profile-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 720;
+}
+
+.telecom-verified-mark {
+    padding: 3px 6px;
+    border-radius: 6px;
+    color: #0f7378;
+    background: #e4f5f2;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.telecom-profile-phone {
+    margin-top: 7px;
+    color: #8d95a4;
+    font-size: 12px;
+}
+
+.telecom-profile-count {
+    color: var(--telecom-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.telecom-menu-list {
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.telecom-menu-item {
+    width: 100%;
+    min-height: 73px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 17px;
+    border: 0;
+    border-bottom: 1px solid #edf0f4;
+    color: var(--telecom-ink);
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.telecom-menu-item:last-child {
+    border-bottom: 0;
+}
+
+.telecom-menu-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 13px;
+    color: var(--telecom-primary);
+    background: #eef0ff;
+}
+
+.telecom-menu-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.telecom-menu-copy {
+    flex: 1;
+}
+
+.telecom-chevron {
+    color: #b3b8c2;
+    font-size: 20px;
+}
+
+.telecom-form-actions {
+    margin-top: 24px;
+}
+
+.telecom-number-manage-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.telecom-managed-number {
+    padding: 18px;
+}
+
+.telecom-managed-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.telecom-managed-top strong {
+    display: block;
+    font-size: 17px;
+    letter-spacing: .035em;
+}
+
+.telecom-managed-top span {
+    display: block;
+    margin-top: 6px;
+    color: #959ca9;
+    font-size: 11px;
+}
+
+.telecom-primary-badge {
+    padding: 5px 8px;
+    border-radius: 8px;
+    color: #0f7378;
+    background: #e4f5f2;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.telecom-managed-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 17px;
+    padding-top: 14px;
+    border-top: 1px solid #edf0f4;
+}
+
+.telecom-managed-actions button {
+    border: 0;
+    color: var(--telecom-primary);
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.telecom-managed-actions button.is-danger {
+    color: #d45661;
+}
+
+.telecom-add-number {
+    width: 100%;
+    min-height: 54px;
+    margin-top: 14px;
+    border: 1px dashed #bec4d7;
+    border-radius: 16px;
+    color: var(--telecom-primary);
+    background: rgba(255,255,255,.58);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.telecom-nav {
+    position: absolute;
+    z-index: 3;
+    left: 16px;
+    right: 16px;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    height: 68px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 7px;
+    border: 1px solid rgba(223, 227, 237, .85);
+    border-radius: 23px;
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 13px 36px rgba(34, 42, 71, .14);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.telecom-nav[hidden] {
+    display: none !important;
+}
+
+.telecom-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 17px;
+    color: #9aa1af;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.telecom-nav-item svg {
+    width: 20px;
+    height: 20px;
+}
+
+.telecom-nav-item.is-active {
+    color: #fff;
+    background: var(--telecom-primary);
+    box-shadow: 0 7px 15px rgba(20,127,131,.22);
+}
+
+.telecom-toast {
+    position: absolute;
+    z-index: 8;
+    left: 50%;
+    bottom: 100px;
+    max-width: calc(100% - 48px);
+    padding: 10px 15px;
+    border-radius: 12px;
+    color: #fff;
+    background: rgba(23,32,51,.92);
+    box-shadow: 0 8px 24px rgba(23,32,51,.2);
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 8px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.telecom-toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+body.has-phone-border .telecom-app {
+    width: 375px !important;
+    height: 812px !important;
+    inset: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+    padding-top: 49px !important;
+    border-radius: 48px !important;
+    transform: translate(-50%, -50%) scale(.8) !important;
+    overflow: hidden !important;
+    z-index: 10300 !important;
+}
+
+body.status-bar-hidden .telecom-app {
+    padding-top: 0 !important;
+}
+
+@media (min-width: 700px) {
+    body:not(.has-phone-border) .telecom-app {
+        left: 50%;
+        width: 430px;
+        border-left: 1px solid #e8ebf1;
+        border-right: 1px solid #e8ebf1;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 360px) {
+    .telecom-screen {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .telecom-plan-card {
+        grid-template-columns: 48px 1fr auto;
+        gap: 10px;
+        padding: 13px;
+    }
+
+    .telecom-plan-icon {
+        width: 48px;
+        height: 48px;
+    }
+}

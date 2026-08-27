@@ -364,14 +364,14 @@ body.has-phone-border .music-app {
 .music-player-disc { border: 0; cursor: pointer; box-sizing: border-box; }
 .music-player-disc img { display: block; }
 .music-choice-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.music-choice-btn { min-height: 86px; border: 1px solid rgba(255,255,255,.95); border-radius: 8px; color: #111; background: rgba(225,225,225,.82); font: inherit; font-weight: 650; }
+.music-choice-btn { min-height: 52px; border: 1px solid rgba(255,255,255,.95); border-radius: 8px; color: #111; background: rgba(225,225,225,.82); font: inherit; font-weight: 650; }
 .music-dialog-hint { margin: 0 0 12px; color: rgba(0,0,0,.56); font-size: 12px; }
 .music-form-split { display: grid; grid-template-columns: 1fr; gap: 0; }
 .music-file-field { position: relative; }
 .music-file-field input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .music-file-control { width: 100%; min-height: 42px; margin-top: 6px; border: 1px solid rgba(0,0,0,.12); border-radius: 7px; padding: 10px 12px; display: flex; align-items: center; justify-content: flex-start; overflow: hidden; color: #111; background: #d8d8d8; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .music-mode-toast { position: absolute; left: 50%; top: 32%; z-index: 40; transform: translate(-50%, -50%); max-width: calc(100% - 40px); min-height: 36px; display: flex; align-items: center; padding: 7px 16px; border: 1px solid rgba(255,255,255,.98); border-radius: 999px; color: #111; background: rgba(224,224,224,.82); box-shadow: 0 8px 24px rgba(0,0,0,.1); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); font-size: 13px; white-space: nowrap; }
-.music-field select { width: 100%; margin-top: 6px; border: 1px solid rgba(0,0,0,.12); border-radius: 7px; padding: 10px 12px; outline: 0; color: #111; background: rgba(255,255,255,.82); font: inherit; }
+.music-field select { width: 100%; margin-top: 6px; border: 1px solid rgba(0,0,0,.12); border-radius: 7px; padding: 7px 10px; min-height: 36px; outline: 0; color: #111; background: rgba(255,255,255,.82); font: inherit; }
 .music-dialog-backdrop { align-items: center; }
 .music-dialog { max-height: min(86vh, 680px); overflow-y: auto; color: #111; background: rgba(245,245,245,.9); border-color: rgba(255,255,255,.96); backdrop-filter: blur(28px) saturate(1.15); -webkit-backdrop-filter: blur(28px) saturate(1.15); }
 .music-dialog-title { color: #111; }

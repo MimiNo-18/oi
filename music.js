@@ -5,6 +5,7 @@
     const AUDIUS_DIRECTORY = 'https://api.audius.co';
     const LRCLIB_API = 'https://lrclib.net/api';
     const FALLBACK_COVER = 'https://jsd.onmicrosoft.cn/gh/mydracula/image@master/20260811/c3db77382dac477485f7672eb3c05d09.jpg';
+    const DEFAULT_ALBUM_ID = 'album-default';
     const T = {
         albums: '\u4e13\u8f91', addAlbum: '\u6dfb\u52a0\u4e13\u8f91', daily: '\u6bcf\u65e5\u63a8\u8350',
         search: '\u641c\u7d22\u5168\u7f51\u516c\u5f00\u97f3\u4e50', noResult: '\u6ca1\u6709\u627e\u5230\u53ef\u64ad\u653e\u7684\u97f3\u4e50',
@@ -13,6 +14,7 @@
         songName: '\u6b4c\u66f2\u540d', artist: '\u4f5c\u8005 / \u6b4c\u624b', songUrl: '\u6b4c\u66f2\u94fe\u63a5',
         lyricsFile: '\u6b4c\u8bcd LRC \u6587\u4ef6', lyricsUrl: '\u6b4c\u8bcd\u94fe\u63a5', coverFile: '\u5c01\u9762\u56fe\u7247', coverUrl: '\u5c01\u9762\u94fe\u63a5', importLyrics: '\u5bfc\u5165\u6b4c\u8bcd', importImage: '\u5bfc\u5165\u56fe\u7247',
         albumName: '\u4e13\u8f91\u540d\u79f0', albumDesc: '\u4e13\u8f91\u7b80\u4ecb', createAlbum: '\u521b\u5efa\u4e13\u8f91',
+        edit: '\u7f16\u8f91', delete: '\u5220\u9664', addToAlbum: '\u52a0\u5165\u4e13\u8f91', save: '\u4fdd\u5b58', chooseAlbum: '\u9009\u62e9\u4e13\u8f91', noAlbum: '\u4e0d\u9009\u62e9\uff08\u5bfc\u5165\u540e\u8fdb\u5165\u9ed8\u8ba4\u4e13\u8f91\uff09',
         nowPlaying: 'NOW PLAYING', playlist: '\u64ad\u653e\u5217\u8868', noLyrics: '\u8fd9\u9996\u6b4c\u6ca1\u6709\u6b4c\u8bcd',
         back: '\u8fd4\u56de', emptyAlbums: '\u70b9\u51fb\u52a0\u53f7\u5bfc\u5165\u7b2c\u4e00\u5f20\u4e13\u8f91',
         localTip: '\u9009\u62e9\u540e\u4f1a\u5f39\u51fa\u6b4c\u66f2\u8d44\u6599', imported: '\u5bfc\u5165\u6210\u529f',
@@ -36,8 +38,10 @@
 
     const state = {
         tab: 'home', currentId: null, playing: false, mode: 'list', playQueue: [], lyrics: [], lyricsTrackId: null,
-        daily: [], searchResults: [], albums: readJson('mimi_music_albums', []), tracks: readJson('mimi_music_tracks', []), favorites: readJson('mimi_music_favorites', [])
+        daily: [], searchResults: [], albums: readJson('mimi_music_albums', []), tracks: readJson('mimi_music_tracks', []), favorites: readJson('mimi_music_favorites', []), albumViewId: null
     };
+    ensureDefaultAlbum();
+    saveState();
     let app, view, audio, navCover, searchTimer, lyricsTimer, toastTimer, audiusHost;
     let lyricsUserScrolling = false;
     let lyricsAutoScrolling = false;
@@ -45,6 +49,13 @@
 
     function readJson(key, fallback) {
         try { const value = JSON.parse(localStorage.getItem(key)); return Array.isArray(value) ? value : fallback; } catch (e) { return fallback; }
+    }
+    function ensureDefaultAlbum() {
+        if (!state.albums.some(function (album) { return album && album.id === DEFAULT_ALBUM_ID; })) {
+            state.albums.unshift({ id: DEFAULT_ALBUM_ID, name: '默认专辑', desc: '', cover: FALLBACK_COVER, isDefault: true });
+        }
+        state.albums.forEach(function (album) { if (album.id === DEFAULT_ALBUM_ID) { album.name = album.name || '默认专辑'; album.desc = ''; album.isDefault = true; album.cover = safeCover(album.cover || FALLBACK_COVER); } });
+        state.tracks.forEach(function (track) { if (String(track.id || '').indexOf('local-') === 0) track.imported = true; if ((track.imported || track.local) && !track.albumId) { track.albumId = DEFAULT_ALBUM_ID; track.album = '\u9ed8\u8ba4\u4e13\u8f91'; } if (track.albumId === DEFAULT_ALBUM_ID && !(track.imported || track.local)) { track.albumId = ''; track.album = ''; } });
     }
     function saveState() {
         localStorage.setItem('mimi_music_albums', JSON.stringify(state.albums));
@@ -90,6 +101,25 @@
         results.forEach(function (result) { if (result.status === 'fulfilled') merged.push.apply(merged, result.value); });
         const seen = {};
         return merged.filter(function (track) { const key = (track.name + '|' + track.artist).toLowerCase(); if (seen[key]) return false; seen[key] = true; return true; });
+    }
+    function localSearch(keyword, limit) {
+        const query = normalizeMetadata(keyword);
+        if (!query) return [];
+        return state.tracks.filter(function (track) {
+            if (!(track.imported || track.local)) return false;
+            return [track.name, track.artist, track.album].some(function (value) { return normalizeMetadata(value).includes(query); });
+        }).slice(0, limit || 20);
+    }
+    async function searchMusic(keyword, limit) {
+        const local = localSearch(keyword, limit || 20);
+        const remote = await publicSearch(keyword, limit || 20);
+        const seen = {};
+        return local.concat(remote).filter(function (track) {
+            const key = normalizeMetadata(track.name) + '|' + normalizeMetadata(track.artist);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        }).slice(0, limit || 20);
     }
     async function loadDaily() {
         const terms = ['\u534e\u8bed', '\u5468\u6770\u4f26', '\u6797\u4fca\u6770', '\u9648\u5955\u8fc5', '\u8f7b\u97f3\u4e50'];
@@ -143,7 +173,7 @@
             track.lrc = track.lrc || '';
         } finally {
             track.lyricsLoading = false;
-            if (state.currentId === track.id) { state.lyrics = parseLyrics(track.lrc); if (document.querySelector('.music-lyrics-page')) renderLyrics(); }
+            if (state.currentId === track.id) { prepareLyricsForTrack(track); if (document.querySelector('.music-lyrics-page')) renderLyrics(); }
         }
     }
     function formatTime(seconds) { return Number.isFinite(seconds) ? Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0') : '0:00'; }
@@ -157,7 +187,7 @@
     }
     function trackRow(track) {
         const liked = state.favorites.includes(track.id);
-        return '<div class="music-track-row' + (state.currentId === track.id ? ' is-current' : '') + '" data-track-id="' + escapeHtml(track.id) + '" role="button" tabindex="0"><img class="music-track-cover" src="' + safeCover(track.cover) + '" alt="' + escapeHtml(track.name) + '" loading="lazy"><span class="music-track-copy"><span class="music-track-name">' + escapeHtml(track.name) + '</span><span class="music-track-artist">' + escapeHtml(track.artist + (track.source ? ' · ' + track.source : '')) + '</span></span><button class="music-track-action' + (liked ? ' is-liked' : '') + '" type="button" data-like-id="' + escapeHtml(track.id) + '" aria-label="收藏">' + icons.heart + '</button></div>';
+        return '<div class="music-track-row' + (state.currentId === track.id ? ' is-current' : '') + '" data-track-id="' + escapeHtml(track.id) + '" data-track-imported="' + (track.imported || track.local ? 'true' : 'false') + '" role="button" tabindex="0"><img class="music-track-cover" src="' + safeCover(track.cover) + '" alt="' + escapeHtml(track.name) + '" loading="lazy"><span class="music-track-copy"><span class="music-track-name">' + escapeHtml(track.name) + '</span><span class="music-track-artist">' + escapeHtml(track.artist + (track.source ? ' · ' + track.source : '')) + '</span></span><button class="music-track-action' + (liked ? ' is-liked' : '') + '" type="button" data-like-id="' + escapeHtml(track.id) + '" aria-label="收藏">' + icons.heart + '</button></div>';
     }
     function bindTrackRows(root) {
         root.querySelectorAll('[data-track-id]').forEach(function (row) {
@@ -165,32 +195,114 @@
             row.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); state.playQueue = Array.from(root.querySelectorAll('[data-track-id]')).map(function (item) { return item.dataset.trackId; }); playTrack(row.dataset.trackId); } });
         });
         root.querySelectorAll('[data-like-id]').forEach(function (button) { button.addEventListener('click', function (event) { event.stopPropagation(); toggleFavorite(button.dataset.likeId); }); });
+        root.querySelectorAll('[data-track-id]').forEach(function (row) { bindLongPress(row, function () { openTrackActions(row.dataset.trackId); }); });
     }
+    function bindLongPress(element, callback) {
+        let timer = null; let suppressClick = false;
+        const clear = function () { if (timer) window.clearTimeout(timer); timer = null; };
+        element.addEventListener('pointerdown', function (event) { if (event.button !== undefined && event.button !== 0) return; clear(); timer = window.setTimeout(function () { timer = null; suppressClick = true; callback(event); window.setTimeout(function () { suppressClick = false; }, 350); }, 600); });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (name) { element.addEventListener(name, clear); });
+        element.addEventListener('click', function (event) { if (suppressClick) { event.preventDefault(); event.stopImmediatePropagation(); } }, true);
+        element.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+    }
+    function removeTrack(trackId) {
+        const track = state.tracks.find(function (item) { return item.id === trackId; });
+        if (!track || !(track.imported || track.local)) return;
+        if (!window.confirm('删除这首导入的音乐？')) return;
+        if (track.local && String(track.src || '').indexOf('blob:') === 0) URL.revokeObjectURL(track.src);
+        state.tracks = state.tracks.filter(function (item) { return item.id !== trackId; });
+        state.favorites = state.favorites.filter(function (id) { return id !== trackId; });
+        state.playQueue = state.playQueue.filter(function (id) { return id !== trackId; });
+        if (state.currentId === trackId) { audio.pause(); audio.removeAttribute('src'); state.currentId = null; state.playing = false; state.lyrics = []; navCover.src = FALLBACK_COVER; }
+        saveState();
+        if (state.tab === 'home') renderHome(); else if (state.tab === 'mine') renderMine(); else if (state.tab === 'player') renderPlayer(); else if (state.albumViewId) renderAlbumDetail(state.albumViewId); else renderAlbumList();
+    }
+    function actionDialog(title, buttons) {
+        const content = '<div class="music-choice-grid">' + buttons.map(function (button) { return '<button type="button" class="music-choice-btn" data-action="' + button.id + '">' + button.label + '</button>'; }).join('') + '</div>';
+        const backdrop = makeDialog(title, content, function () {});
+        backdrop.querySelector('button[type="submit"]').style.display = 'none';
+        backdrop.querySelector('form').addEventListener('submit', function (event) { event.preventDefault(); });
+        return backdrop;
+    }
+    function openTrackActions(trackId) {
+        const track = allKnownTracks().find(function (item) { return item.id === trackId; }); if (!track) return;
+        const imported = track.imported || track.local;
+        const buttons = imported ? [{ id: 'edit', label: T.edit }, { id: 'delete', label: T.delete }] : [{ id: 'album', label: T.addToAlbum }];
+        const backdrop = actionDialog(track.name, buttons);
+        if (backdrop.querySelector('[data-action="edit"]')) backdrop.querySelector('[data-action="edit"]').addEventListener('click', function () { backdrop.remove(); openTrackEditDialog(track); });
+        if (backdrop.querySelector('[data-action="delete"]')) backdrop.querySelector('[data-action="delete"]').addEventListener('click', function () { backdrop.remove(); removeTrack(track.id); });
+        if (backdrop.querySelector('[data-action="album"]')) backdrop.querySelector('[data-action="album"]').addEventListener('click', function () { backdrop.remove(); openAddToAlbumDialog(track); });
+    }
+    function openTrackEditDialog(track) {
+        const albumOptions = state.albums.map(function (album) { return '<option value="' + escapeHtml(album.id) + '"' + (album.id === track.albumId ? ' selected' : '') + '>' + escapeHtml(album.name) + '</option>'; }).join('');
+        const content = field(T.songName, 'name', 'text', 'required maxlength="80" value="' + escapeHtml(track.name) + '"') + field(T.artist, 'artist', 'text', 'required maxlength="60" value="' + escapeHtml(track.artist) + '"') + '<label class="music-field">' + T.albums + '<select name="albumId"><option value="">-</option>' + albumOptions + '</select></label>';
+        const backdrop = makeDialog(T.edit, content, function (data, close) { track.name = String(data.get('name') || '').trim() || track.name; track.artist = String(data.get('artist') || '').trim() || track.artist; const albumId = String(data.get('albumId') || DEFAULT_ALBUM_ID); track.albumId = albumId; const album = state.albums.find(function (item) { return item.id === albumId; }); track.album = album ? album.name : '\u9ed8\u8ba4\u4e13\u8f91'; saveState(); close(); renderCurrentMusicView(); });
+        backdrop.querySelector('button[type="submit"]').textContent = T.save;
+    }
+    function openAddToAlbumDialog(track) {
+        const content = '<label class="music-field">' + T.chooseAlbum + '<select name="albumId">' + state.albums.map(function (album) { return '<option value="' + escapeHtml(album.id) + '">' + escapeHtml(album.name) + '</option>'; }).join('') + '</select></label>';
+        const backdrop = makeDialog(T.addToAlbum, content, function (data, close) { const albumId = String(data.get('albumId') || DEFAULT_ALBUM_ID); let target = state.tracks.find(function (item) { return item.id === track.id; }); if (!target) { target = Object.assign({}, track); target.local = false; target.imported = false; state.tracks.push(target); } target.albumId = albumId; const album = state.albums.find(function (item) { return item.id === albumId; }); target.album = album ? album.name : ''; saveState(); close(); renderCurrentMusicView(); });
+        backdrop.querySelector('button[type="submit"]').textContent = T.save;
+    }
+    function renderCurrentMusicView() { if (state.tab === 'home') renderHome(); else if (state.tab === 'mine') renderMine(); else if (state.tab === 'player') renderPlayer(); else if (state.albumViewId) renderAlbumDetail(state.albumViewId); else renderAlbumList(); }
     function renderHome() {
+        state.albumViewId = null;
         const albums = state.albums;
         const cards = albums.map(function (album) { return '<button class="music-album-card" type="button" data-album-id="' + escapeHtml(album.id) + '"><img class="music-album-cover" src="' + safeCover(album.cover) + '" alt="' + escapeHtml(album.name) + '"><span class="music-album-card-name">' + escapeHtml(album.name) + '</span></button>'; }).join('');
-        view.innerHTML = '<section class="music-page music-home-page"><div class="music-page-inner"><h1 class="music-page-title" data-music-exit>MUSIC</h1><div class="music-search-row"><label class="music-search-shell">' + icons.search + '<input id="musicSearchInput" class="music-search-input" type="search" placeholder="' + T.search + '" autocomplete="off"></label><button class="music-add-btn" type="button" data-import-music aria-label="' + T.import + '">' + icons.plus + '</button></div></div><div id="musicSearchResults" class="music-search-results" hidden></div><div class="music-heading-row"><h2 class="music-section-title">' + T.albums + '</h2>' + (albums.length > 4 ? '<button class="music-album-next" type="button" aria-label="' + T.albums + '">' + icons.arrow + '</button>' : '') + '</div><div id="musicAlbumStrip" class="music-album-strip"><button class="music-album-card music-add-album-card" type="button" data-add-album><span class="music-album-add-cover">' + icons.plus + '</span><span class="music-album-card-name">' + T.addAlbum + '</span></button>' + (cards || '') + '</div><div class="music-heading-row"><h2 class="music-section-title">' + T.daily + '</h2><button class="music-shuffle-btn" type="button" data-refresh-daily aria-label="' + T.daily + '">' + icons.shuffle + '</button></div><div class="music-track-list">' + (state.daily.length ? state.daily.map(trackRow).join('') : '<div class="music-empty">' + (state.daily === null ? T.loading : T.noSongs) + '</div>') + '</div></section>';
+        view.innerHTML = '<section class="music-page music-home-page"><div class="music-page-inner"><h1 class="music-page-title" data-music-exit>MUSIC</h1><div class="music-search-row"><label class="music-search-shell">' + icons.search + '<input id="musicSearchInput" class="music-search-input" type="search" placeholder="' + T.search + '" autocomplete="off"></label><button class="music-add-btn" type="button" data-import-music aria-label="' + T.import + '">' + icons.plus + '</button></div></div><div id="musicSearchResults" class="music-search-results" hidden></div><div class="music-heading-row"><h2 class="music-section-title" data-open-albums role="button" tabindex="0">' + T.albums + '</h2>' + (albums.length > 4 ? '<button class="music-album-next" type="button" aria-label="' + T.albums + '">' + icons.arrow + '</button>' : '') + '</div><div id="musicAlbumStrip" class="music-album-strip"><button class="music-album-card music-add-album-card" type="button" data-add-album><span class="music-album-add-cover">' + icons.plus + '</span><span class="music-album-card-name">' + T.addAlbum + '</span></button>' + (cards || '') + '</div><div class="music-heading-row"><h2 class="music-section-title">' + T.daily + '</h2><button class="music-shuffle-btn" type="button" data-refresh-daily aria-label="' + T.daily + '">' + icons.shuffle + '</button></div><div class="music-track-list">' + (state.daily.length ? state.daily.map(trackRow).join('') : '<div class="music-empty">' + (state.daily === null ? T.loading : T.noSongs) + '</div>') + '</div></section>';
         view.querySelector('[data-music-exit]').addEventListener('click', closeMusicApp);
+        view.querySelector('[data-open-albums]').addEventListener('click', renderAlbumList); view.querySelector('[data-open-albums]').addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); renderAlbumList(); } });
         view.querySelectorAll('[data-add-album]').forEach(function (button) { button.addEventListener('click', openAlbumDialog); });
         view.querySelector('[data-import-music]').addEventListener('click', openImportChoice);
         view.querySelector('[data-refresh-daily]').addEventListener('click', function () { state.daily = []; renderHome(); loadDaily(); });
         view.querySelectorAll('[data-album-id]').forEach(function (button) { button.addEventListener('click', function () { renderAlbumDetail(button.dataset.albumId); }); });
+        view.querySelectorAll('[data-album-id]').forEach(function (button) { bindLongPress(button, function () { openAlbumActions(button.dataset.albumId); }); });
         const next = view.querySelector('.music-album-next');
         if (next) next.addEventListener('click', function () { document.getElementById('musicAlbumStrip').scrollBy({ left: 240, behavior: 'smooth' }); });
         bindSearch(); bindTrackRows(view);
     }
     function bindSearch() {
         const input = document.getElementById('musicSearchInput'); const results = document.getElementById('musicSearchResults');
-        input.addEventListener('input', function () { const query = input.value.trim(); window.clearTimeout(searchTimer); if (!query) { results.hidden = true; return; } results.hidden = false; results.innerHTML = '<div class="music-search-empty">' + T.searching + '</div>'; searchTimer = window.setTimeout(async function () { try { state.searchResults = await publicSearch(query, 20); results.innerHTML = state.searchResults.length ? state.searchResults.map(trackRow).join('') : '<div class="music-search-empty">' + T.noResult + '</div>'; bindTrackRows(results); } catch (e) { results.innerHTML = '<div class="music-search-empty">' + T.noResult + '</div>'; } }, 260); });
+        input.addEventListener('input', function () { const query = input.value.trim(); window.clearTimeout(searchTimer); if (!query) { results.hidden = true; return; } results.hidden = false; results.innerHTML = '<div class="music-search-empty">' + T.searching + '</div>'; searchTimer = window.setTimeout(async function () { try { state.searchResults = await searchMusic(query, 20); results.innerHTML = state.searchResults.length ? state.searchResults.map(trackRow).join('') : '<div class="music-search-empty">' + T.noResult + '</div>'; bindTrackRows(results); } catch (e) { const local = localSearch(query, 20); state.searchResults = local; results.innerHTML = local.length ? local.map(trackRow).join('') : '<div class="music-search-empty">' + T.noResult + '</div>'; bindTrackRows(results); } }, 260); });
     }
     function renderAlbumList() {
+        state.albumViewId = null;
         view.scrollTop = 0;
-        view.innerHTML = '<section class="music-page"><header class="music-album-list-head"><h1 class="music-page-title music-album-list-title" data-album-back>Albums</h1><div class="music-album-list-subtitle">' + state.albums.length + ' \u5f20\u4e13\u8f91</div></header><div class="music-album-list">' + (state.albums.length ? state.albums.map(function (album) { return '<button class="music-album-list-row" type="button" data-open-album="' + escapeHtml(album.id) + '"><img src="' + safeCover(album.cover) + '" alt="' + escapeHtml(album.name) + '"><span class="music-album-list-copy"><span class="music-album-list-name">' + escapeHtml(album.name) + '</span><span class="music-album-list-desc">' + escapeHtml(album.desc) + '</span></span></button>'; }).join('') : '<div class="music-empty">' + T.emptyAlbums + '</div>') + '</div></section>';
+        view.innerHTML = '<section class="music-page"><header class="music-album-list-head"><h1 class="music-page-title music-album-list-title" data-album-back>Albums</h1><div class="music-album-list-subtitle">' + state.albums.length + ' \u5f20\u4e13\u8f91</div></header><div class="music-album-list">' + (state.albums.length ? state.albums.map(function (album) { return '<button class="music-album-list-row" type="button" data-open-album="' + escapeHtml(album.id) + '"><img src="' + safeCover(album.cover) + '" alt="' + escapeHtml(album.name) + '"><span class="music-album-list-copy"><span class="music-album-list-name">' + escapeHtml(album.name) + '</span>' + (album.desc ? '<span class="music-album-list-desc">' + escapeHtml(album.desc) + '</span>' : '') + '</span></button>'; }).join('') : '<div class="music-empty">' + T.emptyAlbums + '</div>') + '</div></section>';
         view.querySelector('[data-album-back]').addEventListener('click', renderHome); view.querySelectorAll('[data-open-album]').forEach(function (button) { button.addEventListener('click', function () { renderAlbumDetail(button.dataset.openAlbum); }); });
+        view.querySelectorAll('[data-open-album]').forEach(function (button) { bindLongPress(button, function () { openAlbumActions(button.dataset.openAlbum); }); });
     }
     function renderAlbumDetail(albumId) {
-        const album = state.albums.find(function (item) { return item.id === albumId; }); const songs = state.tracks.filter(function (track) { return track.albumId === albumId; });
-        view.scrollTop = 0; view.innerHTML = '<section class="music-page"><header class="music-album-list-head"><h1 class="music-page-title music-album-list-title" data-album-back>' + escapeHtml(album ? album.name : T.albums) + '</h1><div class="music-album-list-subtitle">' + (album ? escapeHtml(album.desc) : '') + '</div></header><div class="music-track-list">' + (songs.length ? songs.map(trackRow).join('') : '<div class="music-empty">' + T.noSongs + '</div>') + '</div></section>'; view.querySelector('[data-album-back]').addEventListener('click', renderAlbumList); bindTrackRows(view);
+        state.albumViewId = albumId;
+        const album = state.albums.find(function (item) { return item.id === albumId; }); const songs = state.tracks.filter(function (track) { return track.albumId === albumId && (albumId !== DEFAULT_ALBUM_ID || track.imported || track.local); });
+        view.scrollTop = 0; view.innerHTML = '<section class="music-page"><header class="music-album-list-head"><h1 class="music-page-title music-album-list-title" data-album-back>' + escapeHtml(album ? album.name : T.albums) + '</h1>' + (album && album.desc ? '<div class="music-album-list-subtitle">' + escapeHtml(album.desc) + '</div>' : '') + '</header><div class="music-track-list">' + (songs.length ? songs.map(trackRow).join('') : '<div class="music-empty">' + T.noSongs + '</div>') + '</div></section>'; view.querySelector('[data-album-back]').addEventListener('click', renderAlbumList); bindTrackRows(view);
+    }
+    function removeAlbum(albumId) { return removeAlbumSafe(albumId); /*
+        if (albumId === DEFAULT_ALBUM_ID) { window.alert('默认专辑不能删除'); return; }
+        const album = state.albums.find(function (item) { return item.id === albumId; }); if (!album || !window.confirm('删除专辑“' + album.name + '”？其中的音乐将移入默认专辑。')) return;
+        state.tracks.forEach(function (track) { if (track.albumId === albumId) track.albumId = DEFAULT_ALBUM_ID; }); state.albums = state.albums.filter(function (item) { return item.id !== albumId; }); saveState(); renderAlbumList();
+    } */ }
+    function openAlbumActions(albumId) {
+        const album = state.albums.find(function (item) { return item.id === albumId; }); if (!album) return;
+        const buttons = albumId === DEFAULT_ALBUM_ID ? [{ id: 'edit', label: T.edit }] : [{ id: 'edit', label: T.edit }, { id: 'delete', label: T.delete }];
+        const backdrop = actionDialog(album.name, buttons);
+        const edit = backdrop.querySelector('[data-action="edit"]'); if (edit) edit.addEventListener('click', function () { backdrop.remove(); openAlbumEditDialog(album); });
+        const del = backdrop.querySelector('[data-action="delete"]'); if (del) del.addEventListener('click', function () { backdrop.remove(); removeAlbumSafe(albumId); });
+    }
+    function openAlbumEditDialog(album) {
+        const coverUrl = /^https?:\/\//i.test(String(album.cover || '')) ? String(album.cover) : '';
+        const content = field(T.albumName, 'name', 'text', 'required maxlength="40" value="' + escapeHtml(album.name) + '"') + field(T.albumDesc, 'desc', 'text', 'maxlength="120" value="' + escapeHtml(album.desc || '') + '"') + '<div class="music-form-split">' + field(T.coverUrl, 'coverUrl', 'url', 'placeholder="https://..." value="' + escapeHtml(coverUrl) + '"') + fileField('coverFile', 'image/*', T.importImage) + '</div>';
+        const backdrop = makeDialog(T.edit, content, async function (data, close) { album.name = String(data.get('name') || '').trim() || album.name; album.desc = String(data.get('desc') || '').trim(); const nextCoverUrl = String(data.get('coverUrl') || '').trim(); const coverFile = data.get('coverFile'); if (nextCoverUrl) album.cover = safeCover(nextCoverUrl); if (coverFile && coverFile.size) album.cover = await readDataUrl(coverFile); if (!album.cover) album.cover = FALLBACK_COVER; state.tracks.forEach(function (track) { if (track.albumId === album.id) track.album = album.name; }); saveState(); close(); renderCurrentMusicView(); });
+        backdrop.querySelector('button[type="submit"]').textContent = T.save;
+        bindFileControls(backdrop);
+    }
+    function removeAlbumSafe(albumId) {
+        if (albumId === DEFAULT_ALBUM_ID) { window.alert('Default album cannot be deleted'); return; }
+        const album = state.albums.find(function (item) { return item.id === albumId; });
+        if (!album || !window.confirm('Delete album: ' + album.name + '? Songs will move to the default album.')) return;
+        state.tracks.forEach(function (track) { if (track.albumId === albumId) { if (track.imported || track.local) { track.albumId = DEFAULT_ALBUM_ID; track.album = '\u9ed8\u8ba4\u4e13\u8f91'; } else { track.albumId = ''; track.album = ''; } } });
+        state.albums = state.albums.filter(function (item) { return item.id !== albumId; });
+        saveState(); renderAlbumList();
     }
     function makeDialog(title, content, onSubmit) {
         const backdrop = document.createElement('div'); backdrop.className = 'music-dialog-backdrop'; backdrop.innerHTML = '<form class="music-dialog"><h2 class="music-dialog-title">' + title + '</h2>' + content + '<div class="music-dialog-actions"><button class="music-dialog-btn" type="button" data-dialog-close>' + T.cancel + '</button><button class="music-dialog-btn is-primary" type="submit">' + title + '</button></div></form>'; app.appendChild(backdrop);
@@ -218,10 +330,12 @@
         const coverInputs = '<div class="music-form-split">' + field(T.coverUrl, 'coverUrl', 'url', 'placeholder="https://..."') + fileField('coverFile', 'image/*', T.importImage) + '</div>';
         const lyricsInputs = '<div class="music-form-split">' + field(T.lyricsUrl, 'lyricsUrl', 'url', 'placeholder="https://...lrc"') + fileField('lyricsFile', '.lrc,text/plain', T.importLyrics) + '</div>';
         const audioInput = options.link ? field(T.songUrl, 'songUrl', 'url', 'required placeholder="https://..."') : '<p class="music-dialog-hint">' + T.localTip + '</p>';
-        const backdrop = makeDialog(T.import, audioInput + field(T.songName, 'name', 'text', 'required maxlength="80"') + field(T.artist, 'artist', 'text', 'required maxlength="60"') + '<label class="music-field">' + T.albums + '<select name="albumId"><option value="">-</option>' + albumOptions + '</select></label>' + lyricsInputs + coverInputs, async function (data, close, form) {
+        const backdrop = makeDialog(T.import, audioInput + field(T.songName, 'name', 'text', 'required maxlength="80"') + field(T.artist, 'artist', 'text', 'required maxlength="60"') + '<label class="music-field">' + T.albums + '<select name="albumId"><option value="">' + T.noAlbum + '</option>' + albumOptions + '</select></label>' + lyricsInputs + coverInputs, async function (data, close, form) {
             const name = String(data.get('name') || '').trim(); const artist = String(data.get('artist') || '').trim(); if (!name || !artist) return;
             const audioFile = options.file; const lyricsFile = data.get('lyricsFile'); const coverFile = data.get('coverFile');
-            const track = { id: 'local-' + Date.now(), name: name, artist: artist, album: '', albumId: String(data.get('albumId') || ''), src: options.link ? String(data.get('songUrl') || '').trim() : URL.createObjectURL(audioFile), cover: safeCover(String(data.get('coverUrl') || '').trim()), lrc: '', local: !options.link };
+            const selectedAlbumId = String(data.get('albumId') || DEFAULT_ALBUM_ID);
+            const selectedAlbum = state.albums.find(function (album) { return album.id === selectedAlbumId; });
+            const track = { id: 'local-' + Date.now(), name: name, artist: artist, album: selectedAlbum ? selectedAlbum.name : '默认专辑', albumId: selectedAlbum ? selectedAlbum.id : DEFAULT_ALBUM_ID, src: options.link ? String(data.get('songUrl') || '').trim() : URL.createObjectURL(audioFile), cover: safeCover(String(data.get('coverUrl') || '').trim()), lrc: '', local: !options.link, imported: true };
             if (lyricsFile && lyricsFile.size) track.lrc = await readText(lyricsFile); else if (data.get('lyricsUrl')) { try { track.lrc = decodeTextBuffer(await (await fetch(String(data.get('lyricsUrl')))).arrayBuffer()); } catch (e) {} }
             if (coverFile && coverFile.size) track.cover = await readDataUrl(coverFile);
             if (!track.cover) track.cover = FALLBACK_COVER;
@@ -231,7 +345,7 @@
     }
     function openAlbumDialog() {
         const content = field(T.albumName, 'name', 'text', 'required maxlength="40"') + field(T.albumDesc, 'desc', 'text', 'maxlength="120"') + '<div class="music-form-split">' + field(T.coverUrl, 'coverUrl', 'url', 'placeholder="https://..."') + fileField('coverFile', 'image/*', T.importImage) + '</div>';
-        const backdrop = makeDialog(T.createAlbum, content, async function (data, close) { const name = String(data.get('name') || '').trim(); if (!name) return; const file = data.get('coverFile'); const album = { id: 'album-' + Date.now(), name: name, desc: String(data.get('desc') || '').trim() || T.addAlbum, cover: safeCover(String(data.get('coverUrl') || '').trim()) }; if (file && file.size) album.cover = await readDataUrl(file); state.albums.push(album); saveState(); close(); renderHome(); });
+        const backdrop = makeDialog(T.createAlbum, content, async function (data, close) { const name = String(data.get('name') || '').trim(); if (!name) return; const file = data.get('coverFile'); const album = { id: 'album-' + Date.now(), name: name, desc: String(data.get('desc') || '').trim(), cover: safeCover(String(data.get('coverUrl') || '').trim()) }; if (file && file.size) album.cover = await readDataUrl(file); state.albums.push(album); saveState(); close(); renderHome(); });
         bindFileControls(backdrop);
     }
     function readDataUrl(file) { return new Promise(function (resolve) { const reader = new FileReader(); reader.onload = function () { resolve(String(reader.result || '')); }; reader.onerror = function () { resolve(''); }; reader.readAsDataURL(file); }); }
@@ -246,6 +360,13 @@
         return new TextDecoder('utf-8').decode(bytes).replace(/^\uFEFF/, '');
     }
     function readText(file) { return file.arrayBuffer().then(decodeTextBuffer).catch(function () { return ''; }); }
+    function prepareLyricsForTrack(track) {
+        state.lyricsTrackId = track ? track.id : null;
+        state.lyrics = track ? parseLyrics(track.lrc) : [];
+        lyricsUserScrolling = false;
+        lyricsAutoScrolling = false;
+        lyricsActiveIndex = -1;
+    }
     function parseLyrics(text) {
         const lines = [];
         const source = String(text || '').replace(/\u0000/g, '');
@@ -272,7 +393,7 @@
         view.querySelector('[data-open-lyrics]').addEventListener('click', renderLyrics); view.querySelector('[data-player-toggle]').addEventListener('click', togglePlayback); view.querySelector('[data-player-previous]').addEventListener('click', function () { stepTrack(-1); }); view.querySelector('[data-player-next]').addEventListener('click', function () { stepTrack(1); }); view.querySelector('[data-play-mode]').addEventListener('click', cycleMode); view.querySelector('[data-playlist]').addEventListener('click', openPlaylist); view.querySelector('#musicProgress').addEventListener('input', function (event) { if (Number.isFinite(audio.duration)) audio.currentTime = audio.duration * Number(event.target.value) / 100; }); updateProgress();
     }
     function renderLyrics() {
-        const track = currentTrack(); if (!track) return; state.lyrics = parseLyrics(track.lrc); state.lyricsTrackId = track.id;
+        const track = currentTrack(); if (!track) return; prepareLyricsForTrack(track);
         view.innerHTML = '<section class="music-page music-lyrics-page"><header class="music-lyrics-head"><button type="button" data-lyrics-back aria-label="back">' + icons.arrow + '</button><div><div class="music-lyrics-title">' + escapeHtml(track.name) + '</div><div class="music-lyrics-artist">' + escapeHtml(track.artist) + '</div></div></header><div class="music-lyrics-stage"><div id="musicLyricsScroll" class="music-lyrics-scroll"><div class="music-lyrics-spacer"></div>' + (state.lyrics.length ? state.lyrics.map(function (line, index) { return '<button class="music-lyric-line" type="button" data-lyric-index="' + index + '" data-lyric-time="' + line.time + '">' + escapeHtml(line.text) + '</button>'; }).join('') : '<div class="music-empty">' + T.noLyrics + '</div>') + '<div class="music-lyrics-spacer"></div></div><div class="music-lyrics-marker" aria-hidden="true"></div></div></section>';
         view.querySelector('[data-lyrics-back]').addEventListener('click', renderPlayer);
         const scroll = document.getElementById('musicLyricsScroll');
@@ -313,7 +434,7 @@
     function showModeToast() { const old = app.querySelector('.music-mode-toast'); if (old) old.remove(); window.clearTimeout(toastTimer); const toast = document.createElement('div'); toast.className = 'music-mode-toast'; toast.textContent = state.mode === 'single' ? T.modeSingle : state.mode === 'random' ? T.modeRandom : T.modeList; app.appendChild(toast); toastTimer = window.setTimeout(function () { toast.remove(); }, 1000); }
     function cycleMode() { state.mode = state.mode === 'single' ? 'list' : state.mode === 'list' ? 'random' : 'single'; renderPlayer(); showModeToast(); }
     function stepTrack(delta) { const queue = getQueue(); if (!queue.length) return; if (state.mode === 'random') { const choices = queue.length > 1 ? queue.filter(function (track) { return track.id !== state.currentId; }) : queue; playTrack(choices[Math.floor(Math.random() * choices.length)].id); return; } let index = queue.findIndex(function (track) { return track.id === state.currentId; }); index = (index + delta + queue.length) % queue.length; playTrack(queue[index].id); }
-    function playTrack(id) { const track = allKnownTracks().find(function (item) { return item.id === id; }); if (!track) return; if (!state.tracks.some(function (item) { return item.id === track.id; })) state.tracks.push(track); state.currentId = id; state.lyrics = parseLyrics(track.lrc); if (track.duration || track.lrc) loadLyricsForTrack(track); navCover.src = safeCover(track.cover); audio.src = track.src; audio.play().then(function () { state.playing = true; setTab('player'); }).catch(function () { state.playing = false; setTab('player'); }); }
+    function playTrack(id) { const track = allKnownTracks().find(function (item) { return item.id === id; }); if (!track) return; if (!state.tracks.some(function (item) { return item.id === track.id; })) state.tracks.push(track); state.currentId = id; prepareLyricsForTrack(track); if (track.duration || track.lrc) loadLyricsForTrack(track); navCover.src = safeCover(track.cover); audio.src = track.src; audio.play().then(function () { state.playing = true; setTab('player'); }).catch(function () { state.playing = false; setTab('player'); }); }
     function togglePlayback() { const track = currentTrack(); if (!track) return; if (!audio.src || audio.src !== track.src) audio.src = track.src; if (audio.paused) audio.play().then(function () { state.playing = true; renderPlayer(); }).catch(function () { state.playing = false; renderPlayer(); }); else { audio.pause(); state.playing = false; renderPlayer(); } }
     function toggleFavorite(id) { const index = state.favorites.indexOf(id); if (index >= 0) state.favorites.splice(index, 1); else state.favorites.push(id); saveState(); if (state.tab === 'home') renderHome(); else if (state.tab === 'mine') renderMine(); }
     function updateProgress() { const progress = document.getElementById('musicProgress'); if (progress && audio.duration) progress.value = String(audio.currentTime / audio.duration * 100); const current = document.getElementById('musicCurrentTime'); const duration = document.getElementById('musicDuration'); if (current) current.textContent = formatTime(audio.currentTime); if (duration) duration.textContent = formatTime(audio.duration); updateLyricsScroll(); }

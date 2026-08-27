@@ -3089,6 +3089,49 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         let contactSelectMode = false;
         let selectedContacts = new Set();
         let editingContactId = null;
+        let pendingPhoneNumbers = [];
+
+        function generateContactPhoneNumber() {
+            const used = new Set(contacts.flatMap(contact => [contact.phoneNumber, ...(Array.isArray(contact.phoneNumbers) ? contact.phoneNumbers : [])].filter(Boolean).map(value => String(value).replace(/\D/g, ''))));
+            let phone = '';
+            do {
+                phone = `1${[3, 4, 5, 6, 7, 8, 9][Math.floor(Math.random() * 7)]}${String(Math.floor(Math.random() * 100000000)).padStart(9, '0')}`;
+            } while (used.has(phone));
+            return phone;
+        }
+
+        function getContactPhoneNumbers(contact) {
+            if (!contact) return pendingPhoneNumbers;
+            const numbers = Array.isArray(contact.phoneNumbers) ? contact.phoneNumbers.filter(value => String(value).replace(/\D/g, '').length >= 7) : [];
+            if (!numbers.length && contact.phoneNumber && String(contact.phoneNumber).replace(/\D/g, '').length >= 7) numbers.push(contact.phoneNumber);
+            return numbers;
+        }
+
+        function renderContactPhoneNumbers(numbers) {
+            const list = document.getElementById('contactPhoneList');
+            if (!list) return;
+            list.innerHTML = numbers.length
+                ? numbers.map(number => `<div class="contact-phone-item">${String(number).replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3')}</div>`).join('')
+                : '<div class="contact-phone-empty">保存后自动生成电话号码</div>';
+            const hidden = document.getElementById('newContactPhone');
+            if (hidden) hidden.value = numbers[0] || '';
+        }
+
+        function addContactPhoneNumber() {
+            const number = generateContactPhoneNumber();
+            if (editingContactId) {
+                const contact = contacts.find(c => c.id === editingContactId);
+                if (!contact) return;
+                contact.phoneNumbers = getContactPhoneNumbers(contact);
+                contact.phoneNumbers.push(number);
+                contact.phoneNumber = contact.phoneNumbers[0];
+                renderContactPhoneNumbers(contact.phoneNumbers);
+                saveContactsToStorage();
+            } else {
+                pendingPhoneNumbers.push(number);
+                renderContactPhoneNumbers(pendingPhoneNumbers);
+            }
+        }
         let swipedContactId = null;
 
         // 打开联系人页面
@@ -3156,6 +3199,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         // 打开添加联系人页面
         function openAddContactPage() {
             editingContactId = null;
+            pendingPhoneNumbers = [];
             document.getElementById('contactsContainer').style.display = 'none';
             document.getElementById('addContactContainer').style.display = 'flex';
             document.querySelector('.add-contact-nav-title').textContent = '新建联系人';
@@ -3163,6 +3207,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             updateTime();
             updateBattery();
             clearAddContactForm();
+            renderContactPhoneNumbers(pendingPhoneNumbers);
             saveUIState();
         }
 
@@ -3272,6 +3317,14 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('newContactNetName').value = contact.netName || '';
             document.getElementById('newContactWechat').value = contact.wechat || '';
             document.getElementById('newContactPhone').value = contact.phoneNumber || '';
+            pendingPhoneNumbers = getContactPhoneNumbers(contact).slice();
+            if (!pendingPhoneNumbers.length) {
+                pendingPhoneNumbers = [generateContactPhoneNumber()];
+                contact.phoneNumber = pendingPhoneNumbers[0];
+                contact.phoneNumbers = pendingPhoneNumbers.slice();
+                saveContactsToStorage();
+            }
+            renderContactPhoneNumbers(pendingPhoneNumbers);
             document.getElementById('newContactRegion').value = contact.region || '';
             document.getElementById('newContactSignature').value = contact.signature || '';
             document.getElementById('newContactDesign').value = contact.design || '';
@@ -3288,7 +3341,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const nickname = document.getElementById('newContactNickname').value.trim();
             const netName = document.getElementById('newContactNetName').value.trim();
             const wechat = document.getElementById('newContactWechat').value.trim();
-            const phoneNumber = document.getElementById('newContactPhone').value.trim();
+            const phoneNumber = (getContactPhoneNumbers(contact)[0] || document.getElementById('newContactPhone').value).trim();
             const region = document.getElementById('newContactRegion').value.trim();
             const signature = document.getElementById('newContactSignature').value.trim();
             const design = document.getElementById('newContactDesign').value.trim();
@@ -3300,7 +3353,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             contact.phoneNumber = phoneNumber;
             contact.region = region;
             contact.signature = signature;
-            contact.phone = wechat || nickname || netName || '未设置';
+            contact.phone = wechat || nickname || netName || contact.phoneNumber;
             contact.design = design;
 
             // 实时更新可能存在的聊天列表显示
@@ -3329,6 +3382,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             document.getElementById('newContactNetName').value = '';
             document.getElementById('newContactWechat').value = '';
             document.getElementById('newContactPhone').value = '';
+            pendingPhoneNumbers = [];
+            renderContactPhoneNumbers(pendingPhoneNumbers);
             document.getElementById('newContactRegion').value = '';
             document.getElementById('newContactDesign').value = '';
         }
@@ -3406,27 +3461,34 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     const contact = contacts.find(c => c.id === editingContactId);
                     if (contact) {
                         contact.name = name;
-                        contact.phone = wechat || nickname || netName || '未设置';
+                        contact.phone = wechat || nickname || netName || contact.phoneNumber;
                         contact.avatar = avatar || '';
                         contact.nickname = nickname;
                         contact.netName = netName;
                         contact.wechat = wechat;
                         contact.phoneNumber = phoneNumber;
+                        contact.phoneNumbers = getContactPhoneNumbers(contact);
+                        if (!contact.phoneNumbers.length) {
+                            contact.phoneNumbers = [generateContactPhoneNumber()];
+                            contact.phoneNumber = contact.phoneNumbers[0];
+                        }
                         contact.region = region;
                         contact.signature = signature;
                         contact.design = design;
                     }
                 } else {
                     // 添加新联系人
+                    const generatedNumbers = pendingPhoneNumbers.length ? pendingPhoneNumbers.slice() : [generateContactPhoneNumber()];
                     const newContact = {
                         id: Date.now(),
                         name: name,
-                        phone: wechat || nickname || netName || '未设置',
+                        phone: wechat || nickname || netName || generatedNumbers[0],
                         avatar: avatar || '',
                         nickname: nickname,
                         netName: netName,
                         wechat: wechat,
-                        phoneNumber: phoneNumber,
+                        phoneNumber: generatedNumbers[0],
+                        phoneNumbers: generatedNumbers,
                         region: region,
                         signature: signature,
                         design: design
@@ -3495,23 +3557,24 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 return;
             }
 
-            if (!phone) {
-                alert('请输入电话号码');
-                return;
-            }
+            const generatedPhone = phone || generateContactPhoneNumber();
 
             if (editingContactId) {
                 const contact = contacts.find(c => c.id === editingContactId);
                 if (contact) {
                     contact.name = name;
-                    contact.phone = phone;
+                    contact.phone = phone || generatedPhone;
+                    contact.phoneNumber = generatedPhone;
+                    contact.phoneNumbers = phone ? [phone, ...(contact.phoneNumbers || []).filter(value => value !== phone)] : (Array.isArray(contact.phoneNumbers) && contact.phoneNumbers.length ? contact.phoneNumbers : [generatedPhone]);
                     contact.avatar = avatar;
                 }
             } else {
                 const newContact = {
                     id: Date.now(),
                     name: name,
-                    phone: phone,
+                    phone: phone || generatedPhone,
+                    phoneNumber: generatedPhone,
+                    phoneNumbers: [generatedPhone],
                     avatar: avatar
                 };
                 contacts.push(newContact);

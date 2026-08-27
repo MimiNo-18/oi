@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="music.css?v=20260811">
     <link rel="stylesheet" href="game.css?v=20260813">
     <link rel="stylesheet" href="telecom.css?v=20260814">
+    <link rel="stylesheet" href="sms.css?v=20260827">
 </head>
 <body>
     <div class="phone-border-frame"></div>
@@ -139,7 +140,7 @@
 
                     <section class="story-app-grid" aria-label="应用列表">
                         <div class="app-item story-app-item telecom-story-entry" onclick="openTelecomApp()" role="button" tabindex="0" aria-label="打开通讯服务"><img id="storyApp1" class="app-icon story-app-icon" alt="通讯服务图标"><div class="app-label">通讯服务</div></div>
-                        <div class="app-item story-app-item"><img id="storyApp2" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-2" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item sms-story-entry" onclick="openSmsApp()" role="button" tabindex="0" aria-label="打开短信"><img id="storyApp2" class="app-icon story-app-icon sms-story-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='18' y='24' width='64' height='52' rx='18' fill='white'/%3E%3Cpath d='M29 72 25 85l16-10' fill='white'/%3E%3Ccircle cx='38' cy='50' r='5' fill='%234e9cff'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%234e9cff'/%3E%3Ccircle cx='62' cy='50' r='5' fill='%234e9cff'/%3E%3C/svg%3E" alt="短信图标"><div class="app-label">短信</div></div>
                         <div class="app-item story-app-item"><img id="storyApp3" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-3" onclick="editText(this, '应用名称')">占位 App</div></div>
                         <div class="app-item story-app-item"><img id="storyApp4" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-4" onclick="editText(this, '应用名称')">占位 App</div></div>
                         <div class="app-item story-app-item"><img id="storyApp5" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-5" onclick="editText(this, '应用名称')">占位 App</div></div>
@@ -1657,6 +1658,11 @@
                 <input type="text" class="form-input" id="newContactWechat" placeholder="角色微信号" oninput="syncContactEdit()">
             </div>
 
+            <div class="form-field contact-phone-field">
+                <label class="form-label">电话号码 (Phone)</label>
+                <div id="contactPhoneList" class="contact-phone-list"></div>
+                <button type="button" class="contact-add-phone-btn" onclick="addContactPhoneNumber()" aria-label="增加电话号码">＋</button>
+            </div>
             <input type="hidden" id="newContactPhone">
 
             <div class="form-field">
@@ -2977,11 +2983,27 @@ MimiGameSave.save({ score, level: 2 });</pre></div></section>
         <div id="telecomToast" class="telecom-toast" role="status" aria-live="polite"></div>
     </section>
 
+    <!-- 短信 -->
+    <section id="smsApp" class="sms-app" aria-label="短信" hidden>
+        <header class="sms-header">
+            <button id="smsBackBtn" class="sms-header-button sms-back-button" type="button" aria-label="返回">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div id="smsHeaderTitle" class="sms-header-title">信息</div>
+            <button id="smsComposeBtn" class="sms-header-button sms-compose-button" type="button" aria-label="新信息">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+        </header>
+        <main id="smsView" class="sms-view"></main>
+        <div id="smsToast" class="sms-toast" role="status" aria-live="polite"></div>
+    </section>
+
     <script src="wechat.js"></script>
     <script src="script.js"></script>
     <script src="music.js?v=20260811"></script>
     <script src="game.js?v=20260813"></script>
     <script src="telecom.js?v=20260814"></script>
+    <script src="sms.js?v=20260827"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

@@ -3777,7 +3777,18 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             renderMessages();
         }
 
-        let heartVoiceRequestToken = 0;
+        const heartVoiceRequestTokens = new Map();
+        let heartVoiceOpenFriendId = null;
+
+        function nextHeartVoiceToken(friendId) {
+            const token = (heartVoiceRequestTokens.get(friendId) || 0) + 1;
+            heartVoiceRequestTokens.set(friendId, token);
+            return token;
+        }
+
+        function isCurrentHeartVoiceToken(friendId, token) {
+            return heartVoiceRequestTokens.get(friendId) === token;
+        }
 
         function openHeartVoiceCard(friendId) {
             const friend = chatList.find(item => item.id === friendId);
@@ -3785,12 +3796,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const modal = document.getElementById('heartVoiceModal');
             const title = document.getElementById('heartVoiceTitle');
             if (!modal || !title) return;
-            title.innerHTML = 'VOICE<br>OF THE<br>HEART';
+            heartVoiceOpenFriendId = friendId;
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
-            renderHeartVoiceItems(friend, true);
-            const token = ++heartVoiceRequestToken;
-            generateHeartVoice(friendId, token);
+            renderHeartVoiceItems(friend, Boolean(friend.innerVoicePending));
         }
 
         function closeHeartVoiceCard() {
@@ -3799,36 +3808,50 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 modal.classList.remove('active');
                 modal.setAttribute('aria-hidden', 'true');
             }
+            heartVoiceOpenFriendId = null;
         }
 
         function renderHeartVoiceItems(friend, loading = false) {
             const contact = contacts.find(item => item.id === friend.contactId) || {};
             const list = document.getElementById('heartVoiceList');
             const footer = document.getElementById('heartVoiceFooter');
+            const refresh = document.getElementById('heartVoiceRefresh');
             if (!list) return;
             const currentState = loading ? '正在感受此刻...' : (friend.innerVoiceStatus || friend.currentStatus || '正在和你聊天');
             const innerVoice = loading ? '心声正在浮现...' : (friend.innerVoice || contact.signature || '其实我一直有话想和你说');
             list.innerHTML = `
-                <div class="heart-voice-item state"><div class="heart-voice-label">当前状态</div><div class="heart-voice-text"></div></div>
+                <div class="heart-voice-item state"><div class="heart-voice-label"><span class="heart-voice-dot"></span>当前状态</div><div class="heart-voice-text"></div></div>
                 <div class="heart-voice-item voice"><div class="heart-voice-label">心声</div><div class="heart-voice-text"></div></div>
             `;
             list.querySelector('.state .heart-voice-text').textContent = currentState;
             list.querySelector('.voice .heart-voice-text').textContent = innerVoice;
-            if (footer) footer.textContent = loading ? '正在更新' : `刚刚 · ${getFriendDisplayName(friend)}`;
+            if (refresh) {
+                refresh.disabled = loading;
+                refresh.classList.toggle('is-loading', loading);
+            }
+            if (footer) {
+                const roundLabel = friend.innerVoiceRoundId ? `第 ${friend.innerVoiceRoundId} 轮` : '等待下一轮对话';
+                footer.textContent = loading ? '正在生成这一轮的心声…' : `${roundLabel} · ${getFriendDisplayName(friend)}`;
+            }
         }
 
-        async function generateHeartVoice(friendId, token) {
+        async function generateHeartVoice(friendId, token, configOverride = null) {
             const friend = chatList.find(item => item.id === friendId);
             const contact = friend && contacts.find(item => item.id === friend.contactId);
             if (!friend || !contact) return;
+            friend.innerVoicePending = true;
+            if (heartVoiceOpenFriendId === friendId) renderHeartVoiceItems(friend, true);
             const fallback = {
                 status: friend.currentStatus || '正在和你聊天',
                 voice: friend.innerVoice || contact.signature || '其实我一直有话想和你说'
             };
             try {
-                const configId = localStorage.getItem('current_api_config_id') || 'default';
-                const configs = await dbGetAll('api_configs');
-                const config = configs.find(item => item.id === configId);
+                let config = configOverride;
+                if (!config) {
+                    const configId = localStorage.getItem('current_api_config_id') || 'default';
+                    const configs = await dbGetAll('api_configs');
+                    config = configs.find(item => item.id === configId);
+                }
                 if (!config || !config.url || !config.key) throw new Error('API config missing');
                 const history = (chatHistories[friendId] || []).slice(-12).map(item => `${item.type === 'sent' ? '用户' : '你'}：${item.content || ''}`).join('\n');
                 const prompt = `你是微信联系人“${getFriendDisplayName(friend)}”。根据你的人设“${contact.design || '自然真诚'}”、最近聊天：\n${history || '暂无聊天'}\n，写出你此刻的状态和没有说出口的心声。只返回 JSON：{"currentStatus":"不超过18字","innerVoice":"不超过45字"}，不要解释。`;
@@ -3851,11 +3874,32 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             } catch (error) {
                 console.warn('Heart voice generation unavailable:', error);
             }
+            if (!isCurrentHeartVoiceToken(friendId, token)) return;
             friend.innerVoiceStatus = fallback.status;
             friend.innerVoice = fallback.voice;
+            friend.innerVoiceRoundId = friend.innerVoiceRoundId || 0;
             friend.innerVoiceUpdatedAt = Date.now();
+            friend.innerVoicePending = false;
             await saveChatListToStorage();
-            if (token === heartVoiceRequestToken) renderHeartVoiceItems(friend, false);
+            if (heartVoiceOpenFriendId === friendId) renderHeartVoiceItems(friend, false);
+        }
+
+        function refreshHeartVoice(event) {
+            if (event) event.stopPropagation();
+            const friendId = heartVoiceOpenFriendId;
+            const friend = friendId && chatList.find(item => item.id === friendId);
+            if (!friend || friend.innerVoicePending) return;
+            const token = nextHeartVoiceToken(friendId);
+            void generateHeartVoice(friendId, token).catch(error => console.warn('Heart voice refresh failed:', error));
+        }
+
+        function startHeartVoiceForRound(friendId, config) {
+            const friend = chatList.find(item => item.id === friendId);
+            if (!friend) return;
+            friend.innerVoiceRoundId = (Number(friend.innerVoiceRoundId) || 0) + 1;
+            const token = nextHeartVoiceToken(friendId);
+            // 心声与回复并行生成，不阻塞聊天回复；本轮只创建这一条请求。
+            void generateHeartVoice(friendId, token, config).catch(error => console.warn('Heart voice round failed:', error));
         }
 
         function openPersonalInfo() {
@@ -6867,6 +6911,136 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             }
         }
 
+        let virtualPaymentKind = 'red_packet';
+
+        function openVirtualPaymentComposer(kind) {
+            if (!currentChatFriendId) return;
+            virtualPaymentKind = kind === 'transfer' ? 'transfer' : 'red_packet';
+            const isTransfer = virtualPaymentKind === 'transfer';
+            document.getElementById('virtualPaymentTitle').textContent = isTransfer ? '转账' : '发红包';
+            document.getElementById('virtualPaymentNoteLabel').textContent = isTransfer ? '转账说明' : '祝福语';
+            document.getElementById('virtualPaymentNote').placeholder = isTransfer ? '添加转账说明' : '恭喜发财，大吉大利';
+            document.getElementById('virtualPaymentHint').textContent = isTransfer
+                ? '虚拟转账由对方确认收款后记入其模拟银行卡。'
+                : '虚拟红包由对方领取后记入其模拟银行卡。';
+            document.getElementById('virtualPaymentSubmit').textContent = isTransfer ? '确认转账' : '塞钱进红包';
+            document.getElementById('virtualPaymentAmount').value = '';
+            document.getElementById('virtualPaymentNote').value = '';
+            const modal = document.getElementById('virtualPaymentModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.getElementById('chatMorePanel').style.display = 'none';
+            setTimeout(() => document.getElementById('virtualPaymentAmount').focus(), 80);
+        }
+
+        function closeVirtualPaymentComposer() {
+            const modal = document.getElementById('virtualPaymentModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function submitVirtualPayment() {
+            const amount = Math.round(Number(document.getElementById('virtualPaymentAmount').value) * 100) / 100;
+            if (!Number.isFinite(amount) || amount <= 0 || amount > 200) {
+                alert('请输入 0.01 至 200 元的虚拟金额');
+                return;
+            }
+            if (!currentChatFriendId) return;
+            const friend = chatList.find(item => item.id === currentChatFriendId);
+            const kind = virtualPaymentKind;
+            const noteInput = document.getElementById('virtualPaymentNote').value.trim();
+            const fallback = kind === 'transfer' ? '转账' : '恭喜发财，大吉大利';
+            const message = {
+                type: 'sent',
+                msgType: kind,
+                content: kind === 'transfer' ? `[虚拟转账] ¥${amount.toFixed(2)}` : `[虚拟红包] ¥${amount.toFixed(2)}`,
+                payment: {
+                    amount,
+                    note: noteInput || fallback,
+                    status: 'pending',
+                    recipientName: friend ? (friend.remark || friend.name || friend.netName || '对方') : '对方',
+                    createdAt: Date.now()
+                },
+                time: Date.now()
+            };
+            const history = chatHistories[currentChatFriendId] || (chatHistories[currentChatFriendId] = []);
+            history.push(message);
+            if (friend) {
+                friend.message = message.content;
+                friend.time = formatTime(new Date());
+            }
+            closeVirtualPaymentComposer();
+            renderMessages();
+            saveChatHistories();
+            saveChatListToStorage();
+            renderChatList();
+        }
+
+        function settleVirtualPayment(friendId, messageIndex) {
+            const history = chatHistories[friendId] || [];
+            const message = history[messageIndex];
+            if (!message || !message.payment || message.payment.status !== 'pending') return;
+            const storeKey = 'wechat_virtual_payment_ledger';
+            let ledger = {};
+            try { ledger = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch (_) { ledger = {}; }
+            const account = ledger[friendId] || { balance: 0, bankLabel: '模拟银行卡 ·· 0000', entries: [] };
+            const amount = Number(message.payment.amount) || 0;
+            account.balance = Math.round((Number(account.balance || 0) + amount) * 100) / 100;
+            account.entries = Array.isArray(account.entries) ? account.entries : [];
+            account.entries.push({ type: message.msgType, amount, note: message.payment.note, time: Date.now() });
+            ledger[friendId] = account;
+            localStorage.setItem(storeKey, JSON.stringify(ledger));
+            message.payment.status = 'claimed';
+            message.payment.settledAt = Date.now();
+            message.payment.bankLabel = account.bankLabel;
+            saveChatHistories();
+            renderMessages();
+        }
+
+        function createVirtualPaymentCard(message, messageIndex, friendId) {
+            const payment = message.payment || {};
+            const isTransfer = message.msgType === 'transfer';
+            const card = document.createElement('div');
+            card.className = `virtual-payment-card ${isTransfer ? 'is-transfer' : 'is-red-packet'} ${message.type === 'sent' ? 'is-sent' : 'is-received'}`;
+            const main = document.createElement('div');
+            main.className = 'virtual-payment-card-main';
+            const icon = document.createElement('div');
+            icon.className = 'virtual-payment-card-icon';
+            icon.textContent = isTransfer ? '¥' : '恭';
+            const details = document.createElement('div');
+            details.className = 'virtual-payment-card-details';
+            const title = document.createElement('strong');
+            title.textContent = isTransfer ? `¥${Number(payment.amount || 0).toFixed(2)}` : '恭喜发财，大吉大利';
+            const note = document.createElement('span');
+            note.textContent = isTransfer ? (payment.note || '转账') : (payment.note || '恭喜发财，大吉大利');
+            details.append(title, note);
+            main.append(icon, details);
+            card.appendChild(main);
+            const footer = document.createElement('div');
+            footer.className = 'virtual-payment-card-footer';
+            if (payment.status === 'claimed') {
+                footer.textContent = isTransfer ? '已收款 · 已存入模拟银行卡' : '已领取 · 已存入模拟银行卡';
+            } else if (payment.status === 'expired') {
+                footer.textContent = '已过期';
+            } else {
+                footer.textContent = isTransfer ? '待对方确认收款' : '待对方领取';
+            }
+            card.appendChild(footer);
+            if (payment.status === 'pending') {
+                const action = document.createElement('button');
+                action.type = 'button';
+                action.className = 'virtual-payment-claim';
+                action.textContent = isTransfer ? '模拟对方收款' : '模拟对方领取';
+                action.onclick = event => {
+                    event.stopPropagation();
+                    settleVirtualPayment(friendId, messageIndex);
+                };
+                card.appendChild(action);
+            }
+            return card;
+        }
+
         function renderMessages() {
             const container = document.getElementById('chatMessages');
             const history = chatHistories[currentChatFriendId] || [];
@@ -6995,6 +7169,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     bubble.className = 'msg-bubble file-bubble';
                 } else if (msg.msgType === 'card') {
                     bubble.className = 'msg-bubble card-bubble';
+                } else if (msg.msgType === 'red_packet' || msg.msgType === 'transfer') {
+                    bubble.className = 'msg-bubble virtual-payment-bubble';
                 } else {
                     bubble.className = 'msg-bubble';
                 }
@@ -7042,7 +7218,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 }
 
                 if (!msg.isMergedForward) {
-                    if (msg.msgType === 'sticker') {
+                    if (msg.msgType === 'red_packet' || msg.msgType === 'transfer') {
+                        bubble.appendChild(createVirtualPaymentCard(msg, index, currentChatFriendId));
+                    } else if (msg.msgType === 'sticker') {
                         const img = document.createElement('img');
                         img.src = msg.content;
                         img.className = 'msg-sticker-img';
@@ -7178,7 +7356,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     renderMessages();
                     
                     // 触发 AI 回复
-                    await callAI(`(发送了一张图片，识别内容为：${topClassName}。详细识别数据：${recognitionResult})`);
+                    await callAI(`(发送了一张图片，识别内容为：${topClassName}。详细识别数据：${recognitionResult})`, false, null, true);
                     return;
                 } catch (err) {
                     console.error("Mic identification error:", err);
@@ -7193,9 +7371,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             const input = document.getElementById('chatInput');
             if (input.value.trim().length > 0) {
                 await sendChatMessage();
-                await callAI(null, false);
+                await callAI(null, false, null, true);
             } else {
-                await callAI(null, true);
+                await callAI(null, true, null, true);
             }
         }
 
@@ -7351,7 +7529,7 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             return `${apiMessage}`;
         }
 
-        async function callAI(userMsg, isPersonaTrigger = false, targetFriendId = null) {
+        async function callAI(userMsg, isPersonaTrigger = false, targetFriendId = null, shouldGenerateHeartVoice = false) {
             const friendId = targetFriendId || currentChatFriendId;
             if (!friendId) return;
 
@@ -7386,6 +7564,10 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                     }, 1000);
                 }
                 return;
+            }
+
+            if (shouldGenerateHeartVoice) {
+                startHeartVoiceForRound(friendId, config);
             }
 
             // 获取手动记忆

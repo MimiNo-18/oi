@@ -381,11 +381,18 @@
         <!-- 对方心声卡片 -->
         <div class="heart-voice-modal" id="heartVoiceModal" aria-hidden="true" onclick="if(event.target===this) closeHeartVoiceCard()">
             <div class="heart-voice-card" role="dialog" aria-modal="true" aria-labelledby="heartVoiceTitle">
-                <button class="heart-voice-close" type="button" onclick="closeHeartVoiceCard()" aria-label="关闭">×</button>
-                <div class="heart-voice-layout">
-                    <div class="heart-voice-title" id="heartVoiceTitle">VOICE<br>OF THE<br>HEART</div>
-                    <div class="heart-voice-list" id="heartVoiceList"></div>
+                <div class="heart-voice-header">
+                    <div>
+                        <div class="heart-voice-kicker">对方的心声</div>
+                        <div class="heart-voice-title" id="heartVoiceTitle">此刻想说的话</div>
+                    </div>
+                    <div class="heart-voice-header-actions">
+                        <button class="heart-voice-refresh" id="heartVoiceRefresh" type="button" onclick="refreshHeartVoice(event)" aria-label="刷新心声" title="刷新心声">↻</button>
+                        <button class="heart-voice-close" type="button" onclick="closeHeartVoiceCard()" aria-label="关闭">×</button>
+                    </div>
                 </div>
+                <div class="heart-voice-card-rule"></div>
+                <div class="heart-voice-list" id="heartVoiceList"></div>
                 <div class="heart-voice-footer" id="heartVoiceFooter"></div>
             </div>
         </div>
@@ -438,11 +445,11 @@
                 <div class="chat-more-icon">📍</div>
                 <div class="chat-more-label">位置</div>
             </div>
-            <div class="chat-more-item" onclick="alert('红包功能开发中')">
+            <div class="chat-more-item" onclick="openVirtualPaymentComposer('red_packet')">
                 <div class="chat-more-icon">🧧</div>
                 <div class="chat-more-label">红包</div>
             </div>
-            <div class="chat-more-item" onclick="alert('转账功能开发中')">
+            <div class="chat-more-item" onclick="openVirtualPaymentComposer('transfer')">
                 <div class="chat-more-icon">💸</div>
                 <div class="chat-more-label">转账</div>
             </div>
@@ -1954,6 +1961,22 @@
                 <button class="theme-action-btn settings-save-style-btn" style="width: 100%;" onclick="saveStyleApplication('popup')">保存</button>
             </div>
         </div>
+    </div>
+
+    <div class="virtual-payment-modal" id="virtualPaymentModal" aria-hidden="true" onclick="if(event.target===this) closeVirtualPaymentComposer()">
+        <section class="virtual-payment-sheet" role="dialog" aria-modal="true" aria-labelledby="virtualPaymentTitle">
+            <header class="virtual-payment-header">
+                <button type="button" class="virtual-payment-close" onclick="closeVirtualPaymentComposer()" aria-label="关闭">×</button>
+                <strong id="virtualPaymentTitle">发红包</strong>
+                <span></span>
+            </header>
+            <div class="virtual-payment-form">
+                <label class="virtual-payment-field"><span>金额</span><span class="virtual-payment-amount"><b>¥</b><input id="virtualPaymentAmount" type="number" min="0.01" max="200" step="0.01" inputmode="decimal" placeholder="0.00"></span></label>
+                <label class="virtual-payment-field"><span id="virtualPaymentNoteLabel">祝福语</span><input id="virtualPaymentNote" type="text" maxlength="30" placeholder="恭喜发财，大吉大利"></label>
+                <p id="virtualPaymentHint" class="virtual-payment-hint">虚拟红包仅用于本页面互动，不涉及真实资金。</p>
+                <button id="virtualPaymentSubmit" type="button" class="virtual-payment-submit" onclick="submitVirtualPayment()">塞钱进红包</button>
+            </div>
+        </section>
     </div>
 
     <!-- 充电提示设置容器 -->

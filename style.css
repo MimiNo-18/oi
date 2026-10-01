@@ -5444,20 +5444,32 @@ body.has-phone-border #categoryManagementContainer .wechat-content-area {
 /* 心声卡片与用户状态 */
 .msg-avatar { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
 .msg-avatar:active { transform: scale(.92); }
-.heart-voice-modal { display: none; position: fixed; inset: 0; z-index: 24000; align-items: center; justify-content: center; background: rgba(12, 15, 20, .32); perspective: 1100px; }
+.heart-voice-modal { display: none; position: fixed; inset: 0; z-index: 24000; align-items: center; justify-content: center; padding: 20px; background: rgba(12, 15, 20, .42); }
 .heart-voice-modal.active { display: flex; }
-.heart-voice-card { position: relative; width: min(88vw, 360px); min-height: 286px; padding: 30px 24px 20px; background: #fbfbfa; color: #171717; border-radius: 10px; box-shadow: 0 22px 60px rgba(0,0,0,.2); transform-origin: 50% 50%; animation: heartVoiceIn .42s cubic-bezier(.2,.8,.25,1) both; }
-@keyframes heartVoiceIn { from { opacity: 0; transform: rotateY(-88deg) translateY(12px); } to { opacity: 1; transform: rotateY(0) translateY(0); } }
-.heart-voice-close { position: absolute; top: 8px; right: 12px; width: 28px; height: 28px; border: 0; background: transparent; color: #777; font-size: 25px; line-height: 28px; cursor: pointer; }
-.heart-voice-layout { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 22px; align-items: start; }
-.heart-voice-title { padding-top: 2px; color: #111; font-size: 17px; font-weight: 700; line-height: 1.12; letter-spacing: 0; }
-.heart-voice-list { display: flex; flex-direction: column; gap: 0; border-left: 1px solid #dedede; }
-.heart-voice-item { padding: 10px 0 10px 14px; border-bottom: 1px solid #e9e9e9; }
+.heart-voice-card { position: relative; width: min(92vw, 380px); padding: 22px 22px 16px; overflow: hidden; background: #fff; color: #171717; border: 1px solid rgba(20, 20, 20, .08); border-radius: 18px; box-shadow: 0 18px 55px rgba(0, 0, 0, .22); animation: heartVoiceIn .28s ease-out both; }
+@keyframes heartVoiceIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.heart-voice-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.heart-voice-kicker { margin-bottom: 5px; color: #8c8c8c; font-size: 11px; line-height: 1; letter-spacing: .12em; }
+.heart-voice-title { color: #171717; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: 0; }
+.heart-voice-header-actions { display: flex; align-items: center; gap: 4px; margin: -5px -8px 0 0; }
+.heart-voice-close, .heart-voice-refresh { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: #777; cursor: pointer; transition: background .16s ease, color .16s ease, transform .16s ease; }
+.heart-voice-close { font-size: 24px; line-height: 1; }
+.heart-voice-refresh { font-size: 22px; line-height: 1; }
+.heart-voice-close:hover, .heart-voice-refresh:hover { background: #f2f2f2; color: #171717; }
+.heart-voice-refresh:active { transform: rotate(-35deg) scale(.94); }
+.heart-voice-refresh:disabled { color: #bcbcbc; cursor: wait; }
+.heart-voice-refresh.is-loading { animation: heartVoiceSpin .8s linear infinite; }
+@keyframes heartVoiceSpin { to { transform: rotate(360deg); } }
+.heart-voice-card-rule { height: 1px; margin: 18px 0 4px; background: #ececec; }
+.heart-voice-list { display: flex; flex-direction: column; gap: 0; }
+.heart-voice-item { padding: 15px 2px 14px; border-bottom: 1px solid #ededed; }
 .heart-voice-item:last-child { border-bottom: 0; }
-.heart-voice-label { margin-bottom: 4px; color: #999; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
-.heart-voice-text { color: #262626; font-size: 15px; line-height: 1.5; word-break: break-word; }
-.heart-voice-item.voice .heart-voice-text { font-style: italic; color: #555; }
-.heart-voice-footer { min-height: 16px; margin-top: 16px; color: #aaa; font-size: 11px; text-align: right; }
+.heart-voice-label { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; color: #999; font-size: 11px; line-height: 1; letter-spacing: .05em; }
+.heart-voice-dot { width: 6px; height: 6px; border-radius: 50%; background: #36b37e; }
+.heart-voice-text { color: #272727; font-size: 15px; line-height: 1.55; word-break: break-word; }
+.heart-voice-item.voice { padding-bottom: 9px; }
+.heart-voice-item.voice .heart-voice-text { color: #424242; font-size: 17px; font-style: italic; }
+.heart-voice-footer { min-height: 16px; margin-top: 8px; color: #aaa; font-size: 11px; text-align: left; }
 .user-status-content { width: min(88vw, 360px); }
 .user-status-input { width: 100%; min-height: 112px; padding: 12px; border: 1px solid #dedede; border-radius: 8px; outline: none; resize: vertical; color: #222; background: #fafafa; font: inherit; line-height: 1.5; }
 .user-status-input:focus { border-color: #999; background: #fff; }

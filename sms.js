@@ -26,7 +26,7 @@
 
     function uid(prefix) { return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
     function escapeHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
-    function defaultState() { return { conversations: [] }; }
+    function defaultState() { return { conversations: [], presets: [], chatCss: '' }; }
     function loadState() {
         try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
@@ -41,12 +41,16 @@
     function primaryNumber() { const tel = telecomState(); return tel && (tel.numbers || []).find(n => n.id === tel.primaryId) || tel && (tel.numbers || [])[0] || null; }
     function formatPhone(phone) { const digits = String(phone || '').replace(/\D/g, ''); return digits.length === 11 ? `${digits.slice(0, 3)} ${digits.slice(3, 7)} ${digits.slice(7)}` : digits; }
     function lastMessage(conversation) { const messages = conversation && Array.isArray(conversation.messages) ? conversation.messages : []; return messages.length ? messages[messages.length - 1] : null; }
-    function displayDate(timestamp) {
+    /* function displayDate(timestamp) {
         const date = new Date(timestamp || Date.now());
         const now = new Date();
         if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
         return `${date.getMonth() + 1}月${date.getDate()}日`;
     }
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+    }
+    */
+    function displayDate(timestamp) { const date = new Date(timestamp || Date.now()); const now = new Date(); if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); return date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }); }
     function avatarMarkup(conversation, extraClass) {
         const name = conversation.name || conversation.phone || '?';
         if (conversation.avatar) return `<img class="sms-avatar ${extraClass || ''}" src="${escapeHtml(conversation.avatar)}" alt="">`;
@@ -59,7 +63,15 @@
     }
     function seedConversations() {
         if (state.conversations.length) return;
-        const seeds = availableContacts().slice(0, 2).map((contact, index) => ({
+        const seeds = [{
+            id: 'mimi-assistant', phone: '', name: 'Mimi助手', avatar: '', unread: true, pinned: true, updatedAt: Date.now(),
+            messages: [
+                { id: uid('msg'), direction: 'in', text: '欢迎使用MimiPhone！', time: Date.now() - 1000 },
+                { id: uid('msg'), direction: 'in', text: '列表页CSS设置请点击顶部“信息”聊天页CSS设置请点击上方三个点中的自定义CSS。', time: Date.now() }
+            ]
+        }];
+        /* 联系人只在真正收到短信或主动新建会话时出现。 */
+        /* const seeds = availableContacts().slice(0, 2).map((contact, index) => ({
             id: uid('sms'), phone: contact.phone || `1380000${String(1000 + index).slice(-4)}`,
             name: contact.name || contact.netName || '联系人', avatar: contact.avatar || '', phones: (contact.phoneNumbers && contact.phoneNumbers.length ? contact.phoneNumbers : [contact.phoneNumber || contact.phone]), unread: index === 0,
             updatedAt: Date.now() - index * 3600000,
@@ -68,7 +80,7 @@
         if (!seeds.length) {
             seeds.push({ id: uid('sms'), phone: '138 0000 1001', name: '妈妈', avatar: '', unread: true, updatedAt: Date.now() - 1800000, messages: [{ id: uid('msg'), direction: 'in', text: '到家了吗？', time: Date.now() - 1800000 }] });
             seeds.push({ id: uid('sms'), phone: '139 0000 1002', name: '小王', avatar: '', unread: false, updatedAt: Date.now() - 86400000, messages: [{ id: uid('msg'), direction: 'in', text: '周末一起吃饭吗？', time: Date.now() - 86400000 }] });
-        }
+        } */
         state.conversations = seeds; saveState();
     }
     function setHeader(title, mode) {
@@ -81,9 +93,9 @@
     function applyCustomCss() {
         let style = document.getElementById('smsCustomStyle');
         const css = localStorage.getItem('mimi_sms_custom_css') || DEFAULT_SMS_CSS;
-        if (route !== 'home') { if (style) style.remove(); return; }
+        if (route !== 'home' && route !== 'thread') { if (style) style.remove(); return; }
         if (!style) { style = document.createElement('style'); style.id = 'smsCustomStyle'; document.head.appendChild(style); }
-        style.textContent = css;
+        style.textContent = route === 'thread' ? (state.chatCss || '') : css;
     }
 
     function renderHome(filter) {
@@ -121,15 +133,17 @@
     }
     function renderCompose() {
         route = 'compose'; activeId = ''; setHeader('新信息', 'compose');
-        const suggestions = state.conversations.slice(0, 5);
+        const suggestions = state.conversations.filter(c => c.id !== 'mimi-assistant' && c.phone).slice(0, 5);
         view.innerHTML = `<section class="sms-screen sms-compose-screen"><div class="sms-recipient-label">收件人</div><input id="smsRecipientInput" class="sms-recipient-input" type="text" inputmode="tel" placeholder="输入姓名或电话号码"><div class="sms-contact-suggestions">${suggestions.map(c => `<button type="button" class="sms-suggestion" data-action="pick-recipient" data-id="${escapeHtml(c.id)}">${escapeHtml(c.name || c.phone)}</button>`).join('')}</div><div class="sms-compose-hint">使用当前手机号发送短信</div><button id="smsComposeNext" class="sms-compose-send" type="button" disabled>开始发送</button></section>`;
         const input = document.getElementById('smsRecipientInput'); const next = document.getElementById('smsComposeNext');
         const update = () => { next.disabled = !String(input.value).trim(); }; input?.addEventListener('input', update); next?.addEventListener('click', () => startCompose(input.value));
     }
     function startCompose(value) {
         const query = String(value || '').trim(); if (!query) return;
-        let conversation = state.conversations.find(c => c.name === query || c.phone.replace(/\s/g, '') === query.replace(/\s/g, ''));
-        if (!conversation) { conversation = { id: uid('sms'), phone: query.replace(/\s/g, ''), phones: [query.replace(/\s/g, '')], name: /^\d+$/.test(query.replace(/\s/g, '')) ? query : query, avatar: '', unread: false, updatedAt: Date.now(), messages: [] }; state.conversations.push(conversation); saveState(); }
+        const phone = query.replace(/\D/g, '');
+        if (!phone) { showToast('请输入电话号码'); return; }
+        let conversation = state.conversations.find(c => String(c.phone || '').replace(/\D/g, '') === phone);
+        if (!conversation) { let contact = null; try { contact = availableContacts().find(item => String(item.phoneNumber || item.phone || '').replace(/\D/g, '') === phone); } catch (_) {} conversation = { id: uid('sms'), phone, phones: [phone], name: contact?.name || phone, contactId: contact?.id || '', avatar: contact?.avatar || '', unread: false, updatedAt: Date.now(), messages: [] }; state.conversations.push(conversation); saveState(); }
         renderThread(conversation.id);
     }
     async function requestApiReply(conversation) {
@@ -151,10 +165,14 @@
     }
     async function receiveApiReply(conversation) {
         const reply = await requestApiReply(conversation); if (!reply) return;
-        conversation.messages = conversation.messages || []; conversation.messages.push({ id: uid('msg'), direction:'in', text:reply, time:Date.now() }); conversation.updatedAt = Date.now(); conversation.unread = !(route === 'thread' && activeId === conversation.id); saveState(); if (route === 'thread' && activeId === conversation.id) renderThread(conversation.id); else if (route === 'home') renderHome();
+        conversation.messages = conversation.messages || [];
+        String(reply).split(/\r?\n+/).map(item => item.trim()).filter(Boolean).forEach(item => conversation.messages.push({ id: uid('msg'), direction:'in', text:item, time:Date.now() }));
+        conversation.updatedAt = Date.now(); conversation.unread = !(route === 'thread' && activeId === conversation.id); saveState(); if (route === 'thread' && activeId === conversation.id) renderThread(conversation.id); else if (route === 'home') renderHome();
     }
     function sendMessage(text) {
-        const conversation = conversationFor(activeId); const clean = String(text || '').trim(); if (!conversation || !clean) return;
+        const conversation = conversationFor(activeId); const clean = String(text || '').trim(); if (!conversation) return;
+        if (!clean) { receiveApiReply(conversation); return; }
+        if (conversation.id === 'mimi-assistant') { conversation.messages.push({ id: uid('msg'), direction:'out', text: clean, time: Date.now() }); conversation.updatedAt = Date.now(); saveState(); renderThread(conversation.id); receiveApiReply(conversation); return; }
         const primary = primaryNumber();
         if (!primary) { showToast('请先在通讯服务中开通手机号'); return; }
         const balance = Number(primary.balance || 0);
@@ -162,7 +180,7 @@
         primary.balance = Math.round((balance - FEE) * 100) / 100;
         const tel = telecomState(); if (tel) { const number = (tel.numbers || []).find(n => n.id === primary.id); if (number) number.balance = primary.balance; try { localStorage.setItem(TELECOM_KEY, JSON.stringify(tel)); } catch (_) {} }
         conversation.messages = conversation.messages || []; const sentMessage = { id: uid('msg'), direction: 'out', text: clean, time: Date.now() }; conversation.messages.push(sentMessage); conversation.updatedAt = Date.now(); conversation.unread = false; saveState(); renderThread(conversation.id);
-        window.setTimeout(() => receiveApiReply(conversation), 250);
+        // API 回复只在点击发送后触发。
     }
     function sendImage(dataUrl) {
         const conversation = conversationFor(activeId); const primary = primaryNumber(); if (!conversation || !primary) { showToast('请先在通讯服务中开通手机号'); return; }
@@ -204,15 +222,24 @@
             } catch (_) {}
             showToast('已添加到联系人');
         }
-        else if (action === 'custom-css') { closeActionMenu(); renderCssEditor(); return; }
+        else if (action === 'custom-css') { closeActionMenu(); renderCssEditor('chat'); return; }
         saveState(); closeActionMenu(); if (route === 'home') renderHome();
     }
     function toggleMorePanel() { document.getElementById('smsMorePanel')?.classList.toggle('is-visible'); }
-    function renderCssEditor() {
+    function renderCssEditor(target) {
+        view.dataset.cssOrigin = target === 'chat' ? 'thread' : 'home';
         route = 'css-editor'; setHeader('自定义CSS', 'compose'); applyCustomCss();
         const value = localStorage.getItem('mimi_sms_custom_css') || DEFAULT_SMS_CSS;
         view.innerHTML = `<section class="sms-screen sms-css-editor"><h1>信息页样式</h1><p>这里的 CSS 只作用于短信列表页，不会改变聊天详情页。可直接修改下方模板后保存。</p><textarea id="smsCssInput" class="sms-css-textarea" spellcheck="false">${escapeHtml(value)}</textarea><div class="sms-css-actions"><button type="button" class="secondary" data-action="css-reset">恢复模板</button><button type="button" data-action="css-save">保存样式</button></div></section>`;
     }
+    const baseRenderCssEditor = renderCssEditor;
+    renderCssEditor = function (target) {
+        baseRenderCssEditor(target);
+        const editor = view.querySelector('.sms-css-editor');
+        if (!editor) return;
+        editor.insertAdjacentHTML('beforeend', `<button type="button" class="sms-primary-action" data-action="css-preset" style="margin-top:10px;width:100%">保存为预设</button><div id="smsPresetList" class="sms-contact-edit-list">${(state.presets || []).map((p, i) => `<button type="button" class="sms-contact-edit-item" data-action="css-use-preset" data-index="${i}">${escapeHtml(p.name)}</button>`).join('')}</div>`);
+        view.dataset.cssTarget = target === 'chat' ? 'chat' : 'home';
+    };
     function receiveSms(phone, name, text) {
         const cleanPhone = String(phone || '').replace(/\s/g, ''); const cleanText = String(text || '').trim(); if (!cleanPhone || !cleanText) return false;
         let c = state.conversations.find(item => String(item.phone).replace(/\s/g, '') === cleanPhone);
@@ -221,14 +248,54 @@
         if (route === 'thread' && activeId === c.id) renderThread(c.id); else if (route === 'home') renderHome();
         return true;
     }
-    function handleBack() { closeActionMenu(); if (route === 'thread' || route === 'compose' || route === 'css-editor') renderHome(); else closeSmsApp(); }
+    function handleBack() { closeActionMenu(); if (route === 'css-editor') { if (view.dataset.cssOrigin === 'thread' && activeId) renderThread(activeId); else renderHome(); return; } if (route === 'thread' || route === 'compose') renderHome(); else closeSmsApp(); }
     function openSmsApp() { state = loadState(); seedConversations(); app.hidden = false; document.body.classList.add('sms-app-active'); renderHome(); if (typeof updateTime === 'function') updateTime(); }
     function closeSmsApp() { app.hidden = true; document.body.classList.remove('sms-app-active'); toast.classList.remove('is-visible'); closeActionMenu(); }
 
     backButton.addEventListener('click', handleBack); composeButton.addEventListener('click', () => { if (route === 'thread') openActionMenu('thread', activeId); else if (route === 'home') renderCompose(); });
+    view.addEventListener('click', event => {
+        const target = event.target.closest('[data-action="css-save"]');
+        if (!target) return;
+        event.stopImmediatePropagation();
+        const css = document.getElementById('smsCssInput')?.value || '';
+        const targetType = view.dataset.cssTarget || 'home';
+        if (targetType === 'chat') state.chatCss = css; else localStorage.setItem('mimi_sms_custom_css', css);
+        const index = Number(view.dataset.activePreset);
+        if (Number.isInteger(index) && state.presets?.[index]) state.presets[index].css = css;
+        saveState(); showToast('样式已立即使用');
+        if (view.dataset.cssOrigin === 'thread' && activeId) renderThread(activeId); else renderHome();
+    }, true);
     view.addEventListener('submit', event => { if (event.target.id === 'smsThreadForm') { event.preventDefault(); const input = document.getElementById('smsMessageInput'); sendMessage(input?.value); } });
     view.addEventListener('click', event => { if (suppressNextClick) { suppressNextClick = false; event.preventDefault(); return; } const target = event.target.closest('[data-action]'); if (!target) return; const action = target.dataset.action; if (action === 'open-thread') renderThread(target.dataset.id); else if (action === 'compose') renderCompose(); else if (action === 'pick-recipient') { const c = conversationFor(target.dataset.id); if (c) { const input = document.getElementById('smsRecipientInput'); if (input) { input.value = c.name || c.phone; document.getElementById('smsComposeNext').disabled = false; } } } else if (action === 'more') toggleMorePanel(); else if (action === 'more-photo' || action === 'more-camera' || action === 'more-video' || action === 'more-capture') document.getElementById('smsImageInput')?.click(); else if (action === 'more-audio') showToast('音频功能暂不可用'); else if (action === 'more-file') showToast('文件功能暂不可用'); else if (action === 'more-live') showToast('实时信息功能暂不可用'); else if (action === 'more-contact') showToast('联系人功能暂不可用'); else if (action === 'css-save') { localStorage.setItem('mimi_sms_custom_css', document.getElementById('smsCssInput')?.value || DEFAULT_SMS_CSS); renderHome(); showToast('信息页样式已保存'); } else if (action === 'css-reset') { const input = document.getElementById('smsCssInput'); if (input) input.value = DEFAULT_SMS_CSS; } });
-    view.addEventListener('click', event => { if (event.target.id === 'smsImageButton') toggleMorePanel(); });
+    view.addEventListener('click', event => {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+        if (target.dataset.action === 'css-preset') {
+            const name = window.prompt('预设名称', '我的预设');
+            if (!name) return;
+            state.presets = state.presets || [];
+            state.presets.push({ name, css: document.getElementById('smsCssInput')?.value || '', target: view.dataset.cssTarget || 'home' });
+            saveState(); renderCssEditor(view.dataset.cssTarget === 'chat' ? 'chat' : 'home');
+        } else if (target.dataset.action === 'css-use-preset') {
+            const preset = (state.presets || [])[Number(target.dataset.index)];
+            const input = document.getElementById('smsCssInput');
+            if (preset && input) { input.value = preset.css; view.dataset.activePreset = target.dataset.index; }
+        } else if (target.dataset.action === 'css-load') {
+            const input = document.getElementById('smsCssInput');
+            if (input) input.value = view.dataset.cssTarget === 'chat' ? '' : DEFAULT_SMS_CSS;
+        }
+        if (event.target.id === 'smsImageButton') toggleMorePanel();
+    });
+    view.addEventListener('contextmenu', event => {
+        const target = event.target.closest('[data-action="css-use-preset"]');
+        if (!target) return;
+        event.preventDefault();
+        const index = Number(target.dataset.index); const preset = (state.presets || [])[index];
+        const action = window.prompt('输入 new 修改名称，输入 delete 删除预设', '');
+        if (action === 'delete') state.presets.splice(index, 1);
+        else if (action === 'new' && preset) { const name = window.prompt('新的预设名称', preset.name); if (name) preset.name = name; }
+        saveState(); renderCssEditor(view.dataset.cssTarget === 'chat' ? 'chat' : 'home');
+    });
     view.addEventListener('change', event => { if (event.target.id === 'smsImageInput') { const file = event.target.files?.[0]; if (!file || !file.type.startsWith('image/')) return; const reader = new FileReader(); reader.onload = () => sendImage(reader.result); reader.readAsDataURL(file); } });
     view.addEventListener('pointerdown', event => { const item = event.target.closest('.sms-conversation'); if (!item) return; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { suppressNextClick = true; openActionMenu('list', item.dataset.id); }, 550); });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => view.addEventListener(type, () => clearTimeout(longPressTimer)));
@@ -238,5 +305,8 @@
     headerTitle.addEventListener('click', () => { if (route === 'home') renderCssEditor(); });
     document.querySelector('.sms-story-entry')?.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSmsApp(); } });
     window.openSmsApp = openSmsApp; window.closeSmsApp = closeSmsApp; window.receiveSms = receiveSms;
+    const telecomIcon = document.getElementById('storyApp1'); const smsIcon = document.getElementById('storyApp2');
+    if (telecomIcon && smsIcon) { const syncIcon = () => { if (telecomIcon.src) smsIcon.src = telecomIcon.src; }; syncIcon(); new MutationObserver(syncIcon).observe(telecomIcon, { attributes: true, attributeFilter: ['src'] }); }
     if (window.location.hash === '#sms') requestAnimationFrame(openSmsApp);
 })();
+//（注：内容由AI生成）

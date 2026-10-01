@@ -83,6 +83,7 @@
         body.has-phone-border #displaySettingsContainer,
         body.has-phone-border #batterySettingsContainer,
         body.has-phone-border #chargingPromptSettingsContainer,
+        body.has-phone-border #popupBeautySettingsContainer,
         body.has-phone-border #statusBarBeautySettingsContainer,
         body.has-phone-border #apiConfigContainer,
         body.has-phone-border #themeContainer,
@@ -406,7 +407,8 @@
         #chargingPromptSettingsContainer,
         #statusBarBeautySettingsContainer,
         #apiConfigContainer,
-        #wechatAccountSwitchContainer {
+        #wechatAccountSwitchContainer,
+        #smsApp {
             padding-top: 49px !important;
         }
 
@@ -441,9 +443,11 @@
         body.status-bar-hidden #momentsEditPage,
         body.status-bar-hidden #batterySettingsContainer,
         body.status-bar-hidden #chargingPromptSettingsContainer,
+        body.status-bar-hidden #popupBeautySettingsContainer,
         body.status-bar-hidden #statusBarBeautySettingsContainer,
         body.status-bar-hidden #apiConfigContainer,
-        body.status-bar-hidden #wechatAccountSwitchContainer {
+        body.status-bar-hidden #wechatAccountSwitchContainer,
+        body.status-bar-hidden #smsApp {
             padding-top: 0 !important;
         }
 
@@ -1106,6 +1110,8 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            position: sticky;
+            top: 0;
             border-bottom: 1px solid #f5f5f5; /* 极淡的分隔线 */
         }
 
@@ -2486,7 +2492,7 @@
         }
 
         .theme-info {
-            padding: 4px 4px 2px;
+            padding: 4px 4px 5px;
             text-align: center;
         }
 
@@ -2794,7 +2800,14 @@
             scroll-behavior: smooth;
         }
 
+        #settingsContainer {
+            overscroll-behavior-y: contain;
+        }
+
         .settings-header {
+            position: sticky;
+            top: 0;
+            flex: 0 0 auto;
             background: #f7f7f7 !important; /* 改为纯灰色 */
             padding: 15px 20px;
             display: flex;
@@ -2878,7 +2891,9 @@
 
         /* 开关样式 */
         .switch {
-            position: relative;
+            position: sticky;
+            top: 0;
+            flex: 0 0 auto;
             display: inline-block;
             width: 50px;
             height: 28px;
@@ -5602,6 +5617,95 @@ body.contact-detail-active .status-bar,
 body.wechat-main-active .status-bar,
 body.service-page-active .status-bar,
 body.category-management-active .status-bar { background: transparent !important; }
+
+/* 设备状态栏适配：PWA/刘海屏下让网页背景延伸到系统状态栏，内容从安全区之后开始。 */
+:root {
+    --mimi-safe-top: env(safe-area-inset-top, 0px);
+    --mimi-status-height: calc(44px + var(--mimi-safe-top));
+    --mimi-page-top: calc(49px + var(--mimi-safe-top));
+}
+
+html, body {
+    width: 100%;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100dvh;
+    background: var(--mimi-status-bar-bg, #fff);
+}
+
+.status-bar {
+    height: var(--mimi-status-height) !important;
+    min-height: var(--mimi-status-height);
+    padding-top: calc(12px + var(--mimi-safe-top)) !important;
+    background: transparent !important;
+}
+
+.phone-container,
+#settingsContainer,
+#accountContainer,
+#accountInfoContainer,
+#displaySettingsContainer,
+#batterySettingsContainer,
+#chargingPromptSettingsContainer,
+#popupBeautySettingsContainer,
+#statusBarBeautySettingsContainer,
+#apiConfigContainer,
+#themeContainer,
+#mineContainer,
+#contactsContainer,
+#wechatContainer,
+#chatPageContainer,
+#smsApp {
+    min-height: 100dvh;
+    padding-top: var(--mimi-page-top) !important;
+}
+
+#popupBeautySettingsContainer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 20000 !important;
+    box-sizing: border-box;
+}
+
+#popupBeautySettingsContainer .settings-header {
+    flex: 0 0 auto;
+}
+
+body.status-bar-hidden .phone-container,
+body.status-bar-hidden #settingsContainer,
+body.status-bar-hidden #accountContainer,
+body.status-bar-hidden #accountInfoContainer,
+body.status-bar-hidden #displaySettingsContainer,
+body.status-bar-hidden #batterySettingsContainer,
+body.status-bar-hidden #chargingPromptSettingsContainer,
+body.status-bar-hidden #popupBeautySettingsContainer,
+body.status-bar-hidden #statusBarBeautySettingsContainer,
+body.status-bar-hidden #apiConfigContainer,
+body.status-bar-hidden #themeContainer,
+body.status-bar-hidden #mineContainer,
+body.status-bar-hidden #contactsContainer,
+body.status-bar-hidden #wechatContainer,
+body.status-bar-hidden #chatPageContainer,
+body.status-bar-hidden #smsApp {
+    padding-top: 0 !important;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+    html, body {
+        height: 100dvh;
+        overflow: hidden;
+        background: transparent;
+    }
+
+    .phone-container {
+        width: 100vw;
+        max-width: none;
+        height: 100dvh;
+    }
+}
 .charging-prompt-icon { font-size: 30px; line-height: 1; margin-bottom: 10px; }
 .charging-prompt-title { font-size: 20px; font-weight: 700; line-height: 1.25; }
 .charging-prompt-level { margin-top: 7px; font-size: 14px; font-weight: 500; opacity: .78; }
@@ -5824,3 +5928,93 @@ html body #wechatStorageContainer > .wechat-nav-bar svg {
 .contact-phone-empty { color:#999; font-size:13px; padding:8px 0; }
 .contact-add-phone-btn { position:absolute; right:0; bottom:0; width:40px; height:40px; border:0; border-radius:50%; background:#000; color:#fff; font-size:25px; line-height:40px; cursor:pointer; box-shadow:0 2px 7px rgba(0,0,0,.24); }
 .contact-add-phone-btn:active { transform:scale(.92); }
+
+/* Keep the settings title visible while its content scrolls, matching theme settings. */
+#settingsContainer > .settings-header {
+    position: sticky !important;
+    top: 0 !important;
+    flex: 0 0 auto;
+    z-index: 100;
+}
+
+/* Settings and status-bar settings use the same top treatment as theme settings. */
+#settingsContainer > .settings-header,
+#statusBarBeautySettingsContainer > .settings-header {
+    min-height: 54px;
+    box-sizing: border-box;
+    padding: 15px 20px;
+    background: #f8f8f8 !important;
+    border: 0;
+}
+
+#settingsContainer > .settings-header .settings-title,
+#statusBarBeautySettingsContainer > .settings-header .settings-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+}
+
+#globalStatusBar {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 12px 20px;
+    background: transparent !important;
+    color: #000 !important;
+}
+
+#settingsContainer,
+#statusBarBeautySettingsContainer {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+}
+
+#mineContainer {
+    background: #f8f8f8 !important;
+}
+
+#mineContainer .theme-content {
+    padding-top: 5px;
+}
+
+#mineContainer .theme-grid {
+    margin-top: 0;
+}
+
+.theme-export-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .28);
+}
+
+.theme-export-dialog {
+    width: min(330px, calc(100% - 40px));
+    max-height: 70vh;
+    overflow: auto;
+    padding: 18px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .2);
+}
+
+.theme-export-title { font-size: 17px; font-weight: 600; margin-bottom: 12px; }
+.theme-export-list { display: grid; gap: 8px; }
+.theme-export-list label { display: flex; align-items: center; gap: 9px; min-height: 38px; font-size: 14px; }
+.theme-export-actions { display: flex; gap: 8px; margin-top: 14px; }
+.theme-export-actions button { flex: 1; height: 40px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; }
+.theme-export-actions button:first-child { background: #eee; color: #333; }
+
+/* The page surface continues behind the transparent system status bar. */
+#settingsContainer > .settings-header,
+#statusBarBeautySettingsContainer > .settings-header {
+    position: sticky !important;
+    top: -49px !important;
+    margin-top: -49px;
+    min-height: 103px;
+    padding-top: 64px;
+    background: #f8f8f8 !important;
+    z-index: 20006;
+}

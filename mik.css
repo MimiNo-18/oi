@@ -1,0 +1,1107 @@
+/* ============ Mik K歌 · 独立样式 ============ */
+.mik-app {
+    --mik-bg: #0c0c0d;
+    --mik-surface: #161619;
+    --mik-surface-2: #1e1e22;
+    --mik-line: rgba(255, 255, 255, 0.08);
+    --mik-text: #f5f5f7;
+    --mik-muted: #8e8e93;
+    --mik-glass: rgba(26, 26, 30, 0.62);
+    position: fixed;
+    inset: 0;
+    z-index: 10450;
+    overflow: hidden;
+    color: var(--mik-text);
+    background: var(--mik-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    display: flex;
+    flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.mik-app[hidden] { display: none !important; }
+.mik-app * { box-sizing: border-box; }
+body.mik-app-active { overflow: hidden; }
+body.mik-app-active .phone-container { visibility: hidden; }
+body.mik-app-active .status-bar { color: #f5f5f7 !important; background: transparent !important; }
+
+/* 顶部：返回 + 胶囊毛玻璃标题 */
+.mik-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 46px 14px 6px;
+    flex: none;
+}
+.mik-back {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--mik-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s;
+}
+.mik-back:hover { background: rgba(255, 255, 255, 0.16); }
+.mik-title-capsule {
+    padding: 7px 24px;
+    border-radius: 999px;
+    background: var(--mik-glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-align: center;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.mik-header-spacer { width: 34px; }
+
+/* ============ 三段横线导航条 ============ */
+.mik-nav {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px 2px;
+    flex: none;
+}
+.mik-nav-bar {
+    flex: 1;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #232326;
+    color: #8f8f96;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.15s;
+}
+.mik-nav-bar:active { transform: scale(0.96); }
+.mik-nav-bar.is-active {
+    background: #000000;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* ============ 视图区 ============ */
+.mik-view {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.mik-view::-webkit-scrollbar { display: none; }
+.mik-page { padding: 8px 16px 30px; transform-origin: 50% 0%; }
+.mik-page.is-in { animation: mikPageIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes mikPageIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* 区块标题 */
+.mik-section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--mik-text);
+    margin: 18px 2px 10px;
+}
+.mik-section-title small {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--mik-muted);
+    letter-spacing: 0.5px;
+}
+
+/* ============ 3D 魔方轮播（热门推荐） ============ */
+.mik-cube-wrap {
+    perspective: 1100px;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0 8px;
+    cursor: grab;
+}
+.mik-cube-wrap.is-dragging { cursor: grabbing; }
+.mik-cube {
+    position: relative;
+    width: var(--cube-w, 250px);
+    height: var(--cube-h, 168px);
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+.mik-cube-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background-color: #161619;
+    background-size: cover;
+    background-position: center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+.mik-cube-face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 10, 12, 0) 52%, rgba(10, 10, 12, 0.88) 100%);
+}
+.mik-cube-face-label {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    z-index: 2;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mik-cube-face-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+.mik-cube-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--mik-muted);
+    padding: 10px 0 2px;
+    letter-spacing: 1px;
+}
+
+/* ============ 专辑卡片（横滑） ============ */
+.mik-album-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+}
+.mik-album-scroll::-webkit-scrollbar { display: none; }
+.mik-album-card {
+    flex: none;
+    width: 190px;
+    scroll-snap-align: start;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.mik-album-card:active { transform: scale(0.96); }
+.mik-album-cover {
+    width: 100%;
+    height: 120px;
+    border-radius: 14px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+.mik-album-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,12,0) 55%, rgba(10,10,12,0.7) 100%);
+}
+.mik-album-card-name {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mik-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mik-album-card-meta {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--mik-muted);
+}
+
+/* ============ 单曲列表 ============ */
+.mik-song-list {
+    border-radius: 16px;
+    background: var(--mik-surface);
+    border: 1px solid var(--mik-line);
+    overflow: hidden;
+}
+.mik-song-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    cursor: pointer;
+    transition: background 0.18s;
+    border-bottom: 1px solid var(--mik-line);
+    position: relative;
+}
+.mik-song-row:last-child { border-bottom: 0; }
+.mik-song-row:hover { background: rgba(255, 255, 255, 0.04); }
+.mik-song-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mik-song-main { flex: 1; min-width: 0; }
+.mik-song-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mik-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mik-song-artist {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--mik-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mik-song-kbtn {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+}
+.mik-song-kbtn:hover { background: #1a1a1a; }
+.mik-song-kbtn:active { transform: scale(0.94); }
+.mik-song-kbtn svg { width: 14px; height: 14px; }
+.mik-song-fav {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: #5a5a5f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: color 0.2s, transform 0.15s;
+}
+.mik-song-fav.is-on { color: #fff; }
+.mik-song-fav:active { transform: scale(0.85); }
+
+/* ============ 专辑详情页 ============ */
+.mik-album-view {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: var(--mik-bg);
+    display: flex;
+    flex-direction: column;
+    animation: mikSingIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mik-album-hero {
+    position: relative;
+    height: 210px;
+    flex: none;
+    background-size: cover;
+    background-position: center;
+}
+.mik-album-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(12,12,13,0.25) 0%, rgba(12,12,13,0.05) 40%, var(--mik-bg) 100%);
+}
+.mik-album-hero-bar {
+    position: absolute;
+    top: 46px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+}
+.mik-album-hero-info {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 14px;
+    z-index: 2;
+}
+.mik-album-hero-name { font-size: 22px; font-weight: 800; color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,0.6); }
+.mik-album-hero-meta { margin-top: 6px; font-size: 12px; color: rgba(255,255,255,0.75); }
+.mik-album-body { flex: 1; overflow-y: auto; padding: 14px 16px 26px; }
+.mik-album-desc {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--mik-muted);
+    margin: 4px 2px 14px;
+}
+
+/* ============ 歌房页 ============ */
+.mik-room-list { display: flex; flex-direction: column; gap: 12px; }
+.mik-room-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    background: var(--mik-surface);
+    border: 1px solid var(--mik-line);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+.mik-room-card:hover { background: rgba(255, 255, 255, 0.04); }
+.mik-room-card:active { transform: scale(0.98); }
+.mik-room-cover {
+    flex: none;
+    width: 74px;
+    height: 74px;
+    border-radius: 14px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+.mik-room-live {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+.mik-room-main { flex: 1; min-width: 0; }
+.mik-room-name { font-size: 15px; font-weight: 700; color: var(--mik-text); }
+.mik-room-host { margin-top: 4px; font-size: 12px; color: var(--mik-muted); }
+.mik-room-meta { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.mik-room-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #232326;
+    border: 1px solid var(--mik-line);
+    color: #b6b6bd;
+    font-size: 10px;
+}
+.mik-room-people {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--mik-muted);
+}
+.mik-room-people svg { width: 12px; height: 12px; }
+
+/* 房间详情 */
+.mik-room-view {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: var(--mik-bg);
+    display: flex;
+    flex-direction: column;
+    animation: mikSingIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mik-room-hero {
+    position: relative;
+    height: 190px;
+    flex: none;
+    background-size: cover;
+    background-position: center;
+}
+.mik-room-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(12,12,13,0.3), rgba(12,12,13,0.1) 45%, var(--mik-bg) 100%);
+}
+.mik-room-body { flex: 1; overflow-y: auto; padding: 12px 16px 26px; }
+.mik-room-members {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 6px 2px 12px;
+    scrollbar-width: none;
+}
+.mik-room-members::-webkit-scrollbar { display: none; }
+.mik-room-member { flex: none; width: 48px; text-align: center; }
+.mik-room-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin: 0 auto;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+.mik-room-member-name {
+    margin-top: 5px;
+    font-size: 10px;
+    color: var(--mik-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mik-room-queue-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 10px 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.mik-room-queue-title span { color: #fff; }
+.mik-room-queue-title small { color: var(--mik-muted); font-weight: 500; font-size: 11px; }
+
+/* ============ 个人主页 ============ */
+.mik-profile-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 2px 16px;
+    border-bottom: 1px solid var(--mik-line);
+}
+.mik-profile-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    flex: none;
+}
+.mik-profile-main { flex: 1; min-width: 0; }
+.mik-profile-name { font-size: 18px; font-weight: 800; color: var(--mik-text); }
+.mik-profile-id { margin-top: 4px; font-size: 11px; color: var(--mik-muted); letter-spacing: 0.5px; }
+.mik-profile-lv {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--mik-surface-2);
+    border: 1px solid var(--mik-line);
+    font-size: 11px;
+    color: #c9c9cf;
+}
+.mik-profile-lv b { color: #fff; }
+.mik-lv-track {
+    width: 74px;
+    height: 5px;
+    border-radius: 999px;
+    background: #2a2a2e;
+    overflow: hidden;
+}
+.mik-lv-track i {
+    display: block;
+    height: 100%;
+    width: 66%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5a5a5f, #fff);
+}
+.mik-profile-stats {
+    display: flex;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--mik-line);
+}
+.mik-profile-stat { flex: 1; text-align: center; cursor: pointer; }
+.mik-profile-stat b { display: block; font-size: 17px; font-weight: 800; color: var(--mik-text); }
+.mik-profile-stat span { font-size: 11px; color: var(--mik-muted); margin-top: 3px; display: block; }
+.mik-section-sub { font-size: 14px; font-weight: 700; margin: 18px 2px 10px; color: var(--mik-text); }
+.mik-work-list { display: flex; flex-direction: column; gap: 10px; }
+.mik-work-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 16px;
+    background: var(--mik-surface);
+    border: 1px solid var(--mik-line);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.mik-work-card:hover { background: rgba(255, 255, 255, 0.04); }
+.mik-work-cover {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mik-work-main { flex: 1; min-width: 0; }
+.mik-work-title { font-size: 13.5px; font-weight: 600; color: var(--mik-text); }
+.mik-work-meta { margin-top: 4px; font-size: 11px; color: var(--mik-muted); }
+.mik-grade-badge {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border: 1px solid;
+}
+.mik-grade-sss { color: #ffd866; border-color: #ffd866; background: rgba(255, 216, 102, 0.08); }
+.mik-grade-ss  { color: #e8e8ea; border-color: #e8e8ea; background: rgba(255, 255, 255, 0.06); }
+.mik-grade-s   { color: #a5f3c0; border-color: #a5f3c0; background: rgba(165, 243, 192, 0.08); }
+.mik-grade-a   { color: #8ab8ff; border-color: #8ab8ff; background: rgba(138, 184, 255, 0.08); }
+.mik-grade-b   { color: #c9c9cf; border-color: #c9c9cf; background: rgba(200, 200, 205, 0.07); }
+.mik-grade-c   { color: #9a9aa0; border-color: #9a9aa0; background: rgba(154, 154, 160, 0.06); }
+.mik-menu-list {
+    border-radius: 16px;
+    background: var(--mik-surface);
+    border: 1px solid var(--mik-line);
+    overflow: hidden;
+    margin-top: 4px;
+}
+.mik-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--mik-line);
+    cursor: pointer;
+    transition: background 0.18s;
+    font-size: 14px;
+    color: var(--mik-text);
+}
+.mik-menu-item:last-child { border-bottom: 0; }
+.mik-menu-item:hover { background: rgba(255, 255, 255, 0.04); }
+.mik-menu-item svg { width: 18px; height: 18px; color: #a8a8af; flex: none; }
+.mik-menu-item .mik-menu-arrow { margin-left: auto; color: #5a5a5f; font-size: 13px; }
+.mik-menu-item .mik-menu-badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--mik-muted);
+}
+
+/* ============ K 歌页 ============ */
+.mik-sing {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(120% 90% at 50% 0%, #1d1d21 0%, #0b0b0c 62%);
+    transform-origin: 50% 100%;
+    animation: mikSingIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mikSingIn {
+    from { opacity: 0; transform: translateY(48px) scale(0.4); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mik-sing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 46px 14px 4px;
+    flex: none;
+}
+.mik-sing-songinfo { flex: 1; min-width: 0; text-align: center; }
+.mik-sing-songname { font-size: 16px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mik-sing-artist { margin-top: 3px; font-size: 11.5px; color: var(--mik-muted); }
+
+/* 歌词区 */
+.mik-lyrics {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 26px 18px;
+    text-align: center;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+.mik-lyrics::-webkit-scrollbar { display: none; }
+.mik-lyric-line {
+    display: block;
+    padding: 9px 0;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #5c5c62;
+    transition: color 0.25s, transform 0.25s, font-size 0.25s;
+    word-break: break-word;
+}
+.mik-lyric-line.is-current {
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: 700;
+    text-shadow: 0 0 22px rgba(255, 255, 255, 0.28);
+}
+
+/* 演唱控制区 */
+.mik-sing-stage {
+    flex: none;
+    padding: 8px 18px calc(env(safe-area-inset-bottom, 12px) + 18px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(12,12,13,0) 0%, rgba(12,12,13,0.9) 30%);
+}
+/* 实时评分条 */
+.mik-scoreline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mik-score-label { font-size: 11px; color: var(--mik-muted); letter-spacing: 1px; flex: none; }
+.mik-score-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: #26262a;
+    overflow: hidden;
+    position: relative;
+}
+.mik-score-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #6b6b72, #f5f5f7);
+    transition: width 0.3s ease;
+}
+.mik-score-num { flex: none; font-size: 15px; font-weight: 800; color: #fff; min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+/* 当前句分数大数字 */
+.mik-sentence-score {
+    position: absolute;
+    right: 22px;
+    top: 118px;
+    z-index: 5;
+    text-align: right;
+    pointer-events: none;
+}
+.mik-sentence-score b {
+    display: block;
+    font-size: 34px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    font-variant-numeric: tabular-nums;
+    transition: transform 0.2s;
+}
+.mik-sentence-score span {
+    font-size: 11px;
+    color: var(--mik-muted);
+    letter-spacing: 2px;
+}
+.mik-sentence-score.is-burst b { transform: scale(1.15); }
+/* 音准指示 */
+.mik-pitch-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+.mik-pitch-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3a3a3f;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+.mik-pitch-dot.is-good { background: #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.7); }
+.mik-pitch-dot.is-high { background: #9a9aa0; box-shadow: 0 0 10px rgba(255, 255, 255, 0.35); }
+.mik-pitch-dot.is-low { background: #56565c; box-shadow: 0 0 8px rgba(255, 255, 255, 0.2); }
+.mik-pitch-text { color: var(--mik-muted); font-size: 12px; }
+/* 控制按钮 */
+.mik-sing-btns { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.mik-sing-round {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: #1a1a1d;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+    font-size: 15px;
+}
+.mik-sing-round:hover { background: #26262a; }
+.mik-sing-round:active { transform: scale(0.92); }
+.mik-sing-round svg { width: 22px; height: 22px; }
+.mik-sing-mic {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    background: radial-gradient(circle at 30% 30%, #3a3a40, #0d0d0e 75%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.3s;
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.6);
+}
+.mik-sing-mic:hover { box-shadow: 0 6px 32px rgba(0, 0, 0, 0.75); }
+.mik-sing-mic:active { transform: scale(0.94); }
+.mik-sing-mic.is-on {
+    animation: mikMicPulse 1.4s ease-in-out infinite;
+    border-color: #fff;
+}
+@keyframes mikMicPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35); }
+    50% { box-shadow: 0 0 0 14px rgba(255, 255, 255, 0); }
+}
+.mik-sing-mic svg { width: 30px; height: 30px; }
+
+/* 进度条 */
+.mik-progressline { display: flex; align-items: center; gap: 10px; }
+.mik-progress {
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: #26262a;
+    overflow: hidden;
+}
+.mik-progress i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    transition: width 0.25s linear;
+}
+.mik-progress-time { font-size: 11px; color: var(--mik-muted); font-variant-numeric: tabular-nums; flex: none; }
+
+/* ============ 演唱结果页 ============ */
+.mik-result {
+    position: absolute;
+    inset: 0;
+    z-index: 35;
+    background: rgba(8, 8, 9, 0.9);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    animation: mikResultIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    text-align: center;
+}
+@keyframes mikResultIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+}
+.mik-result-grade {
+    font-size: 84px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 8px 40px rgba(255, 255, 255, 0.18);
+}
+.mik-result-song { margin-top: 10px; font-size: 14px; color: var(--mik-muted); }
+.mik-result-score {
+    margin-top: 22px;
+    font-size: 42px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+.mik-result-sub { font-size: 12px; color: var(--mik-muted); margin-top: 4px; letter-spacing: 1px; }
+.mik-result-dims {
+    width: 100%;
+    max-width: 300px;
+    margin: 22px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.mik-dim { display: flex; align-items: center; gap: 10px; }
+.mik-dim-name { flex: none; width: 52px; text-align: left; font-size: 12px; color: var(--mik-muted); }
+.mik-dim-track { flex: 1; height: 6px; border-radius: 999px; background: #26262a; overflow: hidden; }
+.mik-dim-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7c7c84, #fff); width: 0%; transition: width 0.8s ease 0.2s; }
+.mik-dim-val { flex: none; width: 36px; text-align: right; font-size: 12px; color: #fff; font-variant-numeric: tabular-nums; }
+.mik-result-beat { margin: 12px 0 24px; font-size: 13px; color: #bdbdc4; }
+.mik-result-actions { display: flex; gap: 12px; }
+.mik-result-btn {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: #1a1a1d;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+.mik-result-btn:hover { background: #2a2a2e; }
+.mik-result-btn:active { transform: scale(0.95); }
+.mik-result-btn.is-primary { background: #fff; color: #000; border-color: #fff; }
+.mik-result-btn.is-primary:hover { background: #e8e8ea; }
+
+/* ============ K 歌准备页（参考真实K歌软件） ============ */
+.mik-prep {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0b0b0c;
+    transform-origin: 50% 100%;
+    animation: mikSingIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mik-prep-bg {
+    position: absolute;
+    inset: -30px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(34px) brightness(0.5) saturate(0.7);
+}
+.mik-prep-body {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 24px calc(env(safe-area-inset-bottom, 14px) + 26px);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.mik-prep-body::-webkit-scrollbar { display: none; }
+.mik-prep-cover {
+    width: 210px;
+    height: 140px;
+    border-radius: 20px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+    flex: none;
+}
+.mik-prep-name { margin-top: 16px; font-size: 21px; font-weight: 800; color: #fff; }
+.mik-prep-artist { margin-top: 6px; font-size: 13px; color: var(--mik-muted); }
+.mik-prep-label {
+    margin-top: 22px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--mik-muted);
+    text-align: center;
+    width: 100%;
+}
+.mik-tone-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+}
+.mik-tone-btn {
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: #bdbdc4;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mik-tone-btn.is-active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.18);
+}
+.mik-volume-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 20px;
+}
+.mik-volume-row svg { width: 18px; height: 18px; color: #8f8f96; flex: none; }
+.mik-volume-track {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: #26262a;
+    position: relative;
+    cursor: pointer;
+}
+.mik-volume-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 80%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #6b6b72, #f5f5f7);
+}
+.mik-volume-num { flex: none; width: 34px; text-align: right; font-size: 12px; color: #fff; font-variant-numeric: tabular-nums; }
+.mik-prep-start {
+    margin-top: 28px;
+    width: 100%;
+    padding: 15px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(180deg, #2c2c30, #101012);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.25s;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+.mik-prep-start:hover { box-shadow: 0 8px 36px rgba(0, 0, 0, 0.7); }
+.mik-prep-start:active { transform: scale(0.97); }
+.mik-prep-start svg { width: 20px; height: 20px; }
+.mik-prep-tip {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #6f6f75;
+    text-align: center;
+}
+
+/* 音准滑动指示条（参考全民K歌） */
+.mik-pitch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
+}
+.mik-pitch-track {
+    flex: 1;
+    height: 7px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #4a4a50, #f5f5f7 50%, #4a4a50);
+    position: relative;
+    overflow: visible;
+}
+.mik-pitch-zone {
+    position: absolute;
+    left: 42%;
+    right: 42%;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+}
+.mik-pitch-cursor {
+    position: absolute;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+    transform: translate(-50%, -50%);
+    left: 50%;
+    transition: left 0.12s ease;
+}
+.mik-pitch-dots { display: flex; gap: 3px; }
+.mik-pitch-dots span { width: 5px; height: 5px; border-radius: 50%; background: #333338; }
+
+/* 结果页句分报告 */
+.mik-result-report {
+    width: 100%;
+    max-width: 300px;
+    margin: 6px 0 4px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+.mik-report-cell {
+    flex: 1;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.mik-report-cell b { display: block; font-size: 16px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+.mik-report-cell span { font-size: 10px; color: var(--mik-muted); letter-spacing: 1px; }
+.mik-result-pub { margin-top: 14px; width: 100%; max-width: 300px; }
+
+/* ============ 提示 ============ */
+.mik-toast {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    z-index: 60;
+    transform: translate(-50%, -50%);
+    max-width: 86%;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    animation: mikToastIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mikToastIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 进入提示（首次打开时） */
+
+/* 响应式：宽屏时限制宽度 */
+@media (min-width: 560px) {
+    .mik-app { left: 50%; right: auto; width: min(100%, 520px); transform: translateX(-50%); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 0 120px rgba(0,0,0,0.6); }
+}

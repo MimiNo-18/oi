@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://html2canvas.hertzen.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *; media-src 'self' blob: data: https:; connect-src *;">
     <title>MimiPhone</title>
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="transparent">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MimiPhone">
     <link rel="apple-touch-icon" href="https://nos.netease.com/ysf/00366c55b2d0cfc204964e3cf235ba14.png">
     <link rel="manifest" href="manifest.json">
@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="game.css?v=20260813">
     <link rel="stylesheet" href="telecom.css?v=20260814">
     <link rel="stylesheet" href="sms.css?v=20260827">
+    <link rel="stylesheet" href="mik.css?v=20260926">
 </head>
 <body>
     <div class="phone-border-frame"></div>
@@ -140,8 +141,8 @@
 
                     <section class="story-app-grid" aria-label="应用列表">
                         <div class="app-item story-app-item telecom-story-entry" onclick="openTelecomApp()" role="button" tabindex="0" aria-label="打开通讯服务"><img id="storyApp1" class="app-icon story-app-icon" alt="通讯服务图标"><div class="app-label">通讯服务</div></div>
-                        <div class="app-item story-app-item sms-story-entry" onclick="openSmsApp()" role="button" tabindex="0" aria-label="打开短信"><img id="storyApp2" class="app-icon story-app-icon sms-story-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='18' y='24' width='64' height='52' rx='18' fill='white'/%3E%3Cpath d='M29 72 25 85l16-10' fill='white'/%3E%3Ccircle cx='38' cy='50' r='5' fill='%234e9cff'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%234e9cff'/%3E%3Ccircle cx='62' cy='50' r='5' fill='%234e9cff'/%3E%3C/svg%3E" alt="短信图标"><div class="app-label">短信</div></div>
-                        <div class="app-item story-app-item"><img id="storyApp3" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-3" onclick="editText(this, '应用名称')">占位 App</div></div>
+                        <div class="app-item story-app-item sms-story-entry" onclick="openSmsApp()" role="button" tabindex="0" aria-label="打开信息"><img id="storyApp2" class="app-icon story-app-icon" alt="信息图标"><div class="app-label">信息</div></div>
+                        <div class="app-item story-app-item mik-story-entry" onclick="openMikApp()" role="button" tabindex="0" aria-label="打开Mik K歌"><img id="storyApp3" class="app-icon story-app-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='4' y='4' width='92' height='92' rx='26' fill='%230c0c0d'/%3E%3Crect x='4' y='4' width='92' height='92' rx='26' fill='none' stroke='%233d3d42' stroke-width='3'/%3E%3Cpath d='M50 24a17 17 0 0 0-17 17v11a17 17 0 0 0 34 0V41a17 17 0 0 0-17-17Z' fill='%23f2f2f4'/%3E%3Cpath d='M30 54a20 20 0 0 0 40 0' stroke='%23f2f2f4' stroke-width='7' fill='none' stroke-linecap='round'/%3E%3Crect x='45.5' y='67' width='9' height='14' rx='4.5' fill='%23f2f2f4'/%3E%3Cpath d='M38 82h24' stroke='%23f2f2f4' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='70' cy='24' r='6' fill='%238e8e93'/%3E%3Ccircle cx='76' cy='30' r='6' fill='%238e8e93'/%3E%3C/svg%3E" alt="Mik K歌图标"><div class="app-label">mik</div></div>
                         <div class="app-item story-app-item"><img id="storyApp4" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-4" onclick="editText(this, '应用名称')">占位 App</div></div>
                         <div class="app-item story-app-item"><img id="storyApp5" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-5" onclick="editText(this, '应用名称')">占位 App</div></div>
                         <div class="app-item story-app-item"><img id="storyApp6" class="app-icon story-app-icon" alt="应用图标"><div class="app-label" id="txt-story-app-6" onclick="editText(this, '应用名称')">占位 App</div></div>
@@ -1842,6 +1843,12 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            <div class="settings-item" onclick="openPopupBeautySettings()">
+                <div class="settings-item-content">
+                    <span class="settings-item-label">弹窗美化</span>
+                </div>
+                <span class="settings-item-arrow">〉</span>
+            </div>
             <div class="settings-item" onclick="openBatterySettings()">
                 <div class="settings-item-content">
                     <span class="settings-item-label">电量提醒</span>
@@ -1921,6 +1928,30 @@
 
                 <button class="theme-action-btn" style="width: 100%;" onclick="previewBatteryAlert()">预览效果</button>
                 <button class="theme-action-btn settings-save-style-btn" style="width: 100%;" onclick="saveStyleApplication('battery')">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗美化设置容器 -->
+    <div id="popupBeautySettingsContainer" style="display: none; width: 100%; height: 100vh; background: #f8f8f8; flex-direction: column; overflow-y: auto;">
+        <div class="settings-header">
+            <div class="settings-back" onclick="closePopupBeautySettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="settings-title">弹窗美化</div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-item">
+                <div class="settings-item-content"><span class="settings-item-label">美化开关</span></div>
+                <label class="switch"><input type="checkbox" id="popupBeautyToggle" onchange="togglePopupBeauty(this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="battery-config-area" style="padding: 10px 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div class="settings-css-title"><span>弹窗 CSS 美化</span><button type="button" onclick="saveStylePreset('popup')">保存为预设</button></div>
+                    <textarea id="popupBeautyCss" class="settings-css-editor" placeholder="请输入弹窗自定义 CSS..." oninput="markStylePresetCustom('popup')"></textarea>
+                    <select id="popupStylePresetSelect" class="settings-preset-select" onchange="loadStylePreset('popup', this.value)"><option value="__custom">自定义</option></select>
+                </div>
+                <button class="theme-action-btn settings-save-style-btn" style="width: 100%;" onclick="saveStyleApplication('popup')">保存</button>
             </div>
         </div>
     </div>
@@ -2998,12 +3029,31 @@ MimiGameSave.save({ score, level: 2 });</pre></div></section>
         <div id="smsToast" class="sms-toast" role="status" aria-live="polite"></div>
     </section>
 
+    <!-- Mik K歌 -->
+    <section id="mikApp" class="mik-app" aria-label="Mik K歌" hidden>
+        <header class="mik-header">
+            <button class="mik-back" type="button" id="mikBackBtn" aria-label="返回">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="mik-title-capsule">MIK</div>
+            <span class="mik-header-spacer"></span>
+        </header>
+        <nav class="mik-nav" aria-label="Mik导航">
+            <button class="mik-nav-bar" type="button" data-mik-tab="room">歌房</button>
+            <button class="mik-nav-bar is-active" type="button" data-mik-tab="home">首页</button>
+            <button class="mik-nav-bar" type="button" data-mik-tab="profile">主页</button>
+        </nav>
+        <main id="mikView" class="mik-view"></main>
+        <div id="mikToast" class="mik-toast" hidden></div>
+    </section>
+
     <script src="wechat.js"></script>
     <script src="script.js"></script>
     <script src="music.js?v=20260811"></script>
     <script src="game.js?v=20260813"></script>
     <script src="telecom.js?v=20260814"></script>
     <script src="sms.js?v=20260827"></script>
+    <script src="mik.js?v=20260926"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -3059,5 +3109,7 @@ MimiGameSave.save({ score, level: 2 });</pre></div></section>
             <div id="scannerStatus" class="scanner-status">将二维码放入框内</div>
         </div>
     </div>
+    <link rel="stylesheet" href="api-config-v2.css?v=20260930">
+    <script src="api-config-v2.js?v=20260930"></script>
 </body>
 </html>

@@ -2015,6 +2015,51 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
             saveUIState();
         }
 
+        const DEFAULT_POPUP_BEAUTY_CSS = 'background: #fff; color: #111; border-radius: 16px; box-shadow: 0 18px 55px rgba(0,0,0,.22); border: 1px solid rgba(0,0,0,.06);';
+
+        function openPopupBeautySettings() {
+            document.getElementById('displaySettingsContainer').style.display = 'none';
+            document.getElementById('popupBeautySettingsContainer').style.display = 'flex';
+            loadPopupBeautySettings();
+            updateTime();
+            saveUIState();
+        }
+
+        function closePopupBeautySettings() {
+            document.getElementById('popupBeautySettingsContainer').style.display = 'none';
+            document.getElementById('displaySettingsContainer').style.display = 'flex';
+            saveUIState();
+        }
+
+        function loadPopupBeautySettings() {
+            const enabled = localStorage.getItem('mimi_popup_beauty_enabled') === 'true';
+            const toggle = document.getElementById('popupBeautyToggle');
+            const input = document.getElementById('popupBeautyCss');
+            if (toggle) toggle.checked = enabled;
+            if (input) input.value = localStorage.getItem('mimi_popup_beauty_css') || DEFAULT_POPUP_BEAUTY_CSS;
+            renderStylePresetOptions('popup');
+        }
+
+        function togglePopupBeauty(enabled) {
+            safeLocalStorageSet('mimi_popup_beauty_enabled', enabled);
+            applyPopupBeauty();
+        }
+
+        function applyPopupBeauty() {
+            let style = document.getElementById('popupBeautyGlobalStyle');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'popupBeautyGlobalStyle';
+                document.head.appendChild(style);
+            }
+            if (localStorage.getItem('mimi_popup_beauty_enabled') !== 'true') {
+                style.textContent = '';
+                return;
+            }
+            const css = localStorage.getItem('mimi_popup_beauty_css') || DEFAULT_POPUP_BEAUTY_CSS;
+            style.textContent = '.modal .modal-content,.style-preset-name-dialog,.api-v2-preset-dialog,.sms-action-menu,.game-modal-card{' + css + '}';
+        }
+
         function loadChargingPromptSettings() {
             const enabled = localStorage.getItem('mimi_charging_prompt_enabled') === 'true';
             const toggle = document.getElementById('chargingPromptToggle');
@@ -2237,7 +2282,8 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         const stylePresetConfigs = {
             battery: { inputId: 'batteryAlertCss', selectId: 'batteryStylePresetSelect', presetsKey: 'mimi_battery_style_presets', activeNameKey: 'mimi_battery_style_preset_name' },
             charging: { inputId: 'chargingPromptCss', selectId: 'chargingStylePresetSelect', presetsKey: 'mimi_charging_style_presets', activeNameKey: 'mimi_charging_style_preset_name' },
-            status: { inputId: 'statusBarBeautyCss', selectId: 'statusStylePresetSelect', presetsKey: 'mimi_status_style_presets', activeNameKey: 'mimi_status_style_preset_name' }
+            status: { inputId: 'statusBarBeautyCss', selectId: 'statusStylePresetSelect', presetsKey: 'mimi_status_style_presets', activeNameKey: 'mimi_status_style_preset_name' },
+            popup: { inputId: 'popupBeautyCss', selectId: 'popupStylePresetSelect', presetsKey: 'mimi_popup_style_presets', activeNameKey: 'mimi_popup_style_preset_name' }
         };
 
         function getStylePresets(kind) {
@@ -2342,6 +2388,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
                 if (previewStyle) previewStyle.remove();
                 applyStatusBarBeauty();
                 scheduleBrowserThemeColorUpdate();
+            } else if (kind === 'popup') {
+                safeLocalStorageSet('mimi_popup_beauty_css', css || DEFAULT_POPUP_BEAUTY_CSS);
+                applyPopupBeauty();
             }
             alert('样式已保存并应用');
         }
@@ -2483,6 +2532,9 @@ ${imgDescriptions.length > 0 ? '【朋友圈配图内容】：' + imgDescription
         function openSettings() {
             document.querySelector('.phone-container').style.display = 'none';
             document.getElementById('settingsContainer').style.display = 'flex';
+            const statusBar = document.getElementById('globalStatusBar');
+            if (statusBar) statusBar.style.display = 'flex';
+            document.body.classList.remove('status-bar-hidden');
             updateTime();
             updateBattery();
             saveUIState();
@@ -8875,6 +8927,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         // 导出主题
+        /* repaired theme export/import block
         function exportThemes() {
             if (savedThemes.length === 0) {
                 alert('没有可导出的主题');
@@ -8927,6 +8980,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
         }
 
         // 我的页面相关函数
+        */
         function openMinePage() {
             document.getElementById('themeContainer').style.display = 'none';
             document.getElementById('mineContainer').style.display = 'flex';
@@ -8944,7 +8998,70 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             saveUIState();
         }
 
+        /* legacy export implementation
+        function exportThemes() {
+            if (!savedThemes.length) { alert('没有可导出的主题'); return; }
+            const overlay = document.createElement('div');
+            overlay.className = 'theme-export-modal';
+            overlay.innerHTML = `<div class="theme-export-dialog"><div class="theme-export-title">选择要导出的主题</div><div class="theme-export-list">${savedThemes.map((theme, index) => `<label><input type="checkbox" data-theme-index="${index}" checked><span>${theme.name || '未命名主题'}</span></label>`).join('')}</div><div class="theme-export-actions"><button type="button" data-export-cancel>取消</button><button type="button" data-export-confirm>导出</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay || event.target.closest('[data-export-cancel]')) { overlay.remove(); return; }
+                if (!event.target.closest('[data-export-confirm]')) return;
+                const selected = [...overlay.querySelectorAll('[data-theme-index]:checked')].map(input => savedThemes[Number(input.dataset.themeIndex)]);
+                if (!selected.length) { alert('请至少选择一个主题'); return; }
+                downloadData(selected, `MimiPhone_Themes_${new Date().toISOString().slice(0, 10)}.json`);
+                overlay.remove();
+            });
+        }
+
+        function importThemes(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function () {
+                try {
+                    const parsed = JSON.parse(reader.result);
+                    const themes = Array.isArray(parsed) ? parsed : [parsed];
+                    const validThemes = themes.filter(theme => theme && theme.name && theme.config);
+                    if (!validThemes.length) throw new Error('没有有效主题');
+                    for (const theme of validThemes) {
+                        const imported = { ...theme, id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}` };
+                        await dbPut('themes', imported);
+                        savedThemes.push(imported);
+                    }
+                    renderThemeList();
+                    alert(`成功导入 ${validThemes.length} 个主题`);
+                } catch (error) { alert(`导入失败：${error.message}`); }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         // IndexedDB 封装
+        */
+        function exportThemes() {
+            if (!savedThemes.length) { alert('No themes to export'); return; }
+            const selected = savedThemes.filter(function (theme) { return window.confirm('Export theme: ' + (theme.name || 'Unnamed theme') + '?'); });
+            if (selected.length) downloadData(selected, 'MimiPhone_Themes_' + new Date().toISOString().slice(0, 10) + '.json');
+        }
+        function importThemes(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function () {
+                try {
+                    const parsed = JSON.parse(reader.result);
+                    const themes = Array.isArray(parsed) ? parsed : [parsed];
+                    const validThemes = themes.filter(function (theme) { return theme && theme.name && theme.config; });
+                    for (const theme of validThemes) { const imported = Object.assign({}, theme, { id: Date.now().toString() + Math.random().toString(36).slice(2) }); await dbPut('themes', imported); savedThemes.push(imported); }
+                    renderThemeList();
+                    alert('Imported ' + validThemes.length + ' theme(s)');
+                } catch (error) { alert('Import failed: ' + error.message); }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
         const DB_NAME = 'MimiPhoneDB';
         const DB_VERSION = 4; // 提升版本号以支持大数据量存储
         let db;
@@ -10069,6 +10186,7 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
             else if (document.getElementById('stickerLibraryContainer').style.display === 'flex') state.activeContainer = 'stickerLibraryContainer';
             else if (document.getElementById('batterySettingsContainer').style.display === 'flex') state.activeContainer = 'batterySettingsContainer';
             else if (document.getElementById('chargingPromptSettingsContainer').style.display === 'flex') state.activeContainer = 'chargingPromptSettingsContainer';
+            else if (document.getElementById('popupBeautySettingsContainer').style.display === 'flex') state.activeContainer = 'popupBeautySettingsContainer';
             else if (document.getElementById('statusBarBeautySettingsContainer').style.display === 'flex') state.activeContainer = 'statusBarBeautySettingsContainer';
             else if (document.getElementById('wechatFavoritesContainer').style.display === 'flex') state.activeContainer = 'wechatFavoritesContainer';
             else if (document.getElementById('contactDetailPage').style.display === 'flex') state.activeContainer = 'contactDetailPage';
@@ -10133,6 +10251,11 @@ ${recentMsgs ? '【最近聊天内容】：\n' + recentMsgs : ''}
                 openSettings();
                 openDisplaySettings();
                 openChargingPromptSettings();
+            }
+            else if (state.activeContainer === 'popupBeautySettingsContainer') {
+                openSettings();
+                openDisplaySettings();
+                openPopupBeautySettings();
             }
             else if (state.activeContainer === 'statusBarBeautySettingsContainer') {
                 openSettings();

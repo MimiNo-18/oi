@@ -4,8 +4,8 @@
   "description": "MimiPhone - 您的虚拟小手机",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "transparent",
+  "theme_color": "transparent",
   "icons": [
     {
       "src": "https://nos.netease.com/ysf/00366c55b2d0cfc204964e3cf235ba14.png",
